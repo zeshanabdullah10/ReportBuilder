@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FilePlus, FileText, Download } from 'lucide-react'
+import { FilePlus, FileText, Download, Activity } from 'lucide-react'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -19,8 +19,13 @@ export default async function DashboardPage() {
     <div className="p-8">
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-          <p className="text-slate-600 mt-1">
+          <h1
+            className="text-2xl font-bold text-white"
+            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+          >
+            Dashboard
+          </h1>
+          <p className="text-gray-400 mt-1">
             Welcome back! Manage your report templates here.
           </p>
         </div>
@@ -36,47 +41,54 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">
+            <CardTitle className="text-sm font-medium text-gray-400">
               Total Templates
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-slate-900">
+            <div className="text-3xl font-bold text-[#00ffc8]" style={{ textShadow: '0 0 20px rgba(0, 255, 200, 0.3)' }}>
               {templates?.length ?? 0}
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">
+            <CardTitle className="text-sm font-medium text-gray-400">
               Downloads This Month
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-slate-900">0</div>
+            <div className="text-3xl font-bold text-[#00ffc8]" style={{ textShadow: '0 0 20px rgba(0, 255, 200, 0.3)' }}>
+              0
+            </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-slate-600">
+            <CardTitle className="text-sm font-medium text-gray-400">
               Current Plan
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-slate-900">Free</div>
+            <div className="text-3xl font-bold text-white">Free</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Templates */}
       <div>
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Your Templates</h2>
+        <h2
+          className="text-lg font-semibold text-white mb-4"
+          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+        >
+          Your Templates
+        </h2>
 
         {!templates || templates.length === 0 ? (
-          <Card className="border-dashed">
+          <Card className="border-dashed border-[rgba(0,255,200,0.3)]">
             <CardContent className="flex flex-col items-center justify-center py-12">
-              <FileText className="h-12 w-12 text-slate-300 mb-4" />
-              <p className="text-slate-600 mb-4">You haven't created any templates yet.</p>
+              <FileText className="h-12 w-12 text-[#00ffc8]/30 mb-4" />
+              <p className="text-gray-400 mb-4">You haven&apos;t created any templates yet.</p>
               <Link href="/dashboard/new">
                 <Button>Create your first template</Button>
               </Link>
@@ -85,10 +97,10 @@ export default async function DashboardPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {templates.map((template) => (
-              <Card key={template.id} className="hover:shadow-lg transition-shadow">
+              <Card key={template.id} className="hover:shadow-[0_0_30px_rgba(0,255,200,0.15)] transition-all duration-300">
                 <CardHeader>
                   <CardTitle className="text-lg">{template.name}</CardTitle>
-                  <p className="text-sm text-slate-600">
+                  <p className="text-sm text-gray-400">
                     {template.description || 'No description'}
                   </p>
                 </CardHeader>
