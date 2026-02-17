@@ -9,7 +9,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { signupSchema, type SignupInput } from '@/lib/validations/auth'
-import { Loader2 } from 'lucide-react'
+import { Loader2, CheckCircle } from 'lucide-react'
 
 export function SignupForm() {
   const router = useRouter()
@@ -54,10 +54,11 @@ export function SignupForm() {
   if (success) {
     return (
       <div className="text-center space-y-4">
-        <div className="p-4 bg-green-50 rounded-lg">
-          <p className="text-green-800 font-medium">Check your email</p>
-          <p className="text-green-700 text-sm mt-1">
-            We've sent a verification link to your email address.
+        <div className="p-4 bg-[rgba(57,255,20,0.1)] border border-[rgba(57,255,20,0.2)] rounded-lg">
+          <CheckCircle className="h-8 w-8 text-[#39ff14] mx-auto mb-2" />
+          <p className="text-[#39ff14] font-medium">Check your email</p>
+          <p className="text-gray-400 text-sm mt-1">
+            We&apos;ve sent a verification link to your email address.
           </p>
         </div>
       </div>
@@ -67,7 +68,7 @@ export function SignupForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
-        <label htmlFor="fullName" className="block text-sm font-medium text-slate-700">
+        <label htmlFor="fullName" className="block text-sm font-medium text-gray-300 mb-1">
           Full Name
         </label>
         <Input
@@ -79,12 +80,12 @@ export function SignupForm() {
           placeholder="John Smith"
         />
         {errors.fullName && (
-          <p className="mt-1 text-sm text-red-600">{errors.fullName.message}</p>
+          <p className="mt-1 text-sm text-red-400">{errors.fullName.message}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+        <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
           Email
         </label>
         <Input
@@ -96,12 +97,12 @@ export function SignupForm() {
           placeholder="you@example.com"
         />
         {errors.email && (
-          <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+          <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+        <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
           Password
         </label>
         <Input
@@ -112,12 +113,12 @@ export function SignupForm() {
           className="mt-1"
         />
         {errors.password && (
-          <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+          <p className="mt-1 text-sm text-red-400">{errors.password.message}</p>
         )}
       </div>
 
       {error && (
-        <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg">
+        <div className="p-3 text-sm text-red-400 bg-[rgba(255,0,0,0.1)] border border-[rgba(255,0,0,0.2)] rounded-lg">
           {error}
         </div>
       )}
@@ -127,7 +128,7 @@ export function SignupForm() {
         Create account
       </Button>
 
-      <p className="text-center text-sm text-slate-600">
+      <p className="text-center text-sm text-gray-500">
         By signing up, you agree to our Terms of Service and Privacy Policy.
       </p>
     </form>

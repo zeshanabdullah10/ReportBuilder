@@ -46,7 +46,7 @@ export function ResetPasswordForm() {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+        <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
           New Password
         </label>
         <Input
@@ -57,12 +57,12 @@ export function ResetPasswordForm() {
           className="mt-1"
         />
         {errors.password && (
-          <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
+          <p className="mt-1 text-sm text-red-400">{errors.password.message}</p>
         )}
       </div>
 
       <div>
-        <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700">
+        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-1">
           Confirm Password
         </label>
         <Input
@@ -73,12 +73,12 @@ export function ResetPasswordForm() {
           className="mt-1"
         />
         {errors.confirmPassword && (
-          <p className="mt-1 text-sm text-red-600">{errors.confirmPassword.message}</p>
+          <p className="mt-1 text-sm text-red-400">{errors.confirmPassword.message}</p>
         )}
       </div>
 
       {error && (
-        <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg">
+        <div className="p-3 text-sm text-red-400 bg-[rgba(255,0,0,0.1)] border border-[rgba(255,0,0,0.2)] rounded-lg">
           {error}
         </div>
       )}

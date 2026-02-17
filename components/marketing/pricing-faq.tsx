@@ -31,28 +31,31 @@ export function PricingFAQ() {
 
   return (
     <section className="mt-20">
-      <h2 className="text-2xl font-bold text-slate-900 text-center mb-10">
+      <h2
+        className="text-2xl font-bold text-white text-center mb-10"
+        style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+      >
         Frequently Asked Questions
       </h2>
       <div className="max-w-3xl mx-auto space-y-4">
         {faqs.map((faq, index) => (
           <div
             key={index}
-            className="border border-slate-200 rounded-lg overflow-hidden"
+            className="bg-gradient-to-br from-[rgba(10,20,30,0.8)] to-[rgba(15,30,45,0.7)] border border-[rgba(0,255,200,0.15)] rounded-lg overflow-hidden transition-all duration-300 hover:border-[rgba(0,255,200,0.3)]"
           >
             <button
-              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-50 transition-colors"
+              className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-[rgba(0,255,200,0.03)] transition-colors"
               onClick={() => setOpenIndex(openIndex === index ? null : index)}
             >
-              <span className="font-medium text-slate-900">{faq.question}</span>
+              <span className="font-medium text-white">{faq.question}</span>
               <ChevronDown
-                className={`h-5 w-5 text-slate-500 transition-transform ${
+                className={`h-5 w-5 text-[#00ffc8] transition-transform duration-200 ${
                   openIndex === index ? 'rotate-180' : ''
                 }`}
               />
             </button>
             {openIndex === index && (
-              <div className="px-6 pb-4 text-slate-600">
+              <div className="px-6 pb-4 text-gray-400 border-t border-[rgba(0,255,200,0.1)] pt-4">
                 {faq.answer}
               </div>
             )}

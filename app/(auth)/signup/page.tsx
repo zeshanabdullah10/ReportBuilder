@@ -9,8 +9,13 @@ export const metadata = {
 export default function SignupPage() {
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900 text-center">Create an account</h1>
-      <p className="mt-2 text-slate-600 text-center">
+      <h1
+        className="text-2xl font-bold text-white text-center"
+        style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+      >
+        Create an account
+      </h1>
+      <p className="mt-2 text-gray-400 text-center">
         Start building professional reports for LabVIEW
       </p>
 
@@ -18,9 +23,9 @@ export default function SignupPage() {
         <SignupForm />
       </div>
 
-      <p className="mt-6 text-center text-sm text-slate-600">
+      <p className="mt-6 text-center text-sm text-gray-400">
         Already have an account?{' '}
-        <Link href="/login" className="text-primary-600 hover:text-primary-500 font-medium">
+        <Link href="/login" className="text-[#00ffc8] hover:text-[#39ff14] font-medium transition-colors">
           Sign in
         </Link>
       </p>

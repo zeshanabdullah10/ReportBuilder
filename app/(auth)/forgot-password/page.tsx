@@ -9,17 +9,22 @@ export const metadata = {
 export default function ForgotPasswordPage() {
   return (
     <div>
-      <h1 className="text-2xl font-bold text-slate-900 text-center">Forgot password?</h1>
-      <p className="mt-2 text-slate-600 text-center">
-        No worries, we'll send you reset instructions.
+      <h1
+        className="text-2xl font-bold text-white text-center"
+        style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+      >
+        Forgot password?
+      </h1>
+      <p className="mt-2 text-gray-400 text-center">
+        No worries, we&apos;ll send you reset instructions.
       </p>
 
       <div className="mt-8">
         <ForgotPasswordForm />
       </div>
 
-      <p className="mt-6 text-center text-sm text-slate-600">
-        <Link href="/login" className="text-primary-600 hover:text-primary-500 font-medium">
+      <p className="mt-6 text-center text-sm text-gray-400">
+        <Link href="/login" className="text-[#00ffc8] hover:text-[#39ff14] font-medium transition-colors">
           Back to sign in
         </Link>
       </p>

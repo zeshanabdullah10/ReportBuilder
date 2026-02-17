@@ -7,7 +7,7 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { forgotPasswordSchema, type ForgotPasswordInput } from '@/lib/validations/auth'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Mail } from 'lucide-react'
 
 export function ForgotPasswordForm() {
   const [error, setError] = useState<string | null>(null)
@@ -45,10 +45,11 @@ export function ForgotPasswordForm() {
   if (success) {
     return (
       <div className="text-center space-y-4">
-        <div className="p-4 bg-green-50 rounded-lg">
-          <p className="text-green-800 font-medium">Check your email</p>
-          <p className="text-green-700 text-sm mt-1">
-            We've sent a password reset link to your email address.
+        <div className="p-4 bg-[rgba(57,255,20,0.1)] border border-[rgba(57,255,20,0.2)] rounded-lg">
+          <Mail className="h-8 w-8 text-[#39ff14] mx-auto mb-2" />
+          <p className="text-[#39ff14] font-medium">Check your email</p>
+          <p className="text-gray-400 text-sm mt-1">
+            We&apos;ve sent a password reset link to your email address.
           </p>
         </div>
       </div>
@@ -57,12 +58,12 @@ export function ForgotPasswordForm() {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-      <p className="text-sm text-slate-600">
-        Enter your email address and we'll send you a link to reset your password.
+      <p className="text-sm text-gray-400">
+        Enter your email address and we&apos;ll send you a link to reset your password.
       </p>
 
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+        <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
           Email
         </label>
         <Input
@@ -74,12 +75,12 @@ export function ForgotPasswordForm() {
           placeholder="you@example.com"
         />
         {errors.email && (
-          <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
+          <p className="mt-1 text-sm text-red-400">{errors.email.message}</p>
         )}
       </div>
 
       {error && (
-        <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg">
+        <div className="p-3 text-sm text-red-400 bg-[rgba(255,0,0,0.1)] border border-[rgba(255,0,0,0.2)] rounded-lg">
           {error}
         </div>
       )}

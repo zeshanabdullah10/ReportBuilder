@@ -18,7 +18,12 @@ export default async function SettingsPage() {
 
   return (
     <div className="p-8 max-w-2xl">
-      <h1 className="text-2xl font-bold text-slate-900 mb-8">Settings</h1>
+      <h1
+        className="text-2xl font-bold text-white mb-8"
+        style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+      >
+        Settings
+      </h1>
 
       <div className="space-y-6">
         {/* Profile Settings */}
@@ -32,7 +37,7 @@ export default async function SettingsPage() {
           <CardContent>
             <form className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Full Name
                 </label>
                 <Input
@@ -42,7 +47,7 @@ export default async function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Company
                 </label>
                 <Input
@@ -52,7 +57,7 @@ export default async function SettingsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-gray-300 mb-1">
                   Email
                 </label>
                 <Input
@@ -61,7 +66,7 @@ export default async function SettingsPage() {
                   defaultValue={user?.email ?? ''}
                   disabled
                 />
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-gray-500">
                   Email cannot be changed
                 </p>
               </div>
@@ -81,8 +86,8 @@ export default async function SettingsPage() {
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium text-slate-900">Free Plan</p>
-                <p className="text-sm text-slate-600">1 template, watermarked PDFs</p>
+                <p className="font-medium text-white">Free Plan</p>
+                <p className="text-sm text-gray-400">1 template, watermarked PDFs</p>
               </div>
               <Button variant="outline">Upgrade to Pro</Button>
             </div>

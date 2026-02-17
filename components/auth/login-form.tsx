@@ -23,7 +23,7 @@ export function LoginForm() {
   return (
     <form action={formAction} className="space-y-6">
       <div>
-        <label htmlFor="email" className="block text-sm font-medium text-slate-700">
+        <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
           Email
         </label>
         <Input
@@ -38,7 +38,7 @@ export function LoginForm() {
       </div>
 
       <div>
-        <label htmlFor="password" className="block text-sm font-medium text-slate-700">
+        <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
           Password
         </label>
         <Input
@@ -52,7 +52,7 @@ export function LoginForm() {
       </div>
 
       {state?.error && (
-        <div className="p-3 text-sm text-red-600 bg-red-50 rounded-lg">
+        <div className="p-3 text-sm text-red-400 bg-[rgba(255,0,0,0.1)] border border-[rgba(255,0,0,0.2)] rounded-lg">
           {state.error}
         </div>
       )}
@@ -60,7 +60,7 @@ export function LoginForm() {
       <SubmitButton />
 
       <div className="text-center text-sm">
-        <Link href="/forgot-password" className="text-primary-600 hover:text-primary-500">
+        <Link href="/forgot-password" className="text-[#00ffc8] hover:text-[#39ff14] transition-colors">
           Forgot your password?
         </Link>
       </div>

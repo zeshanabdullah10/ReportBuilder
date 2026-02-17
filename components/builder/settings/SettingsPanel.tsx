@@ -1,0 +1,83 @@
+'use client'
+
+import React from 'react'
+import { useEditor } from '@craftjs/core'
+import { Trash2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+
+export function SettingsPanel() {
+  const { selected, actions, query } = useEditor((state, query) => {
+    const [currentNodeId] = state.events.selected
+    let selected = null
+
+    if (currentNodeId) {
+      const node = state.nodes[currentNodeId]
+      // A node is the root if it has no parent
+      const isRoot = !node.data.parent
+      // Use Craft.js built-in isDeletable check
+      const isDeletable = query.node(currentNodeId).isDeletable()
+
+      selected = {
+        id: currentNodeId,
+        name: node.data.custom?.displayName || node.data.displayName,
+        settings: node.related?.settings,
+        isDeletable: isDeletable && !isRoot, // Never allow deleting root
+        props: node.data.props,
+      }
+    }
+
+    return { selected }
+  })
+
+  const handleDelete = () => {
+    if (selected && selected.isDeletable) {
+      // Double-check using query before deleting
+      if (query.node(selected.id).isDeletable()) {
+        actions.delete(selected.id)
+      }
+    }
+  }
+
+  return (
+    <div className="p-4">
+      <h3
+        className="text-sm font-semibold text-[#00ffc8] mb-4 uppercase tracking-wider"
+        style={{ fontFamily: 'JetBrains Mono, monospace' }}
+      >
+        Properties
+      </h3>
+
+      {!selected ? (
+        <p className="text-gray-500 text-sm">
+          Click on a component to edit its properties
+        </p>
+      ) : (
+        <div className="space-y-4">
+          <div className="pb-3 border-b border-[rgba(0,255,200,0.1)]">
+            <span className="text-white font-medium">{selected.name}</span>
+          </div>
+
+          {selected.settings && (
+            <div className="space-y-4">
+              {React.createElement(selected.settings)}
+            </div>
+          )}
+
+          {selected.isDeletable && (
+            <div className="pt-4 border-t border-[rgba(0,255,200,0.1)]">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleDelete}
+                className="w-full text-red-400 border-red-400/30 hover:bg-red-400/10"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Component
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
