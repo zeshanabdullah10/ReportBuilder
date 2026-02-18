@@ -36,6 +36,7 @@ interface DragState {
   startY: number
   startLeft: number
   startTop: number
+  hasMoved: boolean
 }
 
 export function ResizableBox({
@@ -71,6 +72,7 @@ export function ResizableBox({
     startY: 0,
     startLeft: 0,
     startTop: 0,
+    hasMoved: false,
   })
 
   const [currentPos, setCurrentPos] = useState({ x, y, width, height })
@@ -122,28 +124,45 @@ export function ResizableBox({
 
   const handleDragStart = useCallback(
     (e: React.MouseEvent) => {
-      e.preventDefault()
-      e.stopPropagation()
+      // Only handle left mouse button
+      if (e.button !== 0) return
 
+      // Don't interfere with resize handles or interactive elements
+      const target = e.target as HTMLElement
+      if (
+        target.closest('.resize-handle') ||
+        target.tagName === 'INPUT' ||
+        target.tagName === 'TEXTAREA' ||
+        target.closest('button')
+      ) {
+        return
+      }
+
+      // Store the starting position but don't prevent default yet
+      // This allows Craft.js to handle selection if needed
       setDragState({
         isDragging: true,
         startX: e.clientX,
         startY: e.clientY,
         startLeft: currentPos.x,
         startTop: currentPos.y,
+        hasMoved: false,
       })
 
-      setActiveDrag({
-        nodeId,
-        startX: currentPos.x,
-        startY: currentPos.y,
-        currentX: currentPos.x,
-        currentY: currentPos.y,
-        width: currentPos.width as number,
-        height: currentPos.height as number,
-      })
+      // If already selected, start tracking for drag immediately
+      if (selected) {
+        setActiveDrag({
+          nodeId,
+          startX: currentPos.x,
+          startY: currentPos.y,
+          currentX: currentPos.x,
+          currentY: currentPos.y,
+          width: currentPos.width as number,
+          height: currentPos.height as number,
+        })
+      }
     },
-    [currentPos, nodeId, setActiveDrag]
+    [currentPos, nodeId, selected, setActiveDrag]
   )
 
   // Resize mouse move handler
@@ -248,6 +267,19 @@ export function ResizableBox({
       const deltaX = e.clientX - dragState.startX
       const deltaY = e.clientY - dragState.startY
 
+      // Require minimum movement before actually dragging (to distinguish from click)
+      const minMovement = 3
+      const hasMovedEnough = Math.abs(deltaX) >= minMovement || Math.abs(deltaY) >= minMovement
+
+      if (!hasMovedEnough && !dragState.hasMoved) {
+        return
+      }
+
+      // First time moving - now we can prevent default behavior
+      if (!dragState.hasMoved) {
+        setDragState((prev) => ({ ...prev, hasMoved: true }))
+      }
+
       const newX = snapToGrid(dragState.startLeft + deltaX)
       const newY = snapToGrid(dragState.startTop + deltaY)
 
@@ -269,11 +301,14 @@ export function ResizableBox({
     }
 
     const handleMouseUp = () => {
-      onPositionChange({
-        x: currentPos.x,
-        y: currentPos.y,
-      })
-      setDragState((prev) => ({ ...prev, isDragging: false }))
+      // Only save position if we actually moved
+      if (dragState.hasMoved) {
+        onPositionChange({
+          x: currentPos.x,
+          y: currentPos.y,
+        })
+      }
+      setDragState((prev) => ({ ...prev, isDragging: false, hasMoved: false }))
       setActiveDrag(null)
     }
 
@@ -315,14 +350,24 @@ export function ResizableBox({
         height: `${currentPos.height}px`,
         userSelect: isActive ? 'none' : 'auto',
         zIndex: selected ? 10 : 1,
-        cursor: selected ? 'move' : 'pointer',
       }}
-      onMouseDown={selected ? handleDragStart : undefined}
     >
+      {/* Drag handle overlay - only when selected, covers everything except resize handles */}
+      {selected && (
+        <div
+          className="absolute inset-0 z-10 cursor-move"
+          onMouseDown={handleDragStart}
+          style={{ background: 'transparent' }}
+        />
+      )}
+
       {/* Content */}
       <div
         className="relative w-full h-full"
-        style={{ pointerEvents: isActive ? 'none' : 'auto' }}
+        style={{
+          pointerEvents: selected ? 'none' : 'auto',
+          cursor: selected ? 'move' : 'pointer'
+        }}
       >
         {children}
       </div>
@@ -333,7 +378,7 @@ export function ResizableBox({
           {(Object.keys(handlePositions) as ResizeHandle[]).map((handle) => (
             <div
               key={handle}
-              className="absolute bg-[#00ffc8] border border-[#0a0f14] z-20"
+              className="resize-handle absolute bg-[#00ffc8] border border-[#0a0f14] z-20"
               style={{
                 ...handlePositions[handle],
                 width: handle === 'n' || handle === 's' ? 24 : 8,
