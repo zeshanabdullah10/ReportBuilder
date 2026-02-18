@@ -4,6 +4,7 @@ import { useNode } from '@craftjs/core'
 import { ChartSettings } from '../settings/ChartSettings'
 import { useBuilderStore } from '@/lib/stores/builder-store'
 import { hasBindings, resolveBindingOrValue } from '@/lib/utils/binding'
+import { ResizableBox } from '../layout/ResizableBox'
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -28,6 +29,10 @@ interface ChartProps {
   dataPoints?: string
   labels?: string
   binding?: string
+  x?: number
+  y?: number
+  width?: number
+  height?: number
 }
 
 interface ChartDataPoint {
@@ -42,10 +47,20 @@ export const Chart = ({
   dataPoints = '65, 59, 80, 81, 56',
   labels = '',
   binding = '',
+  x = 0,
+  y = 0,
+  width = 400,
+  height = 300,
 }: ChartProps) => {
   const {
+    id,
     connectors: { connect, drag },
-  } = useNode()
+    selected,
+    actions: { setProp },
+  } = useNode((node) => ({
+    id: node.id,
+    selected: node.events.selected,
+  }))
 
   const { isPreviewMode, sampleData } = useBuilderStore()
 
@@ -141,16 +156,37 @@ export const Chart = ({
 
   const ChartComponent = chartType === 'line' ? Line : chartType === 'pie' ? Pie : Bar
 
+  const handlePositionChange = (newPos: { x?: number; y?: number; width?: number; height?: number }) => {
+    setProp((props: ChartProps) => {
+      if (newPos.x !== undefined) props.x = newPos.x
+      if (newPos.y !== undefined) props.y = newPos.y
+      if (newPos.width !== undefined) props.width = newPos.width
+      if (newPos.height !== undefined) props.height = newPos.height
+    })
+  }
+
   return (
-    <div
-      ref={(ref) => {
-        if (ref) connect(drag(ref))
-      }}
-      style={{ width: '100%', minHeight: '200px', cursor: 'pointer' }}
-      className="bg-white p-4 rounded-lg"
+    <ResizableBox
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      minWidth={200}
+      minHeight={150}
+      selected={selected}
+      nodeId={id}
+      onPositionChange={handlePositionChange}
     >
-      <ChartComponent data={chartConfig} options={options} />
-    </div>
+      <div
+        ref={(ref) => {
+          if (ref) connect(drag(ref))
+        }}
+        style={{ width: '100%', height: '100%', minHeight: '200px', cursor: 'pointer' }}
+        className="bg-white p-4 rounded-lg"
+      >
+        <ChartComponent data={chartConfig} options={options} />
+      </div>
+    </ResizableBox>
   )
 }
 
@@ -163,6 +199,10 @@ Chart.craft = {
     dataPoints: '65, 59, 80, 81, 56',
     labels: '',
     binding: '',
+    x: 0,
+    y: 0,
+    width: 400,
+    height: 300,
   },
   related: {
     settings: ChartSettings,

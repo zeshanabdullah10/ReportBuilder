@@ -2,6 +2,7 @@
 
 import { useNode } from '@craftjs/core'
 import { ImageSettings } from '../settings/ImageSettings'
+import { ResizableBox } from '../layout/ResizableBox'
 
 interface ImageProps {
   src?: string
@@ -9,6 +10,8 @@ interface ImageProps {
   width?: string
   height?: string
   objectFit?: 'cover' | 'contain' | 'fill'
+  x?: number
+  y?: number
 }
 
 export const Image = ({
@@ -17,29 +20,61 @@ export const Image = ({
   width = '100%',
   height = 'auto',
   objectFit = 'cover',
+  x = 0,
+  y = 0,
 }: ImageProps) => {
   const {
+    id,
     connectors: { connect, drag },
-  } = useNode()
+    selected,
+    actions: { setProp },
+  } = useNode((node) => ({
+    id: node.id,
+    selected: node.events.selected,
+  }))
+
+  // Use fixed dimensions for ResizableBox (component-level width/height are internal image dimensions)
+  const boxWidth = 300
+  const boxHeight = 200
+
+  const handlePositionChange = (newPos: { x?: number; y?: number; width?: number; height?: number }) => {
+    setProp((props: ImageProps) => {
+      if (newPos.x !== undefined) props.x = newPos.x
+      if (newPos.y !== undefined) props.y = newPos.y
+      // Note: width/height in props control internal image sizing, not box size
+    })
+  }
 
   return (
-    <div
-      ref={(ref) => {
-        if (ref) connect(drag(ref))
-      }}
-      style={{ width, height, cursor: 'pointer' }}
+    <ResizableBox
+      x={x}
+      y={y}
+      width={boxWidth}
+      height={boxHeight}
+      minWidth={50}
+      minHeight={50}
+      selected={selected}
+      nodeId={id}
+      onPositionChange={handlePositionChange}
     >
-      <img
-        src={src}
-        alt={alt}
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit,
-          display: 'block',
+      <div
+        ref={(ref) => {
+          if (ref) connect(drag(ref))
         }}
-      />
-    </div>
+        style={{ width: '100%', height: '100%', cursor: 'pointer' }}
+      >
+        <img
+          src={src}
+          alt={alt}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit,
+            display: 'block',
+          }}
+        />
+      </div>
+    </ResizableBox>
   )
 }
 
@@ -51,6 +86,10 @@ Image.craft = {
     width: '100%',
     height: 'auto',
     objectFit: 'cover',
+    x: 0,
+    y: 0,
+    boxWidth: 300,
+    boxHeight: 200,
   },
   related: {
     settings: ImageSettings,

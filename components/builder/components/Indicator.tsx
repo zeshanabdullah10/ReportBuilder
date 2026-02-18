@@ -4,6 +4,7 @@ import { useNode } from '@craftjs/core'
 import { IndicatorSettings } from '../settings/IndicatorSettings'
 import { useBuilderStore } from '@/lib/stores/builder-store'
 import { hasBindings, resolveBindingOrValue } from '@/lib/utils/binding'
+import { ResizableBox } from '../layout/ResizableBox'
 import { CheckCircle, XCircle, AlertCircle, MinusCircle } from 'lucide-react'
 
 export type IndicatorStatus = 'pass' | 'fail' | 'warning' | 'neutral'
@@ -15,6 +16,10 @@ export interface IndicatorProps {
   failLabel?: string
   warningLabel?: string
   binding?: string
+  x?: number
+  y?: number
+  width?: number
+  height?: number
 }
 
 const statusConfig = {
@@ -77,12 +82,19 @@ export const Indicator = ({
   failLabel = 'FAIL',
   warningLabel = 'WARNING',
   binding = '',
+  x = 0,
+  y = 0,
+  width = 120,
+  height = 44,
 }: IndicatorProps) => {
   const {
+    id,
     connectors: { connect, drag },
     selected,
     hovered,
+    actions: { setProp },
   } = useNode((node) => ({
+    id: node.id,
     selected: node.events.selected,
     hovered: node.events.hovered,
   }))
@@ -117,22 +129,47 @@ export const Indicator = ({
     }
   }
 
+  const handlePositionChange = (newPos: { x?: number; y?: number; width?: number; height?: number }) => {
+    setProp((props: IndicatorProps) => {
+      if (newPos.x !== undefined) props.x = newPos.x
+      if (newPos.y !== undefined) props.y = newPos.y
+      if (newPos.width !== undefined) props.width = newPos.width
+      if (newPos.height !== undefined) props.height = newPos.height
+    })
+  }
+
   return (
-    <div
-      ref={(ref) => {
-        if (ref) connect(drag(ref))
-      }}
-      className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 ${config.bgColor} ${config.borderColor} transition-all cursor-pointer`}
-      style={{
-        outline: selected ? '2px solid #00ffc8' : hovered ? '1px dashed rgba(0,255,200,0.5)' : 'none',
-        outlineOffset: '4px',
-      }}
+    <ResizableBox
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      minWidth={80}
+      minHeight={36}
+      selected={selected}
+      nodeId={id}
+      onPositionChange={handlePositionChange}
     >
-      <Icon className={`w-5 h-5 ${config.textColor}`} />
-      <span className={`font-semibold text-sm ${config.textColor}`} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
-        {getDisplayLabel()}
-      </span>
-    </div>
+      <div
+        ref={(ref) => {
+          if (ref) connect(drag(ref))
+        }}
+        className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 ${config.bgColor} ${config.borderColor} transition-all cursor-pointer`}
+        style={{
+          outline: selected ? '2px solid #00ffc8' : hovered ? '1px dashed rgba(0,255,200,0.5)' : 'none',
+          outlineOffset: '4px',
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          justifyContent: 'center',
+        }}
+      >
+        <Icon className={`w-5 h-5 ${config.textColor}`} />
+        <span className={`font-semibold text-sm ${config.textColor}`} style={{ fontFamily: 'JetBrains Mono, monospace' }}>
+          {getDisplayLabel()}
+        </span>
+      </div>
+    </ResizableBox>
   )
 }
 
@@ -145,6 +182,10 @@ Indicator.craft = {
     failLabel: 'FAIL',
     warningLabel: 'WARNING',
     binding: '',
+    x: 0,
+    y: 0,
+    width: 120,
+    height: 44,
   },
   related: {
     settings: IndicatorSettings,
