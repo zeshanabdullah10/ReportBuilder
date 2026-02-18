@@ -40,6 +40,12 @@ export const Page = ({
   const width = effectivePageSize === 'Custom' ? (customWidth || 794) : preset.width
   const height = effectivePageSize === 'Custom' ? (customHeight || 1123) : preset.height
 
+  // Calculate content area dimensions (excluding padding)
+  const contentWidth = width - (padding * 2)
+  const contentHeight = height - (padding * 2)
+  const centerX = contentWidth / 2
+  const centerY = contentHeight / 2
+
   return (
     <div className="flex justify-center py-8">
       <div
@@ -67,6 +73,46 @@ export const Page = ({
         {!isPreviewMode && (
           <div className="absolute -top-6 left-0 text-xs text-[#00ffc8]/60 font-mono">
             {preset.label.split(' ')[0]} • {width}×{height}px
+          </div>
+        )}
+
+        {/* Page guides - center lines and thirds (only in edit mode) */}
+        {!isPreviewMode && (
+          <div className="absolute inset-0 pointer-events-none" style={{ padding: `${padding}px` }}>
+            {/* Vertical center line */}
+            <div
+              className="absolute top-0 bottom-0 w-px"
+              style={{
+                left: padding + centerX,
+                background: 'linear-gradient(to bottom, rgba(0,255,200,0.15), rgba(0,255,200,0.3), rgba(0,255,200,0.15))',
+              }}
+            />
+            {/* Horizontal center line */}
+            <div
+              className="absolute left-0 right-0 h-px"
+              style={{
+                top: padding + centerY,
+                background: 'linear-gradient(to right, rgba(0,255,200,0.15), rgba(0,255,200,0.3), rgba(0,255,200,0.15))',
+              }}
+            />
+            {/* Vertical third lines */}
+            <div
+              className="absolute top-0 bottom-0 w-px bg-[rgba(0,255,200,0.08)]"
+              style={{ left: padding + contentWidth / 3 }}
+            />
+            <div
+              className="absolute top-0 bottom-0 w-px bg-[rgba(0,255,200,0.08)]"
+              style={{ left: padding + (contentWidth * 2) / 3 }}
+            />
+            {/* Horizontal third lines */}
+            <div
+              className="absolute left-0 right-0 h-px bg-[rgba(0,255,200,0.08)]"
+              style={{ top: padding + contentHeight / 3 }}
+            />
+            <div
+              className="absolute left-0 right-0 h-px bg-[rgba(0,255,200,0.08)]"
+              style={{ top: padding + (contentHeight * 2) / 3 }}
+            />
           </div>
         )}
 
