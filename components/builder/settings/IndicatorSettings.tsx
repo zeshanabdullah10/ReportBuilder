@@ -2,6 +2,7 @@
 
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
+import { PositionSettings } from './PositionSettings'
 import type { IndicatorStatus } from '../components/Indicator'
 
 export function IndicatorSettings() {
@@ -97,6 +98,10 @@ export function IndicatorSettings() {
             Bind to a boolean or string value. Use "pass", "fail", "warning", or true/false.
           </p>
         </div>
+      </div>
+
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <PositionSettings />
       </div>
     </div>
   )

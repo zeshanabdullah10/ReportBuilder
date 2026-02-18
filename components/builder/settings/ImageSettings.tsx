@@ -2,6 +2,7 @@
 
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
+import { PositionSettings } from './PositionSettings'
 
 export function ImageSettings() {
   const {
@@ -30,6 +31,10 @@ export function ImageSettings() {
           value={alt}
           onChange={(e) => setProp((props: any) => (props.alt = e.target.value))}
         />
+      </div>
+
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <PositionSettings />
       </div>
     </div>
   )

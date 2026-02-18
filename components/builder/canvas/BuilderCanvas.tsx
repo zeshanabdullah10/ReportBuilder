@@ -15,6 +15,8 @@ import { Indicator } from '../components/Indicator'
 import { Toolbox } from '../toolbox/Toolbox'
 import { SettingsPanel } from '../settings/SettingsPanel'
 import { BuilderTopbar } from '../topbar/BuilderTopbar'
+import { GridOverlay } from '../layout/GridOverlay'
+import { AlignmentGuides } from '../layout/AlignmentGuides'
 import { Eye } from 'lucide-react'
 
 // Import the oscilloscope theme CSS
@@ -85,6 +87,9 @@ export function BuilderCanvas({ template }: BuilderCanvasProps) {
           {/* Center - Canvas */}
           <main className={`flex-1 overflow-auto relative bg-oscilloscope-grid ${isPreviewMode ? '' : ''}`}>
             <div className="absolute inset-0 bg-mesh-gradient opacity-30 pointer-events-none" />
+
+            {!isPreviewMode && <GridOverlay />}
+            <AlignmentGuides />
 
             {/* Preview Mode Indicator */}
             {isPreviewMode && (

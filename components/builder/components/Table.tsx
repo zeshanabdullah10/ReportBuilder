@@ -4,6 +4,7 @@ import { useNode } from '@craftjs/core'
 import { TableSettings } from '../settings/TableSettings'
 import { useBuilderStore } from '@/lib/stores/builder-store'
 import { hasBindings, resolveBinding, resolveBindingOrValue } from '@/lib/utils/binding'
+import { ResizableBox } from '../layout/ResizableBox'
 
 interface TableProps {
   columns?: string[]
@@ -12,6 +13,10 @@ interface TableProps {
   rowColor?: string
   borderColor?: string
   binding?: string
+  x?: number
+  y?: number
+  width?: number
+  height?: number
 }
 
 interface TableRow {
@@ -25,10 +30,20 @@ export const Table = ({
   rowColor = '#ffffff',
   borderColor = '#e0e0e0',
   binding = '',
+  x = 0,
+  y = 0,
+  width = 400,
+  height = 150,
 }: TableProps) => {
   const {
-    connectors: { connect, drag },
-  } = useNode()
+    id,
+    connectors: { connect },
+    selected,
+    actions: { setProp },
+  } = useNode((node) => ({
+    id: node.id,
+    selected: node.events.selected,
+  }))
 
   const { isPreviewMode, sampleData } = useBuilderStore()
 
@@ -92,42 +107,62 @@ export const Table = ({
     return rowColor
   }
 
+  const handlePositionChange = (newPos: { x?: number; y?: number; width?: number; height?: number }) => {
+    setProp((props: TableProps) => {
+      if (newPos.x !== undefined) props.x = newPos.x
+      if (newPos.y !== undefined) props.y = newPos.y
+      if (newPos.width !== undefined) props.width = newPos.width
+      if (newPos.height !== undefined) props.height = newPos.height
+    })
+  }
+
   return (
-    <div
-      ref={(ref) => {
-        if (ref) connect(drag(ref))
-      }}
-      className="overflow-x-auto cursor-pointer"
+    <ResizableBox
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      minWidth={100}
+      minHeight={80}
+      selected={selected}
+      nodeId={id}
+      onPositionChange={handlePositionChange}
+      connectRef={(ref) => { if (ref) connect(ref) }}
     >
-      <table className="w-full border-collapse" style={{ fontSize: '14px' }}>
-        <thead>
-          <tr style={{ background: getHeaderColor() }}>
-            {displayColumns.map((col, i) => (
-              <th
-                key={i}
-                style={{ border: `1px solid ${borderColor}`, padding: '8px', textAlign: 'left', color: '#fff' }}
-              >
-                {col}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {tableRows.map((row, i) => (
-            <tr key={i} style={{ background: i % 2 === 0 ? getRowColor() : '#f5f5f5' }}>
-              {displayColumns.map((col, j) => (
-                <td
-                  key={j}
-                  style={{ border: `1px solid ${borderColor}`, padding: '8px', color: '#333' }}
+      <div
+        className="overflow-x-auto"
+        style={{ width: '100%', height: '100%' }}
+      >
+        <table className="w-full border-collapse" style={{ fontSize: '14px' }}>
+          <thead>
+            <tr style={{ background: getHeaderColor() }}>
+              {displayColumns.map((col, i) => (
+                <th
+                  key={i}
+                  style={{ border: `1px solid ${borderColor}`, padding: '8px', textAlign: 'left', color: '#fff' }}
                 >
-                  {row[col] ?? ''}
-                </td>
+                  {col}
+                </th>
               ))}
             </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+          </thead>
+          <tbody>
+            {tableRows.map((row, i) => (
+              <tr key={i} style={{ background: i % 2 === 0 ? getRowColor() : '#f5f5f5' }}>
+                {displayColumns.map((col, j) => (
+                  <td
+                    key={j}
+                    style={{ border: `1px solid ${borderColor}`, padding: '8px', color: '#333' }}
+                  >
+                    {row[col] ?? ''}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </ResizableBox>
   )
 }
 
@@ -140,6 +175,10 @@ Table.craft = {
     rowColor: '#ffffff',
     borderColor: '#e0e0e0',
     binding: '',
+    x: 0,
+    y: 0,
+    width: 400,
+    height: 150,
   },
   related: {
     settings: TableSettings,

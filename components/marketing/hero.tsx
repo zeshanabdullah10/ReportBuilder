@@ -3,6 +3,30 @@
 import Link from 'next/link'
 import { ArrowRight, Layers, FileCode, Cpu, ChevronDown } from 'lucide-react'
 
+// Pre-generated random positions for floating data points (avoid hydration mismatch)
+const floatingPoints = [
+  { left: 16.26, top: 82.13, duration: 2.54, delay: 0.97 },
+  { left: 63.32, top: 34.58, duration: 2.36, delay: 1.81 },
+  { left: 45.21, top: 67.89, duration: 3.12, delay: 0.42 },
+  { left: 12.45, top: 23.67, duration: 2.89, delay: 1.23 },
+  { left: 78.91, top: 56.34, duration: 2.67, delay: 0.65 },
+  { left: 34.56, top: 91.23, duration: 3.45, delay: 1.56 },
+  { left: 89.12, top: 12.45, duration: 2.23, delay: 0.34 },
+  { left: 23.78, top: 78.91, duration: 3.01, delay: 1.89 },
+  { left: 56.34, top: 45.67, duration: 2.78, delay: 0.78 },
+  { left: 67.89, top: 89.12, duration: 3.34, delay: 1.12 },
+  { left: 9.87, top: 34.56, duration: 2.56, delay: 0.56 },
+  { left: 41.23, top: 9.87, duration: 3.23, delay: 1.67 },
+  { left: 74.56, top: 63.21, duration: 2.45, delay: 0.23 },
+  { left: 28.91, top: 52.78, duration: 3.67, delay: 1.45 },
+  { left: 85.34, top: 71.23, duration: 2.89, delay: 0.89 },
+  { left: 19.67, top: 95.34, duration: 3.12, delay: 1.34 },
+  { left: 52.12, top: 28.45, duration: 2.34, delay: 0.67 },
+  { left: 93.45, top: 47.89, duration: 3.56, delay: 1.78 },
+  { left: 36.78, top: 16.23, duration: 2.12, delay: 0.45 },
+  { left: 61.23, top: 84.56, duration: 3.78, delay: 1.01 },
+]
+
 export function Hero() {
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-[#0a0f14]">
@@ -24,15 +48,15 @@ export function Hero() {
 
       {/* Floating data points */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(20)].map((_, i) => (
+        {floatingPoints.map((point, i) => (
           <div
             key={i}
             className="absolute w-1 h-1 bg-[#00ffc8] rounded-full opacity-30"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animation: `pulse ${2 + Math.random() * 3}s ease-in-out infinite`,
-              animationDelay: `${Math.random() * 2}s`,
+              left: `${point.left}%`,
+              top: `${point.top}%`,
+              animation: `pulse ${point.duration}s ease-in-out infinite`,
+              animationDelay: `${point.delay}s`,
             }}
           />
         ))}
