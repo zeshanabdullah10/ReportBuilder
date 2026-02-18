@@ -18,13 +18,10 @@ interface BuilderState {
   isPreviewMode: boolean
   hasUnsavedChanges: boolean
 
-  // Snap and drag state
+  // NEW: Snap and drag state
   snapEnabled: boolean
   gridSize: number
   activeDrag: ActiveDrag | null
-
-  // Drop position for new components
-  dropPosition: { x: number; y: number } | null
 
   setTemplateId: (id: string) => void
   setTemplateName: (name: string) => void
@@ -34,13 +31,10 @@ interface BuilderState {
   setHasUnsavedChanges: (value: boolean) => void
   reset: () => void
 
-  // Snap and drag actions
+  // NEW: Snap and drag actions
   toggleSnap: () => void
   setActiveDrag: (drag: ActiveDrag | null) => void
   updateDragPosition: (x: number, y: number) => void
-
-  // Drop position actions
-  setDropPosition: (pos: { x: number; y: number } | null) => void
 }
 
 const initialState = {
@@ -53,7 +47,6 @@ const initialState = {
   snapEnabled: true,
   gridSize: 8,
   activeDrag: null,
-  dropPosition: null,
 }
 
 export const useBuilderStore = create<BuilderState>()((set) => ({
@@ -67,13 +60,10 @@ export const useBuilderStore = create<BuilderState>()((set) => ({
   setHasUnsavedChanges: (value) => set({ hasUnsavedChanges: value }),
   reset: () => set(initialState),
 
-  // Snap and drag
+  // NEW
   toggleSnap: () => set((state) => ({ snapEnabled: !state.snapEnabled })),
   setActiveDrag: (drag) => set({ activeDrag: drag }),
   updateDragPosition: (x, y) => set((state) => ({
     activeDrag: state.activeDrag ? { ...state.activeDrag, currentX: x, currentY: y } : null,
   })),
-
-  // Drop position
-  setDropPosition: (pos) => set({ dropPosition: pos }),
 }))
