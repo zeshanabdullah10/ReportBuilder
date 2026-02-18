@@ -3,7 +3,7 @@
 import { useEditor } from '@craftjs/core'
 import { useBuilderStore } from '@/lib/stores/builder-store'
 import { Button } from '@/components/ui/button'
-import { Save, Eye, EyeOff, Undo, Redo, ArrowLeft, Trash2 } from 'lucide-react'
+import { Save, Eye, EyeOff, Undo, Redo, ArrowLeft, Trash2, Magnet } from 'lucide-react'
 import { useState } from 'react'
 import Link from 'next/link'
 import { SampleDataLoader } from './SampleDataLoader'
@@ -18,6 +18,8 @@ export function BuilderTopbar() {
     togglePreviewMode,
     setHasUnsavedChanges,
     sampleData,
+    snapEnabled,
+    toggleSnap,
   } = useBuilderStore()
   const [isSaving, setIsSaving] = useState(false)
 
@@ -134,6 +136,17 @@ export function BuilderTopbar() {
           disabled={isPreviewMode}
         >
           <Trash2 className="w-4 h-4" />
+        </Button>
+
+        <Button
+          variant={snapEnabled ? 'primary' : 'ghost'}
+          size="icon"
+          onClick={toggleSnap}
+          title={snapEnabled ? 'Disable snap to grid' : 'Enable snap to grid'}
+          disabled={isPreviewMode}
+          className={snapEnabled ? 'bg-[#00ffc8] text-[#0a0f14]' : ''}
+        >
+          <Magnet className="w-4 h-4" />
         </Button>
 
         <Button
