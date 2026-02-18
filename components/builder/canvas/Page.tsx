@@ -24,6 +24,7 @@ export const Page = ({ background = 'transparent', padding = 40, children }: Pag
       ref={(ref) => {
         if (ref) connect(ref)
       }}
+      data-craft-page="true"
       style={{
         position: 'relative',
         background,

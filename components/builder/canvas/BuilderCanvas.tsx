@@ -17,6 +17,7 @@ import { SettingsPanel } from '../settings/SettingsPanel'
 import { BuilderTopbar } from '../topbar/BuilderTopbar'
 import { GridOverlay } from '../layout/GridOverlay'
 import { AlignmentGuides } from '../layout/AlignmentGuides'
+import { DropPositionTracker } from '../layout/DropPositionTracker'
 import { Eye } from 'lucide-react'
 
 // Import the oscilloscope theme CSS
@@ -74,6 +75,7 @@ export function BuilderCanvas({ template }: BuilderCanvasProps) {
         }}
         onNodesChange={handleNodesChange}
       >
+        <DropPositionTracker />
         <BuilderTopbar />
 
         <div className="flex flex-1 overflow-hidden">
