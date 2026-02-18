@@ -10,8 +10,9 @@ interface TextProps {
   text?: string
   fontSize?: number
   fontWeight?: string
+  fontFamily?: string
   color?: string
-  textAlign?: 'left' | 'center' | 'right'
+  textAlign?: 'left' | 'center' | 'right' | 'justify'
   binding?: string
   x?: number
   y?: number
@@ -23,6 +24,7 @@ export const Text = ({
   text = 'Edit this text',
   fontSize = 16,
   fontWeight = 'normal',
+  fontFamily = 'inherit',
   color = '#000000',
   textAlign = 'left',
   binding = '',
@@ -105,6 +107,7 @@ export const Text = ({
         style={{
           fontSize: `${fontSize}px`,
           fontWeight,
+          fontFamily,
           color: getDisplayColor(),
           textAlign,
           margin: 0,
@@ -132,6 +135,7 @@ Text.craft = {
     text: 'Edit this text',
     fontSize: 16,
     fontWeight: 'normal',
+    fontFamily: 'inherit',
     color: '#000000',
     textAlign: 'left',
     binding: '',

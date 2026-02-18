@@ -2,6 +2,7 @@
 
 import { useNode } from '@craftjs/core'
 import { PageSettings } from '../settings/PageSettings'
+import { DropIndicator } from '../layout/DropIndicator'
 
 interface PageProps {
   background?: string
@@ -24,6 +25,7 @@ export const Page = ({ background = 'transparent', padding = 40, children }: Pag
       ref={(ref) => {
         if (ref) connect(ref)
       }}
+      data-craft-page="true"
       style={{
         position: 'relative',
         background,
@@ -44,6 +46,7 @@ export const Page = ({ background = 'transparent', padding = 40, children }: Pag
         </div>
       )}
       {children}
+      <DropIndicator />
     </div>
   )
 }
