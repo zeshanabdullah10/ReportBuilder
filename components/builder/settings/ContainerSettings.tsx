@@ -2,6 +2,7 @@
 
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
+import { PositionSettings } from './PositionSettings'
 
 export function ContainerSettings() {
   const {
@@ -68,6 +69,10 @@ export function ContainerSettings() {
             onChange={(e) => setProp((props: any) => (props.borderColor = e.target.value))}
           />
         </div>
+      </div>
+
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <PositionSettings />
       </div>
     </div>
   )

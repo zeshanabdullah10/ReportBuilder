@@ -2,6 +2,7 @@
 
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
+import { PositionSettings } from './PositionSettings'
 
 export function SpacerSettings() {
   const {
@@ -20,6 +21,10 @@ export function SpacerSettings() {
           value={height}
           onChange={(e) => setProp((props: any) => (props.height = parseInt(e.target.value) || 40))}
         />
+      </div>
+
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <PositionSettings />
       </div>
     </div>
   )

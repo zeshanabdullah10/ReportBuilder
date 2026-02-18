@@ -2,6 +2,7 @@
 
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
+import { PositionSettings } from './PositionSettings'
 
 export function TableSettings() {
   const {
@@ -75,6 +76,10 @@ export function TableSettings() {
             Use <code className="text-[#00ffc8]">{'{{data.items}}'}</code> syntax.
           </p>
         </div>
+      </div>
+
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <PositionSettings />
       </div>
     </div>
   )

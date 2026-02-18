@@ -2,6 +2,7 @@
 
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
+import { PositionSettings } from './PositionSettings'
 
 export function ChartSettings() {
   const {
@@ -98,6 +99,10 @@ export function ChartSettings() {
             Overrides static data points when bound.
           </p>
         </div>
+      </div>
+
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <PositionSettings />
       </div>
     </div>
   )
