@@ -33,7 +33,7 @@ export const Text = ({
 }: TextProps) => {
   const {
     id,
-    connectors: { connect, drag },
+    connectors: { connect },
     selected,
     hovered,
     actions: { setProp },
@@ -102,7 +102,7 @@ export const Text = ({
     >
       <p
         ref={(ref) => {
-          if (ref) connect(drag(ref))
+          if (ref) connect(ref)
         }}
         style={{
           fontSize: `${fontSize}px`,

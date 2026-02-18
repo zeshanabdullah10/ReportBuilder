@@ -4,13 +4,13 @@ import { useNode } from '@craftjs/core'
 
 export const PageBreak = () => {
   const {
-    connectors: { connect, drag },
+    connectors: { connect },
   } = useNode()
 
   return (
     <div
       ref={(ref) => {
-        if (ref) connect(drag(ref))
+        if (ref) connect(ref)
       }}
       className="w-full cursor-pointer flex items-center gap-4 py-4"
     >

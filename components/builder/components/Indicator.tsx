@@ -89,7 +89,7 @@ export const Indicator = ({
 }: IndicatorProps) => {
   const {
     id,
-    connectors: { connect, drag },
+    connectors: { connect },
     selected,
     hovered,
     actions: { setProp },
@@ -152,7 +152,7 @@ export const Indicator = ({
     >
       <div
         ref={(ref) => {
-          if (ref) connect(drag(ref))
+          if (ref) connect(ref)
         }}
         className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 ${config.bgColor} ${config.borderColor} transition-all cursor-pointer`}
         style={{

@@ -11,7 +11,7 @@ interface PageProps {
 
 export const Page = ({ background = 'transparent', padding = 40, children }: PageProps) => {
   const {
-    connectors: { connect, drag },
+    connectors: { connect },
     selected,
     hovered,
   } = useNode((node) => ({
@@ -22,7 +22,7 @@ export const Page = ({ background = 'transparent', padding = 40, children }: Pag
   return (
     <div
       ref={(ref) => {
-        if (ref) connect(drag(ref))
+        if (ref) connect(ref)
       }}
       style={{
         position: 'relative',

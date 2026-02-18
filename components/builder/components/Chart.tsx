@@ -54,7 +54,7 @@ export const Chart = ({
 }: ChartProps) => {
   const {
     id,
-    connectors: { connect, drag },
+    connectors: { connect },
     selected,
     actions: { setProp },
   } = useNode((node) => ({
@@ -179,7 +179,7 @@ export const Chart = ({
     >
       <div
         ref={(ref) => {
-          if (ref) connect(drag(ref))
+          if (ref) connect(ref)
         }}
         style={{ width: '100%', height: '100%', minHeight: '200px', cursor: 'pointer' }}
         className="bg-white p-4 rounded-lg"

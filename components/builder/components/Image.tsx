@@ -25,7 +25,7 @@ export const Image = ({
 }: ImageProps) => {
   const {
     id,
-    connectors: { connect, drag },
+    connectors: { connect },
     selected,
     actions: { setProp },
   } = useNode((node) => ({
@@ -59,7 +59,7 @@ export const Image = ({
     >
       <div
         ref={(ref) => {
-          if (ref) connect(drag(ref))
+          if (ref) connect(ref)
         }}
         style={{ width: '100%', height: '100%', cursor: 'pointer' }}
       >

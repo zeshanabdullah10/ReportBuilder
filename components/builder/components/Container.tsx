@@ -31,7 +31,7 @@ export const Container = ({
 }: ContainerProps) => {
   const {
     id,
-    connectors: { connect, drag },
+    connectors: { connect },
     selected,
     hovered,
     actions: { setProp },
@@ -64,7 +64,7 @@ export const Container = ({
     >
       <div
         ref={(ref) => {
-          if (ref) connect(drag(ref))
+          if (ref) connect(ref)
         }}
         style={{
           background,
