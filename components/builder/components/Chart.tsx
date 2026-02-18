@@ -16,29 +16,50 @@ import {
   Title,
   Tooltip,
   Legend,
+  Filler,
 } from 'chart.js'
 import { Line, Bar, Pie } from 'react-chartjs-2'
 
 // Register Chart.js components
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend)
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, BarElement, ArcElement, Title, Tooltip, Legend, Filler)
+
+interface DatasetConfig {
+  label?: string
+  dataPoints?: string
+  binding?: string
+  chartType?: 'line' | 'bar'
+  color?: string
+  backgroundColor?: string
+  yAxisID?: 'y' | 'y1'
+  fill?: boolean
+}
 
 interface ChartProps {
   chartType?: 'line' | 'bar' | 'pie'
   title?: string
+  // Single dataset (backward compatible)
   label?: string
   dataPoints?: string
   labels?: string
   binding?: string
+  // Color options
+  primaryColor?: string
+  backgroundColor?: string
+  borderColor?: string
+  // Multi-dataset support
+  datasets?: DatasetConfig[]
+  enableMultiAxis?: boolean
+  // Position
   x?: number
   y?: number
   width?: number
   height?: number
 }
 
-interface ChartDataPoint {
-  label?: string
-  value: number
-}
+const DEFAULT_COLORS = [
+  '#00ffc8', '#39ff14', '#ffb000', '#ff6b6b', '#4ecdc4',
+  '#9b59b6', '#3498db', '#e74c3c', '#1abc9c', '#f39c12'
+]
 
 export const Chart = ({
   chartType = 'bar',
@@ -47,6 +68,11 @@ export const Chart = ({
   dataPoints = '65, 59, 80, 81, 56',
   labels = '',
   binding = '',
+  primaryColor = '#00ffc8',
+  backgroundColor = 'rgba(0, 255, 200, 0.5)',
+  borderColor = '#00ffc8',
+  datasets = [],
+  enableMultiAxis = false,
   x = 0,
   y = 0,
   width = 400,
@@ -64,13 +90,12 @@ export const Chart = ({
 
   const { isPreviewMode, sampleData } = useBuilderStore()
 
-  // Get chart data based on preview mode and bindings
-  const getChartData = () => {
-    // If in preview mode with binding, try to resolve the binding
-    if (isPreviewMode && sampleData && binding && hasBindings(binding)) {
-      const resolved = resolveBindingOrValue(binding, sampleData)
+  // Parse data from string or binding
+  const parseData = (points: string, bindPath: string): { values: number[], labels: string[] } => {
+    // If in preview mode with binding, try to resolve
+    if (isPreviewMode && sampleData && bindPath && hasBindings(bindPath)) {
+      const resolved = resolveBindingOrValue(bindPath, sampleData)
 
-      // Support array of objects with { label, value } structure
       if (Array.isArray(resolved)) {
         if (resolved.length > 0 && typeof resolved[0] === 'object') {
           return {
@@ -78,7 +103,6 @@ export const Chart = ({
             values: resolved.map((item: any) => item.value ?? item.y ?? 0),
           }
         }
-        // Simple array of numbers
         return {
           labels: resolved.map((_: any, i: number) => `Item ${i + 1}`),
           values: resolved.map((item: any) => (typeof item === 'number' ? item : 0)),
@@ -87,20 +111,62 @@ export const Chart = ({
     }
 
     // Parse static data points
-    const dataValues = dataPoints.split(',').map((d) => parseFloat(d.trim()) || 0)
+    const values = points.split(',').map((d) => parseFloat(d.trim()) || 0)
+    const dataLabels = values.map((_, i) => `Item ${i + 1}`)
+    return { values, labels: dataLabels }
+  }
 
-    // Parse static labels if provided
-    let dataLabels: string[]
+  // Get chart labels (from primary dataset or provided labels)
+  const getChartLabels = () => {
     if (labels && labels.trim()) {
-      dataLabels = labels.split(',').map((l) => l.trim())
-    } else {
-      dataLabels = dataValues.map((_, i) => `Item ${i + 1}`)
+      return labels.split(',').map((l) => l.trim())
+    }
+    // Get labels from first dataset or primary data
+    if (datasets && datasets.length > 0) {
+      const firstDataset = datasets[0]
+      const parsed = parseData(firstDataset.dataPoints || '', firstDataset.binding || '')
+      return parsed.labels
+    }
+    const parsed = parseData(dataPoints, binding)
+    return parsed.labels
+  }
+
+  // Build datasets array
+  const buildDatasets = () => {
+    // If using multi-dataset mode
+    if (datasets && datasets.length > 0) {
+      return datasets.map((ds, index) => {
+        const parsed = parseData(ds.dataPoints || '', ds.binding || '')
+        const color = ds.color || DEFAULT_COLORS[index % DEFAULT_COLORS.length]
+        const bgColor = ds.backgroundColor || `${color}80`
+
+        return {
+          label: ds.label || `Dataset ${index + 1}`,
+          data: parsed.values,
+          type: ds.chartType || (chartType === 'pie' ? 'bar' : chartType),
+          backgroundColor: chartType === 'pie' ? DEFAULT_COLORS : bgColor,
+          borderColor: color,
+          borderWidth: 2,
+          yAxisID: enableMultiAxis && ds.yAxisID ? ds.yAxisID : 'y',
+          fill: ds.fill || false,
+          tension: ds.chartType === 'line' ? 0.3 : 0,
+        }
+      })
     }
 
-    return {
-      labels: dataLabels,
-      values: dataValues,
-    }
+    // Single dataset mode (backward compatible)
+    const parsed = parseData(dataPoints, binding)
+
+    return [{
+      label,
+      data: parsed.values,
+      backgroundColor: chartType === 'pie' ? DEFAULT_COLORS : backgroundColor,
+      borderColor: chartType === 'pie' ? '#ffffff' : borderColor,
+      borderWidth: 2,
+      yAxisID: 'y',
+      fill: false,
+      tension: chartType === 'line' ? 0.3 : 0,
+    }]
   }
 
   // Resolve title if it contains a binding
@@ -112,27 +178,71 @@ export const Chart = ({
     return title
   }
 
-  const chartData = getChartData()
-
   const chartConfig = {
-    labels: chartData.labels,
-    datasets: [
-      {
-        label,
-        data: chartData.values,
-        backgroundColor:
-          chartType === 'pie'
-            ? ['#00ffc8', '#39ff14', '#ffb000', '#ff6b6b', '#4ecdc4', '#9b59b6', '#3498db']
-            : 'rgba(0, 255, 200, 0.5)',
-        borderColor: '#00ffc8',
-        borderWidth: 2,
+    labels: getChartLabels(),
+    datasets: buildDatasets(),
+  } as any // Type assertion needed for mixed chart types
+
+  // Build scales configuration
+  const buildScales = () => {
+    if (chartType === 'pie') return undefined
+
+    const baseScale = {
+      beginAtZero: true,
+      ticks: { color: '#666' },
+      grid: { color: 'rgba(0,0,0,0.1)' },
+    }
+
+    if (enableMultiAxis) {
+      return {
+        y: {
+          ...baseScale,
+          type: 'linear' as const,
+          display: true,
+          position: 'left' as const,
+          title: {
+            display: true,
+            text: 'Primary Axis',
+            color: '#666',
+          },
+        },
+        y1: {
+          ...baseScale,
+          type: 'linear' as const,
+          display: true,
+          position: 'right' as const,
+          title: {
+            display: true,
+            text: 'Secondary Axis',
+            color: '#666',
+          },
+          grid: {
+            drawOnChartArea: false,
+          },
+        },
+        x: {
+          ticks: { color: '#666' },
+          grid: { color: 'rgba(0,0,0,0.1)' },
+        },
+      }
+    }
+
+    return {
+      y: baseScale,
+      x: {
+        ticks: { color: '#666' },
+        grid: { color: 'rgba(0,0,0,0.1)' },
       },
-    ],
+    }
   }
 
   const options = {
     responsive: true,
-    maintainAspectRatio: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: 'index' as const,
+      intersect: false,
+    },
     plugins: {
       legend: {
         position: 'top' as const,
@@ -145,13 +255,7 @@ export const Chart = ({
         font: { size: 16 },
       },
     },
-    scales:
-      chartType !== 'pie'
-        ? {
-            y: { beginAtZero: true, ticks: { color: '#666' } },
-            x: { ticks: { color: '#666' } },
-          }
-        : undefined,
+    scales: buildScales(),
   }
 
   const ChartComponent = chartType === 'line' ? Line : chartType === 'pie' ? Pie : Bar
@@ -179,7 +283,7 @@ export const Chart = ({
       connectRef={(ref) => { if (ref) connect(ref) }}
     >
       <div
-        style={{ width: '100%', height: '100%', minHeight: '200px' }}
+        style={{ width: '100%', height: '100%' }}
         className="bg-white p-4 rounded-lg"
       >
         <ChartComponent data={chartConfig} options={options} />
@@ -197,6 +301,11 @@ Chart.craft = {
     dataPoints: '65, 59, 80, 81, 56',
     labels: '',
     binding: '',
+    primaryColor: '#00ffc8',
+    backgroundColor: 'rgba(0, 255, 200, 0.5)',
+    borderColor: '#00ffc8',
+    datasets: [],
+    enableMultiAxis: false,
     x: 0,
     y: 0,
     width: 400,

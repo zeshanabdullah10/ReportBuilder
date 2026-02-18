@@ -3,10 +3,13 @@
 import { useEditor } from '@craftjs/core'
 import { useBuilderStore } from '@/lib/stores/builder-store'
 import { Button } from '@/components/ui/button'
-import { Save, Eye, EyeOff, Undo, Redo, ArrowLeft, Trash2, Magnet } from 'lucide-react'
-import { useState } from 'react'
+import { Save, Eye, EyeOff, Undo, Redo, ArrowLeft, Trash2, Magnet, Pencil, Check, Loader2 } from 'lucide-react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { SampleDataLoader } from './SampleDataLoader'
+
+// Autosave delay in milliseconds
+const AUTOSAVE_DELAY = 2000
 
 export function BuilderTopbar() {
   const { query, actions } = useEditor()
@@ -17,13 +20,35 @@ export function BuilderTopbar() {
     isPreviewMode,
     togglePreviewMode,
     setHasUnsavedChanges,
+    setTemplateName,
     sampleData,
     snapEnabled,
     toggleSnap,
   } = useBuilderStore()
   const [isSaving, setIsSaving] = useState(false)
+  const [isEditingName, setIsEditingName] = useState(false)
+  const [editName, setEditName] = useState(templateName)
+  const [showSaved, setShowSaved] = useState(false)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null)
 
-  const handleSave = async () => {
+  // Focus input when editing starts
+  useEffect(() => {
+    if (isEditingName && inputRef.current) {
+      inputRef.current.focus()
+      inputRef.current.select()
+    }
+  }, [isEditingName])
+
+  // Sync editName with templateName when it changes externally
+  useEffect(() => {
+    setEditName(templateName)
+  }, [templateName])
+
+  // Save function used by both manual save and autosave
+  const saveTemplate = useCallback(async () => {
+    if (isSaving || isPreviewMode) return
+
     setIsSaving(true)
     const serializedState = query.serialize()
 
@@ -39,6 +64,8 @@ export function BuilderTopbar() {
 
       if (response.ok) {
         setHasUnsavedChanges(false)
+        setShowSaved(true)
+        setTimeout(() => setShowSaved(false), 2000)
       } else {
         console.error('Save failed')
       }
@@ -47,6 +74,73 @@ export function BuilderTopbar() {
     } finally {
       setIsSaving(false)
     }
+  }, [isSaving, isPreviewMode, query, templateId, sampleData, setHasUnsavedChanges])
+
+  // Autosave effect - trigger save after delay when changes are detected
+  useEffect(() => {
+    // Clear any existing timer
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current)
+      autosaveTimerRef.current = null
+    }
+
+    // If there are unsaved changes and not in preview mode, set autosave timer
+    if (hasUnsavedChanges && !isPreviewMode && !isSaving) {
+      autosaveTimerRef.current = setTimeout(() => {
+        saveTemplate()
+      }, AUTOSAVE_DELAY)
+    }
+
+    // Cleanup on unmount or when dependencies change
+    return () => {
+      if (autosaveTimerRef.current) {
+        clearTimeout(autosaveTimerRef.current)
+      }
+    }
+  }, [hasUnsavedChanges, isPreviewMode, isSaving, saveTemplate])
+
+  const handleStartEdit = () => {
+    if (isPreviewMode) return
+    setEditName(templateName)
+    setIsEditingName(true)
+  }
+
+  const handleSaveName = async (newName: string) => {
+    const trimmedName = newName.trim() || 'Untitled Template'
+    setIsEditingName(false)
+
+    if (trimmedName === templateName) return
+
+    setTemplateName(trimmedName)
+
+    // Save to API
+    try {
+      await fetch(`/api/templates/${templateId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: trimmedName }),
+      })
+    } catch (error) {
+      console.error('Failed to save name:', error)
+    }
+  }
+
+  const handleNameKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSaveName(editName)
+    } else if (e.key === 'Escape') {
+      setIsEditingName(false)
+      setEditName(templateName)
+    }
+  }
+
+  const handleSave = () => {
+    // Clear autosave timer when manually saving
+    if (autosaveTimerRef.current) {
+      clearTimeout(autosaveTimerRef.current)
+      autosaveTimerRef.current = null
+    }
+    saveTemplate()
   }
 
   const handleResetCanvas = () => {
@@ -77,16 +171,47 @@ export function BuilderTopbar() {
           <ArrowLeft className="w-5 h-5" />
         </Link>
 
-        <h1
-          className="text-lg font-semibold text-white"
-          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-        >
-          {templateName}
-        </h1>
+        {isEditingName ? (
+          <input
+            ref={inputRef}
+            type="text"
+            value={editName}
+            onChange={(e) => setEditName(e.target.value)}
+            onBlur={() => handleSaveName(editName)}
+            onKeyDown={handleNameKeyDown}
+            className="text-lg font-semibold text-white bg-[rgba(0,255,200,0.1)] border border-[#00ffc8] rounded px-2 py-0.5 outline-none focus:ring-1 focus:ring-[#00ffc8]"
+            style={{ fontFamily: 'Space Grotesk, sans-serif', minWidth: '150px' }}
+          />
+        ) : (
+          <button
+            onClick={handleStartEdit}
+            className="group flex items-center gap-1.5 text-lg font-semibold text-white hover:text-[#00ffc8] transition-colors rounded px-1 -mx-1"
+            style={{ fontFamily: 'Space Grotesk, sans-serif' }}
+            disabled={isPreviewMode}
+            title="Click to rename"
+          >
+            {templateName}
+            <Pencil className="w-3.5 h-3.5 text-gray-500 group-hover:text-[#00ffc8] opacity-0 group-hover:opacity-100 transition-opacity" />
+          </button>
+        )}
 
-        {hasUnsavedChanges && (
+        {hasUnsavedChanges && !isSaving && (
           <span className="text-xs text-[#ffb000] px-2 py-0.5 rounded bg-[rgba(255,176,0,0.1)]">
             Unsaved
+          </span>
+        )}
+
+        {isSaving && (
+          <span className="text-xs text-[#00ffc8] px-2 py-0.5 rounded bg-[rgba(0,255,200,0.1)] flex items-center gap-1">
+            <Loader2 className="w-3 h-3 animate-spin" />
+            Saving...
+          </span>
+        )}
+
+        {showSaved && (
+          <span className="text-xs text-[#39ff14] px-2 py-0.5 rounded bg-[rgba(57,255,20,0.1)] flex items-center gap-1">
+            <Check className="w-3 h-3" />
+            Saved
           </span>
         )}
 

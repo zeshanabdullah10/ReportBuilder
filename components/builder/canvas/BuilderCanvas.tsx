@@ -18,7 +18,6 @@ import { BuilderTopbar } from '../topbar/BuilderTopbar'
 import { GridOverlay } from '../layout/GridOverlay'
 import { AlignmentGuides } from '../layout/AlignmentGuides'
 import { DropPositionTracker } from '../layout/DropPositionTracker'
-import { DropIndicator } from '../layout/DropIndicator'
 import { Eye } from 'lucide-react'
 
 // Import the oscilloscope theme CSS
