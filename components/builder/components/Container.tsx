@@ -15,6 +15,8 @@ interface ContainerProps {
   y?: number
   width?: number
   height?: number
+  zIndex?: number
+  visible?: boolean
 }
 
 export const Container = ({
@@ -28,6 +30,8 @@ export const Container = ({
   y = 0,
   width = 300,
   height = 200,
+  zIndex = 1,
+  visible = true,
 }: ContainerProps) => {
   const {
     id,
@@ -40,6 +44,8 @@ export const Container = ({
     selected: node.events.selected,
     hovered: node.events.hovered,
   }))
+
+  if (!visible) return null
 
   const handlePositionChange = (newPos: { x?: number; y?: number; width?: number; height?: number }) => {
     setProp((props: ContainerProps) => {
@@ -62,6 +68,7 @@ export const Container = ({
       nodeId={id}
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
+      zIndex={zIndex}
     >
       <div
         style={{
@@ -96,6 +103,8 @@ Container.craft = {
     y: 0,
     width: 300,
     height: 200,
+    zIndex: 1,
+    visible: true,
   },
   rules: {
     canMoveIn: () => true,

@@ -20,6 +20,8 @@ export interface IndicatorProps {
   y?: number
   width?: number
   height?: number
+  zIndex?: number
+  visible?: boolean
 }
 
 const statusConfig = {
@@ -86,6 +88,8 @@ export const Indicator = ({
   y = 0,
   width = 120,
   height = 44,
+  zIndex = 1,
+  visible = true,
 }: IndicatorProps) => {
   const {
     id,
@@ -100,6 +104,8 @@ export const Indicator = ({
   }))
 
   const { isPreviewMode, sampleData } = useBuilderStore()
+
+  if (!visible) return null
 
   // Resolve status based on preview mode and binding
   const getDisplayStatus = (): IndicatorStatus => {
@@ -150,6 +156,7 @@ export const Indicator = ({
       nodeId={id}
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
+      zIndex={zIndex}
     >
       <div
         className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 ${config.bgColor} ${config.borderColor} transition-all`}
@@ -184,6 +191,8 @@ Indicator.craft = {
     y: 0,
     width: 120,
     height: 44,
+    zIndex: 1,
+    visible: true,
   },
   related: {
     settings: IndicatorSettings,

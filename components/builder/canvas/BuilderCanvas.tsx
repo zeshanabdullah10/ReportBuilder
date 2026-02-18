@@ -19,7 +19,7 @@ import { Gauge } from '../components/Gauge'
 import { ProgressBar } from '../components/ProgressBar'
 import { BulletList } from '../components/BulletList'
 import { Toolbox } from '../toolbox/Toolbox'
-import { SettingsPanel } from '../settings/SettingsPanel'
+import { RightSidebar } from '../settings/RightSidebar'
 import { BuilderTopbar } from '../topbar/BuilderTopbar'
 import { GridOverlay } from '../layout/GridOverlay'
 import { DropPositionTracker } from '../layout/DropPositionTracker'
@@ -124,8 +124,8 @@ export function BuilderCanvas({ template }: BuilderCanvasProps) {
 
           {/* Right Sidebar - Settings (hidden in preview mode) */}
           {!isPreviewMode && (
-            <aside className="w-72 border-l border-[rgba(0,255,200,0.1)] bg-[#050810] overflow-y-auto">
-              <SettingsPanel />
+            <aside className="w-72 border-l border-[rgba(0,255,200,0.1)] bg-[#050810] overflow-hidden">
+              <RightSidebar />
             </aside>
           )}
         </div>

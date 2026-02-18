@@ -14,6 +14,8 @@ interface DividerProps {
   y?: number
   width?: number
   height?: number
+  zIndex?: number
+  visible?: boolean
 }
 
 export const Divider = ({
@@ -25,6 +27,8 @@ export const Divider = ({
   y = 0,
   width = 200,
   height = 20,
+  zIndex = 1,
+  visible = true,
 }: DividerProps) => {
   const {
     id,
@@ -35,6 +39,8 @@ export const Divider = ({
     id: node.id,
     selected: node.events.selected,
   }))
+
+  if (!visible) return null
 
   const handlePositionChange = (newPos: { x?: number; y?: number; width?: number; height?: number }) => {
     setProp((props: DividerProps) => {
@@ -80,6 +86,7 @@ export const Divider = ({
       nodeId={id}
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
+      zIndex={zIndex}
     >
       <div
         style={{
@@ -110,6 +117,8 @@ Divider.craft = {
     y: 0,
     width: 200,
     height: 20,
+    zIndex: 1,
+    visible: true,
   },
   related: {
     settings: DividerSettings,

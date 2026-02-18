@@ -8,6 +8,8 @@ interface PageBreakProps {
   y?: number
   width?: number
   height?: number
+  zIndex?: number
+  visible?: boolean
 }
 
 export const PageBreak = ({
@@ -15,6 +17,8 @@ export const PageBreak = ({
   y = 0,
   width = 400,
   height = 40,
+  zIndex = 1,
+  visible = true,
 }: PageBreakProps) => {
   const {
     id,
@@ -25,6 +29,8 @@ export const PageBreak = ({
     id: node.id,
     selected: node.events.selected,
   }))
+
+  if (!visible) return null
 
   const handlePositionChange = (newPos: { x?: number; y?: number; width?: number; height?: number }) => {
     setProp((props: PageBreakProps) => {
@@ -47,6 +53,7 @@ export const PageBreak = ({
       nodeId={id}
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
+      zIndex={zIndex}
     >
       <div
         style={{
@@ -79,5 +86,7 @@ PageBreak.craft = {
     y: 0,
     width: 400,
     height: 40,
+    zIndex: 1,
+    visible: true,
   },
 }

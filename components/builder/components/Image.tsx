@@ -12,6 +12,8 @@ interface ImageProps {
   objectFit?: 'cover' | 'contain' | 'fill'
   x?: number
   y?: number
+  zIndex?: number
+  visible?: boolean
 }
 
 export const Image = ({
@@ -22,6 +24,8 @@ export const Image = ({
   objectFit = 'cover',
   x = 0,
   y = 0,
+  zIndex = 1,
+  visible = true,
 }: ImageProps) => {
   const {
     id,
@@ -32,6 +36,8 @@ export const Image = ({
     id: node.id,
     selected: node.events.selected,
   }))
+
+  if (!visible) return null
 
   // Use fixed dimensions for ResizableBox (component-level width/height are internal image dimensions)
   const boxWidth = 300
@@ -57,6 +63,7 @@ export const Image = ({
       nodeId={id}
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
+      zIndex={zIndex}
     >
       <div style={{ width: '100%', height: '100%' }}>
         <img
@@ -86,6 +93,8 @@ Image.craft = {
     y: 0,
     boxWidth: 300,
     boxHeight: 200,
+    zIndex: 1,
+    visible: true,
   },
   related: {
     settings: ImageSettings,

@@ -4,6 +4,7 @@ import React from 'react'
 import { useEditor } from '@craftjs/core'
 import { Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { LayerControls } from './LayerControls'
 
 export function SettingsPanel() {
   const { selected, actions, query } = useEditor((state, query) => {
@@ -62,6 +63,11 @@ export function SettingsPanel() {
               {React.createElement(selected.settings)}
             </div>
           )}
+
+          {/* Layer Controls */}
+          <div className="pt-4 border-t border-[rgba(0,255,200,0.1)]">
+            <LayerControls />
+          </div>
 
           {selected.isDeletable && (
             <div className="pt-4 border-t border-[rgba(0,255,200,0.1)]">

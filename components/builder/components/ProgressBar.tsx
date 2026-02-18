@@ -21,6 +21,8 @@ interface ProgressBarProps {
   y?: number
   width?: number
   height?: number
+  zIndex?: number
+  visible?: boolean
 }
 
 export const ProgressBar = ({
@@ -38,6 +40,8 @@ export const ProgressBar = ({
   y = 0,
   width = 200,
   height = 40,
+  zIndex = 1,
+  visible = true,
 }: ProgressBarProps) => {
   const {
     id,
@@ -50,6 +54,8 @@ export const ProgressBar = ({
   }))
 
   const { isPreviewMode, sampleData } = useBuilderStore()
+
+  if (!visible) return null
 
   const handlePositionChange = (newPos: { x?: number; y?: number; width?: number; height?: number }) => {
     setProp((props: ProgressBarProps) => {
@@ -85,6 +91,7 @@ export const ProgressBar = ({
       nodeId={id}
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
+      zIndex={zIndex}
     >
       <div
         style={{
@@ -149,6 +156,8 @@ ProgressBar.craft = {
     y: 0,
     width: 200,
     height: 40,
+    zIndex: 1,
+    visible: true,
   },
   related: {
     settings: ProgressBarSettings,

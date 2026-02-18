@@ -54,6 +54,8 @@ interface ChartProps {
   y?: number
   width?: number
   height?: number
+  zIndex?: number
+  visible?: boolean
 }
 
 const DEFAULT_COLORS = [
@@ -77,6 +79,8 @@ export const Chart = ({
   y = 0,
   width = 400,
   height = 300,
+  zIndex = 1,
+  visible = true,
 }: ChartProps) => {
   const {
     id,
@@ -89,6 +93,8 @@ export const Chart = ({
   }))
 
   const { isPreviewMode, sampleData } = useBuilderStore()
+
+  if (!visible) return null
 
   // Parse data from string or binding
   const parseData = (points: string, bindPath: string): { values: number[], labels: string[] } => {
@@ -281,6 +287,7 @@ export const Chart = ({
       nodeId={id}
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
+      zIndex={zIndex}
     >
       <div
         style={{ width: '100%', height: '100%' }}
@@ -310,6 +317,8 @@ Chart.craft = {
     y: 0,
     width: 400,
     height: 300,
+    zIndex: 1,
+    visible: true,
   },
   related: {
     settings: ChartSettings,

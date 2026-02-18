@@ -18,6 +18,8 @@ interface TextProps {
   y?: number
   width?: number
   height?: number
+  zIndex?: number
+  visible?: boolean
 }
 
 export const Text = ({
@@ -32,6 +34,8 @@ export const Text = ({
   y = 0,
   width = 200,
   height = 50,
+  zIndex = 1,
+  visible = true,
 }: TextProps) => {
   const {
     id,
@@ -46,6 +50,8 @@ export const Text = ({
   }))
 
   const { isPreviewMode, sampleData } = useBuilderStore()
+
+  if (!visible) return null
 
   const handlePositionChange = (newPos: { x?: number; y?: number; width?: number; height?: number }) => {
     setProp((props: TextProps) => {
@@ -102,6 +108,7 @@ export const Text = ({
       nodeId={id}
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
+      zIndex={zIndex}
     >
       <p
         style={{
@@ -143,6 +150,8 @@ Text.craft = {
     y: 0,
     width: 200,
     height: 50,
+    zIndex: 1,
+    visible: true,
   },
   related: {
     settings: TextSettings,

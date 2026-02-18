@@ -18,6 +18,8 @@ interface BulletListProps {
   y?: number
   width?: number
   height?: number
+  zIndex?: number
+  visible?: boolean
 }
 
 export const BulletList = ({
@@ -32,6 +34,8 @@ export const BulletList = ({
   y = 0,
   width = 200,
   height = 100,
+  zIndex = 1,
+  visible = true,
 }: BulletListProps) => {
   const {
     id,
@@ -44,6 +48,8 @@ export const BulletList = ({
   }))
 
   const { isPreviewMode, sampleData } = useBuilderStore()
+
+  if (!visible) return null
 
   const handlePositionChange = (newPos: { x?: number; y?: number; width?: number; height?: number }) => {
     setProp((props: BulletListProps) => {
@@ -86,6 +92,7 @@ export const BulletList = ({
       nodeId={id}
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
+      zIndex={zIndex}
     >
       <div
         style={{
@@ -154,6 +161,8 @@ BulletList.craft = {
     y: 0,
     width: 200,
     height: 100,
+    zIndex: 1,
+    visible: true,
   },
   related: {
     settings: BulletListSettings,

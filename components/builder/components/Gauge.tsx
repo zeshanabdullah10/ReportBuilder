@@ -21,6 +21,8 @@ interface GaugeProps {
   y?: number
   width?: number
   height?: number
+  zIndex?: number
+  visible?: boolean
 }
 
 export const Gauge = ({
@@ -38,6 +40,8 @@ export const Gauge = ({
   y = 0,
   width = 150,
   height = 150,
+  zIndex = 1,
+  visible = true,
 }: GaugeProps) => {
   const {
     id,
@@ -50,6 +54,8 @@ export const Gauge = ({
   }))
 
   const { isPreviewMode, sampleData } = useBuilderStore()
+
+  if (!visible) return null
 
   const handlePositionChange = (newPos: { x?: number; y?: number; width?: number; height?: number }) => {
     setProp((props: GaugeProps) => {
@@ -93,6 +99,7 @@ export const Gauge = ({
       nodeId={id}
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
+      zIndex={zIndex}
     >
       <div
         style={{
@@ -183,6 +190,8 @@ Gauge.craft = {
     y: 0,
     width: 150,
     height: 150,
+    zIndex: 1,
+    visible: true,
   },
   related: {
     settings: GaugeSettings,

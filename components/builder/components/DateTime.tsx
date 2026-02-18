@@ -17,6 +17,8 @@ interface DateTimeProps {
   y?: number
   width?: number
   height?: number
+  zIndex?: number
+  visible?: boolean
 }
 
 const DEFAULT_FORMATS: Record<string, string> = {
@@ -39,6 +41,8 @@ export const DateTime = ({
   y = 0,
   width = 150,
   height = 30,
+  zIndex = 1,
+  visible = true,
 }: DateTimeProps) => {
   const {
     id,
@@ -51,6 +55,8 @@ export const DateTime = ({
   }))
 
   const { isPreviewMode, sampleData } = useBuilderStore()
+
+  if (!visible) return null
 
   const handlePositionChange = (newPos: { x?: number; y?: number; width?: number; height?: number }) => {
     setProp((props: DateTimeProps) => {
@@ -119,6 +125,7 @@ export const DateTime = ({
       nodeId={id}
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
+      zIndex={zIndex}
     >
       <div
         style={{
@@ -155,6 +162,8 @@ DateTime.craft = {
     y: 0,
     width: 150,
     height: 30,
+    zIndex: 1,
+    visible: true,
   },
   related: {
     settings: DateTimeSettings,

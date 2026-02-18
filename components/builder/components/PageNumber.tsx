@@ -15,6 +15,8 @@ interface PageNumberProps {
   y?: number
   width?: number
   height?: number
+  zIndex?: number
+  visible?: boolean
 }
 
 export const PageNumber = ({
@@ -28,6 +30,8 @@ export const PageNumber = ({
   y = 0,
   width = 100,
   height = 30,
+  zIndex = 1,
+  visible = true,
 }: PageNumberProps) => {
   const {
     id,
@@ -38,6 +42,8 @@ export const PageNumber = ({
     id: node.id,
     selected: node.events.selected,
   }))
+
+  if (!visible) return null
 
   const handlePositionChange = (newPos: { x?: number; y?: number; width?: number; height?: number }) => {
     setProp((props: PageNumberProps) => {
@@ -74,6 +80,7 @@ export const PageNumber = ({
       nodeId={id}
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
+      zIndex={zIndex}
     >
       <div
         style={{
@@ -109,6 +116,8 @@ PageNumber.craft = {
     y: 0,
     width: 100,
     height: 30,
+    zIndex: 1,
+    visible: true,
   },
   related: {
     settings: PageNumberSettings,
