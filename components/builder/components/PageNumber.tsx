@@ -1,21 +1,34 @@
 'use client'
 
 import { useNode } from '@craftjs/core'
+import { PageNumberSettings } from '../settings/PageNumberSettings'
 import { ResizableBox } from '../layout/ResizableBox'
 
-interface PageBreakProps {
+interface PageNumberProps {
+  format?: 'page' | 'page-of' | 'slash'
+  fontSize?: number
+  fontFamily?: string
+  color?: string
+  prefix?: string
+  suffix?: string
   x?: number
   y?: number
   width?: number
   height?: number
 }
 
-export const PageBreak = ({
+export const PageNumber = ({
+  format = 'page-of',
+  fontSize = 12,
+  fontFamily = 'inherit',
+  color = '#9ca3af',
+  prefix = '',
+  suffix = '',
   x = 0,
   y = 0,
-  width = 400,
-  height = 40,
-}: PageBreakProps) => {
+  width = 100,
+  height = 30,
+}: PageNumberProps) => {
   const {
     id,
     connectors: { connect },
@@ -27,12 +40,26 @@ export const PageBreak = ({
   }))
 
   const handlePositionChange = (newPos: { x?: number; y?: number; width?: number; height?: number }) => {
-    setProp((props: PageBreakProps) => {
+    setProp((props: PageNumberProps) => {
       if (newPos.x !== undefined) props.x = newPos.x
       if (newPos.y !== undefined) props.y = newPos.y
       if (newPos.width !== undefined) props.width = newPos.width
       if (newPos.height !== undefined) props.height = newPos.height
     })
+  }
+
+  // Preview display (shows placeholder values)
+  const getDisplayText = () => {
+    switch (format) {
+      case 'page':
+        return `${prefix}1${suffix}`
+      case 'page-of':
+        return `${prefix}1 of 5${suffix}`
+      case 'slash':
+        return `${prefix}1/5${suffix}`
+      default:
+        return `${prefix}1 of 5${suffix}`
+    }
   }
 
   return (
@@ -41,8 +68,8 @@ export const PageBreak = ({
       y={y}
       width={width}
       height={height}
-      minWidth={100}
-      minHeight={30}
+      minWidth={50}
+      minHeight={20}
       selected={selected}
       nodeId={id}
       onPositionChange={handlePositionChange}
@@ -55,29 +82,35 @@ export const PageBreak = ({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
+          fontSize: `${fontSize}px`,
+          fontFamily,
+          color,
           outline: selected ? '2px solid #00ffc8' : '1px dashed transparent',
           outlineOffset: '2px',
           borderRadius: '4px',
         }}
       >
-        <div className="flex items-center gap-4 w-full px-4">
-          <div className="flex-1 border-t-2 border-dashed border-gray-400" />
-          <span className="text-gray-500 text-xs font-medium px-3 py-1 bg-gray-100 rounded whitespace-nowrap">
-            PAGE BREAK
-          </span>
-          <div className="flex-1 border-t-2 border-dashed border-gray-400" />
-        </div>
+        {getDisplayText()}
       </div>
     </ResizableBox>
   )
 }
 
-PageBreak.craft = {
-  displayName: 'Page Break',
+PageNumber.craft = {
+  displayName: 'Page Number',
   props: {
+    format: 'page-of',
+    fontSize: 12,
+    fontFamily: 'inherit',
+    color: '#9ca3af',
+    prefix: '',
+    suffix: '',
     x: 0,
     y: 0,
-    width: 400,
-    height: 40,
+    width: 100,
+    height: 30,
+  },
+  related: {
+    settings: PageNumberSettings,
   },
 }

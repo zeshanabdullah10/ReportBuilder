@@ -139,7 +139,7 @@ export function TextSettings() {
 
         <div>
           <label className="block text-sm text-gray-400 mb-1">Text Align</label>
-          <div className="flex gap-1 bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded-lg p-1">
+          <div className="flex gap-0.5 bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded-lg p-0.5">
             {TEXT_ALIGN_OPTIONS.map((option) => {
               const Icon = option.icon
               return (
@@ -148,13 +148,13 @@ export function TextSettings() {
                   type="button"
                   title={option.label}
                   onClick={() => setProp((props: any) => (props.textAlign = option.value))}
-                  className={`flex-1 p-1.5 rounded transition-colors ${
+                  className={`flex-1 p-1 rounded transition-colors ${
                     textAlign === option.value
                       ? 'bg-[#00ffc8] text-[#0a0f14]'
                       : 'text-gray-400 hover:text-white hover:bg-[rgba(0,255,200,0.1)]'
                   }`}
                 >
-                  <Icon className="w-4 h-4 mx-auto" />
+                  <Icon className="w-3.5 h-3.5 mx-auto" />
                 </button>
               )
             })}

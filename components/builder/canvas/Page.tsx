@@ -1,16 +1,30 @@
 'use client'
 
-import { useNode } from '@craftjs/core'
+import { useNode, useEditor } from '@craftjs/core'
 import { PageSettings } from '../settings/PageSettings'
 import { DropIndicator } from '../layout/DropIndicator'
+import { AlignmentGuides } from '../layout/AlignmentGuides'
+import { PAGE_SIZE_PRESETS, PageSizePreset, useBuilderStore } from '@/lib/stores/builder-store'
 
 interface PageProps {
   background?: string
   padding?: number
+  pageSize?: PageSizePreset
+  customWidth?: number
+  customHeight?: number
   children?: React.ReactNode
 }
 
-export const Page = ({ background = 'transparent', padding = 40, children }: PageProps) => {
+export const Page = ({
+  background = 'white',
+  padding = 40,
+  pageSize = 'A4',
+  customWidth = 794,
+  customHeight = 1123,
+  children
+}: PageProps) => {
+  const { isPreviewMode } = useBuilderStore()
+
   const {
     connectors: { connect },
     selected,
@@ -20,33 +34,56 @@ export const Page = ({ background = 'transparent', padding = 40, children }: Pag
     hovered: node.events.hovered,
   }))
 
+  // Calculate page dimensions - ensure pageSize has a valid value
+  const effectivePageSize = pageSize || 'A4'
+  const preset = PAGE_SIZE_PRESETS[effectivePageSize]
+  const width = effectivePageSize === 'Custom' ? (customWidth || 794) : preset.width
+  const height = effectivePageSize === 'Custom' ? (customHeight || 1123) : preset.height
+
   return (
-    <div
-      ref={(ref) => {
-        if (ref) connect(ref)
-      }}
-      data-craft-page="true"
-      style={{
-        position: 'relative',
-        background,
-        padding: `${padding}px`,
-        minHeight: '100%',
-        width: '100%',
-        outline: selected ? '2px solid #00ffc8' : hovered ? '1px dashed rgba(0,255,200,0.5)' : 'none',
-        outlineOffset: '-2px',
-      }}
-      className="transition-all duration-200 min-h-[600px]"
-    >
-      {!children && (
-        <div className="flex items-center justify-center h-full min-h-[500px] text-gray-400 border-2 border-dashed border-gray-600 rounded-lg m-4">
-          <p className="text-center p-8">
-            <span className="block text-3xl mb-3 text-[#00ffc8]/50">+</span>
-            Drag components here to build your template
-          </p>
-        </div>
-      )}
-      {children}
-      <DropIndicator />
+    <div className="flex justify-center py-8">
+      <div
+        ref={(ref) => {
+          if (ref) connect(ref)
+        }}
+        data-craft-page="true"
+        style={{
+          position: 'relative',
+          // Use actual background in preview, transparent in edit mode
+          background: isPreviewMode ? background : 'transparent',
+          padding: `${padding}px`,
+          width: width,
+          minHeight: height,
+          // Selection/hover outline in edit mode
+          outline: !isPreviewMode && selected ? '2px solid #00ffc8' : !isPreviewMode && hovered ? '1px dashed rgba(0,255,200,0.5)' : 'none',
+          outlineOffset: '-2px',
+          // Border style: dashed in edit mode, none in preview
+          border: isPreviewMode ? 'none' : selected ? '2px solid #00ffc8' : hovered ? '2px dashed rgba(0,255,200,0.5)' : '2px dashed rgba(0,255,200,0.2)',
+          boxShadow: isPreviewMode ? 'none' : '0 4px 20px rgba(0,0,0,0.3)',
+        }}
+        className="transition-all duration-200"
+      >
+        {/* Page size indicator in edit mode */}
+        {!isPreviewMode && (
+          <div className="absolute -top-6 left-0 text-xs text-[#00ffc8]/60 font-mono">
+            {preset.label.split(' ')[0]} • {width}×{height}px
+          </div>
+        )}
+
+        {/* Alignment guides - positioned relative to page content */}
+        <AlignmentGuides />
+
+        {!children && (
+          <div className="flex items-center justify-center h-full min-h-[500px] text-gray-400 border-2 border-dashed border-gray-600 rounded-lg m-4">
+            <p className="text-center p-8">
+              <span className="block text-3xl mb-3 text-[#00ffc8]/50">+</span>
+              Drag components here to build your template
+            </p>
+          </div>
+        )}
+        {children}
+        <DropIndicator />
+      </div>
     </div>
   )
 }
@@ -54,8 +91,11 @@ export const Page = ({ background = 'transparent', padding = 40, children }: Pag
 Page.craft = {
   displayName: 'Page',
   props: {
-    background: 'transparent',
-    padding: 20,
+    background: 'white',
+    padding: 40,
+    pageSize: 'A4',
+    customWidth: 794,
+    customHeight: 1123,
   },
   rules: {
     canMoveIn: () => true,

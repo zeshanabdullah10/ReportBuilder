@@ -1,21 +1,24 @@
 'use client'
 
-interface GridOverlayProps {
-  gridSize?: number
-}
+import { useBuilderStore } from '@/lib/stores/builder-store'
 
-export function GridOverlay({ gridSize = 8 }: GridOverlayProps) {
+export function GridOverlay() {
+  const { gridSize, isPreviewMode } = useBuilderStore()
+
+  // Don't show grid in preview mode
+  if (isPreviewMode) return null
+
   const majorGridSize = gridSize * 10 // 80px for major lines
 
   return (
     <div
-      className="absolute inset-0 pointer-events-none"
+      className="fixed inset-0 pointer-events-none z-0"
       style={{
         backgroundImage: `
-          linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px),
-          linear-gradient(to right, rgba(255,255,255,0.1) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(255,255,255,0.1) 1px, transparent 1px)
+          linear-gradient(to right, rgba(0,255,200,0.03) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(0,255,200,0.03) 1px, transparent 1px),
+          linear-gradient(to right, rgba(0,255,200,0.08) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(0,255,200,0.08) 1px, transparent 1px)
         `,
         backgroundSize: `${gridSize}px ${gridSize}px, ${gridSize}px ${gridSize}px, ${majorGridSize}px ${majorGridSize}px, ${majorGridSize}px ${majorGridSize}px`,
       }}

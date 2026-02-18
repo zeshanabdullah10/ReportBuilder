@@ -13,11 +13,11 @@ interface Guide {
 const SNAP_THRESHOLD = 4
 
 export function AlignmentGuides() {
-  const { activeDrag } = useBuilderStore()
+  const { activeDrag, isPreviewMode } = useBuilderStore()
   const { query } = useEditor()
 
   const guides = useMemo(() => {
-    if (!activeDrag) return []
+    if (!activeDrag || isPreviewMode) return []
 
     const guides: Guide[] = []
     const state = query.getState()
@@ -98,12 +98,12 @@ export function AlignmentGuides() {
     )
 
     return uniqueGuides
-  }, [activeDrag, query])
+  }, [activeDrag, isPreviewMode, query])
 
-  if (!activeDrag || guides.length === 0) return null
+  if (!activeDrag || guides.length === 0 || isPreviewMode) return null
 
   return (
-    <div className="absolute inset-0 pointer-events-none z-30">
+    <div className="absolute pointer-events-none z-30" style={{ top: 0, left: 0, right: 0, bottom: 0 }}>
       {guides.map((guide, index) =>
         guide.type === 'vertical' ? (
           <div

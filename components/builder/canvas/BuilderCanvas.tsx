@@ -12,12 +12,18 @@ import { Chart } from '../components/Chart'
 import { Spacer } from '../components/Spacer'
 import { PageBreak } from '../components/PageBreak'
 import { Indicator } from '../components/Indicator'
+import { Divider } from '../components/Divider'
+import { PageNumber } from '../components/PageNumber'
+import { DateTime } from '../components/DateTime'
+import { Gauge } from '../components/Gauge'
+import { ProgressBar } from '../components/ProgressBar'
+import { BulletList } from '../components/BulletList'
 import { Toolbox } from '../toolbox/Toolbox'
 import { SettingsPanel } from '../settings/SettingsPanel'
 import { BuilderTopbar } from '../topbar/BuilderTopbar'
 import { GridOverlay } from '../layout/GridOverlay'
-import { AlignmentGuides } from '../layout/AlignmentGuides'
 import { DropPositionTracker } from '../layout/DropPositionTracker'
+import { CanvasViewport } from '../layout/CanvasViewport'
 import { Eye } from 'lucide-react'
 
 // Import the oscilloscope theme CSS
@@ -65,7 +71,7 @@ export function BuilderCanvas({ template }: BuilderCanvasProps) {
   return (
     <div className="flex flex-col h-screen bg-[#0a0f14]">
       <Editor
-        resolver={{ Page, Text, Container, Image, Table, Chart, Spacer, PageBreak, Indicator }}
+        resolver={{ Page, Text, Container, Image, Table, Chart, Spacer, PageBreak, Indicator, Divider, PageNumber, DateTime, Gauge, ProgressBar, BulletList }}
         enabled={!isPreviewMode}
         indicator={{
           success: 'transparent',
@@ -86,15 +92,13 @@ export function BuilderCanvas({ template }: BuilderCanvasProps) {
           )}
 
           {/* Center - Canvas */}
-          <main className={`flex-1 overflow-auto relative bg-oscilloscope-grid ${isPreviewMode ? '' : ''}`}>
-            <div className="absolute inset-0 bg-mesh-gradient opacity-30 pointer-events-none" />
-
-            {!isPreviewMode && <GridOverlay />}
-            <AlignmentGuides />
+          <main className="flex-1 overflow-hidden relative bg-[#0a0f14]">
+            {/* Grid background - fixed, doesn't zoom */}
+            <GridOverlay />
 
             {/* Preview Mode Indicator */}
             {isPreviewMode && (
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
+              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
                 <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#00ffc8] text-[#0a0f14] font-semibold text-sm shadow-lg shadow-[#00ffc8]/20">
                   <Eye className="w-4 h-4" />
                   Preview Mode - Data bindings are active
@@ -102,18 +106,20 @@ export function BuilderCanvas({ template }: BuilderCanvasProps) {
               </div>
             )}
 
-            <div className="relative h-full">
-              {hasSavedState ? (
-                <Frame data={JSON.stringify(template.canvas_state)} />
-              ) : (
-                <Frame>
-                  <Element is={Page} canvas background="transparent" padding={20}>
-                    <Text text="Welcome to the Template Builder" fontSize={28} fontWeight="bold" color="#ffffff" />
-                    <Text text="Drag components from the left panel to start building your report template." fontSize={16} color="#9ca3af" />
-                  </Element>
-                </Frame>
-              )}
-            </div>
+            <CanvasViewport>
+              <div className="relative min-h-screen">
+                {hasSavedState ? (
+                  <Frame data={JSON.stringify(template.canvas_state)} />
+                ) : (
+                  <Frame>
+                    <Element is={Page} canvas background="white" padding={40} pageSize="A4">
+                      <Text text="Welcome to the Template Builder" fontSize={28} fontWeight="bold" color="#333333" />
+                      <Text text="Drag components from the left panel to start building your report template." fontSize={16} color="#666666" />
+                    </Element>
+                  </Frame>
+                )}
+              </div>
+            </CanvasViewport>
           </main>
 
           {/* Right Sidebar - Settings (hidden in preview mode) */}
