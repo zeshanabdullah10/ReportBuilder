@@ -61,11 +61,9 @@ export const Container = ({
       selected={selected}
       nodeId={id}
       onPositionChange={handlePositionChange}
+      connectRef={(ref) => { if (ref) connect(ref) }}
     >
       <div
-        ref={(ref) => {
-          if (ref) connect(ref)
-        }}
         style={{
           background,
           padding: `${padding}px`,

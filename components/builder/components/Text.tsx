@@ -99,11 +99,9 @@ export const Text = ({
       selected={selected}
       nodeId={id}
       onPositionChange={handlePositionChange}
+      connectRef={(ref) => { if (ref) connect(ref) }}
     >
       <p
-        ref={(ref) => {
-          if (ref) connect(ref)
-        }}
         style={{
           fontSize: `${fontSize}px`,
           fontWeight,
@@ -115,7 +113,6 @@ export const Text = ({
           outlineOffset: '2px',
           borderRadius: '4px',
           transition: 'outline 0.15s ease',
-          cursor: 'pointer',
           width: '100%',
           height: '100%',
           minWidth: '20px',

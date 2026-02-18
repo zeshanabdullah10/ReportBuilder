@@ -127,12 +127,10 @@ export const Table = ({
       selected={selected}
       nodeId={id}
       onPositionChange={handlePositionChange}
+      connectRef={(ref) => { if (ref) connect(ref) }}
     >
       <div
-        ref={(ref) => {
-          if (ref) connect(ref)
-        }}
-        className="overflow-x-auto cursor-pointer"
+        className="overflow-x-auto"
         style={{ width: '100%', height: '100%' }}
       >
         <table className="w-full border-collapse" style={{ fontSize: '14px' }}>

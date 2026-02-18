@@ -42,13 +42,11 @@ export const Spacer = ({ height = 40, x = 0, y = 0, width = 100 }: SpacerProps) 
       selected={selected}
       nodeId={id}
       onPositionChange={handlePositionChange}
+      connectRef={(ref) => { if (ref) connect(ref) }}
     >
       <div
-        ref={(ref) => {
-          if (ref) connect(ref)
-        }}
         style={{ height: '100%', width: '100%' }}
-        className="cursor-pointer border border-dashed border-gray-300 hover:border-[#00ffc8] flex items-center justify-center group"
+        className="border border-dashed border-gray-300 hover:border-[#00ffc8] flex items-center justify-center group"
       >
         <span className="text-gray-400 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
           Spacer ({height}px)

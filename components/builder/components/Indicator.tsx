@@ -149,12 +149,10 @@ export const Indicator = ({
       selected={selected}
       nodeId={id}
       onPositionChange={handlePositionChange}
+      connectRef={(ref) => { if (ref) connect(ref) }}
     >
       <div
-        ref={(ref) => {
-          if (ref) connect(ref)
-        }}
-        className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 ${config.bgColor} ${config.borderColor} transition-all cursor-pointer`}
+        className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 ${config.bgColor} ${config.borderColor} transition-all`}
         style={{
           outline: selected ? '2px solid #00ffc8' : hovered ? '1px dashed rgba(0,255,200,0.5)' : 'none',
           outlineOffset: '4px',

@@ -176,12 +176,10 @@ export const Chart = ({
       selected={selected}
       nodeId={id}
       onPositionChange={handlePositionChange}
+      connectRef={(ref) => { if (ref) connect(ref) }}
     >
       <div
-        ref={(ref) => {
-          if (ref) connect(ref)
-        }}
-        style={{ width: '100%', height: '100%', minHeight: '200px', cursor: 'pointer' }}
+        style={{ width: '100%', height: '100%', minHeight: '200px' }}
         className="bg-white p-4 rounded-lg"
       >
         <ChartComponent data={chartConfig} options={options} />
