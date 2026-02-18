@@ -55,8 +55,8 @@ export const Page = ({
         data-craft-page="true"
         style={{
           position: 'relative',
-          // Use actual background in preview, transparent in edit mode
-          background: isPreviewMode ? background : 'transparent',
+          // Always show actual background color (white paper preview)
+          background: background,
           padding: `${padding}px`,
           width: width,
           minHeight: height,

@@ -57,8 +57,8 @@ interface ChartProps {
 }
 
 const DEFAULT_COLORS = [
-  '#00ffc8', '#39ff14', '#ffb000', '#ff6b6b', '#4ecdc4',
-  '#9b59b6', '#3498db', '#e74c3c', '#1abc9c', '#f39c12'
+  '#0066cc', '#28a745', '#fd7e14', '#dc3545', '#17a2b8',
+  '#6f42c1', '#007bff', '#c82333', '#20c997', '#ffc107'
 ]
 
 export const Chart = ({
@@ -301,9 +301,9 @@ Chart.craft = {
     dataPoints: '65, 59, 80, 81, 56',
     labels: '',
     binding: '',
-    primaryColor: '#00ffc8',
-    backgroundColor: 'rgba(0, 255, 200, 0.5)',
-    borderColor: '#00ffc8',
+    primaryColor: '#0066cc',
+    backgroundColor: 'rgba(0, 102, 204, 0.5)',
+    borderColor: '#0066cc',
     datasets: [],
     enableMultiAxis: false,
     x: 0,

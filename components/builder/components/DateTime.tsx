@@ -148,7 +148,7 @@ DateTime.craft = {
     format: 'date-long',
     fontSize: 12,
     fontFamily: 'inherit',
-    color: '#9ca3af',
+    color: '#666666',
     textAlign: 'center',
     binding: '',
     x: 0,

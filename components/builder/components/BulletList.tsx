@@ -147,7 +147,7 @@ BulletList.craft = {
     listStyle: 'disc',
     fontSize: 14,
     fontFamily: 'inherit',
-    color: '#ffffff',
+    color: '#333333',
     lineHeight: 1.6,
     binding: '',
     x: 0,

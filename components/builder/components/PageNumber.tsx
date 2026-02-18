@@ -102,7 +102,7 @@ PageNumber.craft = {
     format: 'page-of',
     fontSize: 12,
     fontFamily: 'inherit',
-    color: '#9ca3af',
+    color: '#666666',
     prefix: '',
     suffix: '',
     x: 0,

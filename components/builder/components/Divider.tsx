@@ -104,7 +104,7 @@ Divider.craft = {
   props: {
     orientation: 'horizontal',
     style: 'solid',
-    color: 'rgba(255, 255, 255, 0.3)',
+    color: 'rgba(0, 0, 0, 0.3)',
     thickness: 1,
     x: 0,
     y: 0,
