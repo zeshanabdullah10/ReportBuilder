@@ -25,6 +25,7 @@ export const Page = ({ background = 'transparent', padding = 40, children }: Pag
         if (ref) connect(drag(ref))
       }}
       style={{
+        position: 'relative',
         background,
         padding: `${padding}px`,
         minHeight: '100%',
