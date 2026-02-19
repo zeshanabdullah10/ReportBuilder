@@ -65,7 +65,9 @@ export type ComponentRenderer = (
 /**
  * Escape HTML special characters
  */
-function escapeHtml(text: string): string {
+function escapeHtml(text: unknown): string {
+  if (text == null) return ''
+  const str = String(text)
   const htmlEscapes: Record<string, string> = {
     '&': '&amp;',
     '<': '&lt;',
@@ -73,7 +75,7 @@ function escapeHtml(text: string): string {
     '"': '&quot;',
     "'": '&#39;',
   }
-  return text.replace(/[&<>"']/g, (char) => htmlEscapes[char] || char)
+  return str.replace(/[&<>"']/g, (char) => htmlEscapes[char] || char)
 }
 
 /**
