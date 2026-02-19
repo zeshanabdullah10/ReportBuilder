@@ -7,6 +7,7 @@ import { Save, Eye, EyeOff, Undo, Redo, ArrowLeft, Trash2, Magnet, Pencil, Check
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { SampleDataLoader } from './SampleDataLoader'
+import { ExportButton } from '../export/ExportButton'
 
 // Autosave delay in milliseconds
 const AUTOSAVE_DELAY = 2000
@@ -273,6 +274,8 @@ export function BuilderTopbar() {
         >
           <Magnet className="w-4 h-4" />
         </Button>
+
+        <ExportButton />
 
         <Button
           variant={isPreviewMode ? 'primary' : 'outline'}
