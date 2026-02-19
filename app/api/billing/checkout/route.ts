@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe/client'
-import { CREDIT_BUNDLES } from '@/lib/stripe/config'
+import { CREDIT_BUNDLES, BundleKey } from '@/lib/stripe/config'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -14,17 +14,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  const { priceId } = await request.json()
+  const { bundleKey } = await request.json()
 
-  if (!priceId) {
-    return NextResponse.json({ error: 'Price ID is required' }, { status: 400 })
+  if (!bundleKey) {
+    return NextResponse.json({ error: 'Bundle key is required' }, { status: 400 })
   }
 
-  // Verify priceId is valid
-  const bundle = Object.values(CREDIT_BUNDLES).find(b => b.priceId === priceId)
+  // Get bundle and priceId from config
+  const bundle = CREDIT_BUNDLES[bundleKey as BundleKey]
   if (!bundle) {
-    return NextResponse.json({ error: 'Invalid price ID' }, { status: 400 })
+    return NextResponse.json({ error: 'Invalid bundle key' }, { status: 400 })
   }
+
+  const priceId = bundle.priceId
 
   // Get or create Stripe customer
   const { data: subscription } = await supabase
