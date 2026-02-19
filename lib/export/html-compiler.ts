@@ -194,7 +194,7 @@ function processNodeRecursive(
     }
 
     // For containers, insert child HTML inside the container element
-    if (componentType === 'Container' && result.html) {
+    if ((componentType === 'Container' || componentType === 'Page') && result.html) {
       const childHtml = childHtmlParts.join('\n')
       // Insert children before the closing </div> of the container
       result.html = result.html.replace(/<\/div>\s*$/, `\n${childHtml}\n</div>`)

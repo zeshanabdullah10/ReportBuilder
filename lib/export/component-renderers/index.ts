@@ -20,11 +20,13 @@ import { renderPageNumber } from './render-pagenumber'
 import { renderGauge } from './render-gauge'
 import { renderProgressBar } from './render-progressbar'
 import { renderChart } from './render-chart'
+import { renderPage } from './render-page'
 
 /**
  * Registry mapping component type names to their renderer functions
  */
 const renderers: Record<string, ComponentRenderer> = {
+  Page: renderPage,
   Text: renderText,
   Image: renderImage,
   Container: renderContainer,
@@ -71,6 +73,7 @@ export function getRegisteredTypes(): string[] {
 }
 
 // Re-export individual renderers for direct access
+export { renderPage } from './render-page'
 export { renderText } from './render-text'
 export { renderImage } from './render-image'
 export { renderContainer } from './render-container'
