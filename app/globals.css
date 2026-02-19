@@ -23,6 +23,27 @@
   }
 }
 
+/* Skeleton wave animation */
+@keyframes skeleton-wave {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-wave {
+  background: linear-gradient(
+    90deg,
+    rgba(0, 255, 200, 0.1) 25%,
+    rgba(0, 255, 200, 0.2) 50%,
+    rgba(0, 255, 200, 0.1) 75%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-wave 1.5s ease-in-out infinite;
+}
+
 /* Print styles for PDF generation */
 @media print {
   @page {
