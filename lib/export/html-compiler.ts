@@ -94,11 +94,8 @@ function processNodes(
   const nodesToProcess = rootNodes || findRootNodes(nodes)
 
   for (const node of nodesToProcess) {
-    const result = processNodeRecursive(node, nodes)
+    const result = processNodeRecursive(node, nodes, components)
     htmlParts.push(result.html)
-    if (result.componentConfig) {
-      components.push(result.componentConfig)
-    }
   }
 
   return {
@@ -129,7 +126,8 @@ function findRootNodes(nodes: Record<string, CanvasNode>): CanvasNode[] {
  */
 function processNodeRecursive(
   node: CanvasNode,
-  allNodes: Record<string, CanvasNode>
+  allNodes: Record<string, CanvasNode>,
+  allConfigs: RendererResult['componentConfig'][]
 ): RendererResult {
   const renderer = getRenderer(node.type)
 
@@ -148,19 +146,20 @@ function processNodeRecursive(
   // Render this node
   const result = renderer(node.id, node.props)
 
+  // Add this node's config to the collection
+  if (result.componentConfig) {
+    allConfigs.push(result.componentConfig)
+  }
+
   // If this node has children (container), render them and insert
   if (node.nodes && node.nodes.length > 0) {
     const childHtmlParts: string[] = []
-    const childConfigs: RendererResult['componentConfig'][] = []
 
     for (const childId of node.nodes) {
       const childNode = allNodes[childId]
       if (childNode) {
-        const childResult = processNodeRecursive(childNode, allNodes)
+        const childResult = processNodeRecursive(childNode, allNodes, allConfigs)
         childHtmlParts.push(childResult.html)
-        if (childResult.componentConfig) {
-          childConfigs.push(childResult.componentConfig)
-        }
       }
     }
 
@@ -169,16 +168,6 @@ function processNodeRecursive(
       const childHtml = childHtmlParts.join('\n')
       // Insert children before the closing </div> of the container
       result.html = result.html.replace(/<\/div>\s*$/, `\n${childHtml}\n</div>`)
-    }
-
-    // Add child configs to the result
-    if (childConfigs.length > 0) {
-      // Return a combined result with children
-      return {
-        html: result.html,
-        componentConfig: result.componentConfig, // Keep parent config
-        // Note: child configs are collected separately in processNodes
-      }
     }
   }
 
@@ -227,8 +216,12 @@ export async function compileTemplate(
   sampleData: Record<string, unknown> | null,
   options: ExportOptions
 ): Promise<string> {
+  // Handle both wrapped and direct node structures
+  // Craft.js serialize() returns nodes directly (not wrapped in { nodes: {...} })
+  const nodes = canvasState.nodes || (canvasState as unknown as Record<string, CanvasNode>)
+
   // 1. Process all nodes recursively
-  const { html: bodyHtml, components } = processNodes(canvasState.nodes)
+  const { html: bodyHtml, components } = processNodes(nodes)
 
   // 2. Generate print CSS
   const printCss = generatePrintStyles(options.pageSize, options.margins)
