@@ -23,7 +23,77 @@
   }
 }
 
-/* Skeleton wave animation */
+/* ============================================
+   Accessibility Utilities
+   ============================================ */
+
+/* Focus indicators - visible focus rings for keyboard navigation */
+:focus-visible {
+  outline: 2px solid #00ffc8;
+  outline-offset: 2px;
+}
+
+/* Remove focus outline for mouse users, keep for keyboard */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Screen reader only - visually hidden but accessible */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Skip link - allows keyboard users to skip navigation */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #00ffc8;
+  color: #0a0f14;
+  padding: 8px 16px;
+  z-index: 100;
+  transition: top 0.2s;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Reduced motion - respect user preferences */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  :root {
+    --border-color: #ffffff;
+  }
+  
+  .border-\[rgba\(0\,255\,200\,0\.1\)\] {
+    border-color: #ffffff;
+  }
+}
+
+/* ============================================
+   Skeleton Loading Animation
+   ============================================ */
+
 @keyframes skeleton-wave {
   0% {
     background-position: -200% 0;
@@ -44,7 +114,10 @@
   animation: skeleton-wave 1.5s ease-in-out infinite;
 }
 
-/* Print styles for PDF generation */
+/* ============================================
+   Print Styles for PDF Generation
+   ============================================ */
+
 @media print {
   @page {
     margin: 1cm;

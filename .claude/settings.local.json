@@ -13,7 +13,10 @@
       "Bash(git commit:*)",
       "Bash(cd:*)",
       "Bash(npx tsc:*)",
-      "Bash(node_modules/.bin/next lint:*)"
+      "Bash(node_modules/.bin/next lint:*)",
+      "mcp__plugin_supabase_supabase__execute_sql",
+      "Bash(npx next lint:*)",
+      "Bash(npx next build:*)"
     ]
   }
 }

@@ -136,21 +136,22 @@ export function Toolbox() {
   const { connectors } = useEditor()
 
   return (
-    <div className="p-4 overflow-y-auto h-full">
+    <div className="p-4 overflow-y-auto h-full" role="region" aria-label="Component toolbox">
       <h3
+        id="toolbox-title"
         className="text-sm font-semibold text-[#00ffc8] mb-4 uppercase tracking-wider"
         style={{ fontFamily: 'JetBrains Mono, monospace' }}
       >
         Components
       </h3>
 
-      <div className="space-y-6">
+      <div className="space-y-6" role="list" aria-labelledby="toolbox-title">
         {toolboxItems.map((category) => (
-          <div key={category.category}>
+          <div key={category.category} role="group" aria-label={category.category + ' components'}>
             <h4 className="text-xs text-gray-500 uppercase tracking-wider mb-2 font-medium">
               {category.category}
             </h4>
-            <div className="space-y-2">
+            <div className="space-y-2" role="list">
               {category.items.map((item) => (
                 <div
                   key={item.name}
@@ -159,10 +160,13 @@ export function Toolbox() {
                       connectors.create(ref, item.component)
                     }
                   }}
-                  className="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all bg-[rgba(0,255,200,0.05)] border border-[rgba(0,255,200,0.15)] hover:bg-[rgba(0,255,200,0.1)] hover:border-[rgba(0,255,200,0.3)] group"
+                  role="listitem"
+                  tabIndex={0}
+                  aria-label={`Drag ${item.name}: ${item.description}`}
+                  className="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all bg-[rgba(0,255,200,0.05)] border border-[rgba(0,255,200,0.15)] hover:bg-[rgba(0,255,200,0.1)] hover:border-[rgba(0,255,200,0.3)] focus:ring-2 focus:ring-[#00ffc8] focus:ring-offset-2 focus:ring-offset-[#0a0f14] group"
                 >
-                  <GripVertical className="w-4 h-4 text-gray-500 group-hover:text-[#00ffc8] transition-colors" />
-                  <item.icon className="w-5 h-5 text-[#00ffc8]" />
+                  <GripVertical className="w-4 h-4 text-gray-500 group-hover:text-[#00ffc8] transition-colors" aria-hidden="true" />
+                  <item.icon className="w-5 h-5 text-[#00ffc8]" aria-hidden="true" />
                   <div className="flex-1">
                     <span className="text-sm text-gray-300 block">{item.name}</span>
                     <span className="text-xs text-gray-500">{item.description}</span>

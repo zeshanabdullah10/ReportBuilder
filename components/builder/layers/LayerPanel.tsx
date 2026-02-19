@@ -120,9 +120,9 @@ export function LayerPanel({ standalone = false }: LayerPanelProps) {
   // Standalone mode - full height for tab view
   if (standalone) {
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full" role="region" aria-label="Layers panel">
         {/* Layer list - fills available space */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto" role="list" aria-label="Component layers">
           {layers.length === 0 ? (
             <div className="px-4 py-8 text-center">
               <div className="text-gray-500 text-sm mb-2">No components yet</div>
@@ -137,15 +137,25 @@ export function LayerPanel({ standalone = false }: LayerPanelProps) {
                 return (
                   <div
                     key={layer.id}
-                    className={`group flex items-center gap-2 px-3 py-2 rounded cursor-pointer transition-colors ${
+                    role="listitem"
+                    tabIndex={0}
+                    aria-selected={isSelected}
+                    aria-label={`${layer.displayName}, ${layer.componentName}, z-index ${layer.zIndex}, ${layer.visible ? 'visible' : 'hidden'}`}
+                    className={`group flex items-center gap-2 px-3 py-2 rounded cursor-pointer transition-colors focus:ring-2 focus:ring-[#00ffc8] focus:ring-inset ${
                       isSelected
                         ? 'bg-[rgba(0,255,200,0.15)] border border-[rgba(0,255,200,0.3)]'
                         : 'hover:bg-[rgba(0,255,200,0.05)] border border-transparent'
                     }`}
                     onClick={() => handleSelectLayer(layer.id)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault()
+                        handleSelectLayer(layer.id)
+                      }
+                    }}
                   >
                     {/* Component icon */}
-                    <Icon className={`w-4 h-4 flex-shrink-0 ${isSelected ? 'text-[#00ffc8]' : 'text-gray-500'}`} />
+                    <Icon className={`w-4 h-4 flex-shrink-0 ${isSelected ? 'text-[#00ffc8]' : 'text-gray-500'}`} aria-hidden="true" />
 
                     {/* Component name */}
                     <span
@@ -157,7 +167,7 @@ export function LayerPanel({ standalone = false }: LayerPanelProps) {
                     </span>
 
                     {/* Z-index badge */}
-                    <span className="text-xs text-gray-600 font-mono flex-shrink-0">{layer.zIndex}</span>
+                    <span className="text-xs text-gray-600 font-mono flex-shrink-0" aria-hidden="true">{layer.zIndex}</span>
 
                     {/* Action buttons - visible on hover or when selected */}
                     <div className={`flex items-center gap-0.5 flex-shrink-0 ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity`}>
@@ -166,33 +176,33 @@ export function LayerPanel({ standalone = false }: LayerPanelProps) {
                           e.stopPropagation()
                           handleBringToFront(layer.id)
                         }}
-                        className="p-1 rounded hover:bg-[rgba(0,255,200,0.1)]"
-                        title="Bring to Front"
+                        className="p-1 rounded hover:bg-[rgba(0,255,200,0.1)] focus:ring-2 focus:ring-[#00ffc8]"
+                        aria-label="Bring to front"
                       >
-                        <ChevronsUp className="w-3.5 h-3.5 text-gray-500 hover:text-[#00ffc8]" />
+                        <ChevronsUp className="w-3.5 h-3.5 text-gray-500 hover:text-[#00ffc8]" aria-hidden="true" />
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
                           handleSendToBack(layer.id)
                         }}
-                        className="p-1 rounded hover:bg-[rgba(0,255,200,0.1)]"
-                        title="Send to Back"
+                        className="p-1 rounded hover:bg-[rgba(0,255,200,0.1)] focus:ring-2 focus:ring-[#00ffc8]"
+                        aria-label="Send to back"
                       >
-                        <ChevronsDown className="w-3.5 h-3.5 text-gray-500 hover:text-[#00ffc8]" />
+                        <ChevronsDown className="w-3.5 h-3.5 text-gray-500 hover:text-[#00ffc8]" aria-hidden="true" />
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation()
                           handleToggleVisibility(layer.id, layer.visible)
                         }}
-                        className="p-1 rounded hover:bg-[rgba(0,255,200,0.1)]"
-                        title={layer.visible ? 'Hide' : 'Show'}
+                        className="p-1 rounded hover:bg-[rgba(0,255,200,0.1)] focus:ring-2 focus:ring-[#00ffc8]"
+                        aria-label={layer.visible ? 'Hide component' : 'Show component'}
                       >
                         {layer.visible ? (
-                          <Eye className="w-3.5 h-3.5 text-[#00ffc8]" />
+                          <Eye className="w-3.5 h-3.5 text-[#00ffc8]" aria-hidden="true" />
                         ) : (
-                          <EyeOff className="w-3.5 h-3.5 text-gray-500" />
+                          <EyeOff className="w-3.5 h-3.5 text-gray-500" aria-hidden="true" />
                         )}
                       </button>
                     </div>
@@ -212,7 +222,9 @@ export function LayerPanel({ standalone = false }: LayerPanelProps) {
       <div className="border-b border-[rgba(0,255,200,0.1)]">
         <button
           onClick={() => setIsCollapsed(false)}
-          className="w-full p-3 flex items-center justify-between hover:bg-[rgba(0,255,200,0.05)]"
+          aria-expanded="false"
+          aria-label="Expand layers panel"
+          className="w-full p-3 flex items-center justify-between hover:bg-[rgba(0,255,200,0.05)] focus:ring-2 focus:ring-[#00ffc8]"
         >
           <span className="text-xs text-gray-500 uppercase tracking-wide">Layers</span>
           <span className="text-xs text-gray-500">{layers.length}</span>
@@ -222,16 +234,18 @@ export function LayerPanel({ standalone = false }: LayerPanelProps) {
   }
 
   return (
-    <div className="border-b border-[rgba(0,255,200,0.1)]">
+    <div className="border-b border-[rgba(0,255,200,0.1)]" role="region" aria-label="Layers panel">
       <button
         onClick={() => setIsCollapsed(true)}
-        className="w-full p-3 flex items-center justify-between hover:bg-[rgba(0,255,200,0.05)]"
+        aria-expanded="true"
+        aria-label="Collapse layers panel"
+        className="w-full p-3 flex items-center justify-between hover:bg-[rgba(0,255,200,0.05)] focus:ring-2 focus:ring-[#00ffc8]"
       >
         <span className="text-xs text-gray-500 uppercase tracking-wide">Layers</span>
         <span className="text-xs text-gray-500">{layers.length} items</span>
       </button>
 
-      <div className="max-h-64 overflow-y-auto">
+      <div className="max-h-64 overflow-y-auto" role="list" aria-label="Component layers">
         {layers.length === 0 ? (
           <div className="px-4 py-3 text-sm text-gray-500">
             No components yet
@@ -245,15 +259,25 @@ export function LayerPanel({ standalone = false }: LayerPanelProps) {
               return (
                 <div
                   key={layer.id}
-                  className={`group flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-colors ${
+                  role="listitem"
+                  tabIndex={0}
+                  aria-selected={isSelected}
+                  aria-label={`${layer.displayName}, ${layer.componentName}, z-index ${layer.zIndex}, ${layer.visible ? 'visible' : 'hidden'}`}
+                  className={`group flex items-center gap-2 px-2 py-1.5 rounded cursor-pointer transition-colors focus:ring-2 focus:ring-[#00ffc8] focus:ring-inset ${
                     isSelected
                       ? 'bg-[rgba(0,255,200,0.15)] border border-[rgba(0,255,200,0.3)]'
                       : 'hover:bg-[rgba(0,255,200,0.05)] border border-transparent'
                   }`}
                   onClick={() => handleSelectLayer(layer.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      handleSelectLayer(layer.id)
+                    }
+                  }}
                 >
                   {/* Component icon */}
-                  <Icon className={`w-4 h-4 ${isSelected ? 'text-[#00ffc8]' : 'text-gray-500'}`} />
+                  <Icon className={`w-4 h-4 ${isSelected ? 'text-[#00ffc8]' : 'text-gray-500'}`} aria-hidden="true" />
 
                   {/* Component name */}
                   <span
@@ -265,7 +289,7 @@ export function LayerPanel({ standalone = false }: LayerPanelProps) {
                   </span>
 
                   {/* Z-index badge */}
-                  <span className="text-xs text-gray-600 font-mono">{layer.zIndex}</span>
+                  <span className="text-xs text-gray-600 font-mono" aria-hidden="true">{layer.zIndex}</span>
 
                   {/* Visibility toggle */}
                   <button
@@ -273,15 +297,15 @@ export function LayerPanel({ standalone = false }: LayerPanelProps) {
                       e.stopPropagation()
                       handleToggleVisibility(layer.id, layer.visible)
                     }}
-                    className={`p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity ${
+                    className={`p-1 rounded opacity-0 group-hover:opacity-100 transition-opacity focus:ring-2 focus:ring-[#00ffc8] ${
                       !layer.visible ? 'opacity-100' : ''
                     }`}
-                    title={layer.visible ? 'Hide' : 'Show'}
+                    aria-label={layer.visible ? 'Hide component' : 'Show component'}
                   >
                     {layer.visible ? (
-                      <Eye className="w-3.5 h-3.5 text-[#00ffc8]" />
+                      <Eye className="w-3.5 h-3.5 text-[#00ffc8]" aria-hidden="true" />
                     ) : (
-                      <EyeOff className="w-3.5 h-3.5 text-gray-500" />
+                      <EyeOff className="w-3.5 h-3.5 text-gray-500" aria-hidden="true" />
                     )}
                   </button>
                 </div>
