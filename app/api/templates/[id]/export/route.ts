@@ -42,22 +42,55 @@ export async function POST(
 
   // 3. Parse export options from request body
   const body = await request.json()
+  const watermark = body.watermark ?? true // Default to watermarked (free)
+
+  // 4. Handle credit check for clean exports
+  if (!watermark) {
+    // Get user's credit balance
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('credits')
+      .eq('id', user.id)
+      .single()
+
+    if (profileError || !profile) {
+      return NextResponse.json({ error: 'Failed to check credits' }, { status: 500 })
+    }
+
+    if (!profile.credits || profile.credits < 1) {
+      return NextResponse.json(
+        { error: 'Insufficient credits. Purchase more credits for clean exports.' },
+        { status: 402 }
+      )
+    }
+
+    // Deduct 1 credit
+    const { error: deductError } = await supabase
+      .from('profiles')
+      .update({ credits: profile.credits - 1 })
+      .eq('id', user.id)
+
+    if (deductError) {
+      return NextResponse.json({ error: 'Failed to deduct credit' }, { status: 500 })
+    }
+  }
+
   const options: ExportOptions = {
     filename: body.filename || template.name || 'Report',
     includeSampleData: body.includeSampleData ?? false,
     pageSize: body.pageSize || 'A4',
     margins: body.margins || { top: 20, right: 20, bottom: 20, left: 20 },
-    includeWatermark: false, // TODO: Check subscription status
+    includeWatermark: watermark,
   }
 
-  // 4. Compile template
+  // 5. Compile template
   try {
     const canvasState = template.canvas_state as unknown as CanvasState
     const sampleData = template.sample_data as Record<string, unknown> | null
 
     const html = await compileTemplate(canvasState, sampleData, options)
 
-    // 5. Return HTML file with download headers
+    // 6. Return HTML file with download headers
     const filename = `${options.filename}.html`
     return new NextResponse(html, {
       headers: {
