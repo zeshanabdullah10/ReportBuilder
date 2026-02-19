@@ -94,6 +94,47 @@ export const renderText: ComponentRenderer = (id, props): RendererResult => {
   // Generate HTML
   const html = `<div id="${escapeHtml(id)}" data-component="text" style="${allStyles}" ${dataBindingAttr}>${content}</div>`
 
+  // Return componentConfig if there's a binding (for runtime resolution)
+  if (binding && binding.trim() !== '') {
+    return {
+      html,
+      componentConfig: {
+        id,
+        type: 'Text',
+        props: {
+          text,
+          binding,
+          fontSize,
+          fontWeight,
+          fontFamily,
+          color,
+          textAlign,
+        },
+      },
+    }
+  }
+
+  // Check for inline bindings
+  const hasInlineBindings = /\{\{[^}]+\}\}/.test(text)
+  if (hasInlineBindings) {
+    return {
+      html,
+      componentConfig: {
+        id,
+        type: 'Text',
+        props: {
+          text,
+          binding: null,
+          fontSize,
+          fontWeight,
+          fontFamily,
+          color,
+          textAlign,
+        },
+      },
+    }
+  }
+
   return { html, componentConfig: null }
 }
 
