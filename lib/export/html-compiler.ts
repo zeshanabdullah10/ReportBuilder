@@ -36,14 +36,34 @@ export interface CanvasState {
 }
 
 /**
+ * Craft.js type resolver structure
+ */
+interface CraftTypeResolver {
+  resolvedName: string
+}
+
+/**
  * Individual node in the Craft.js tree
  */
 export interface CanvasNode {
-  id: string
-  type: string
-  props: Record<string, unknown>
+  id?: string
+  type: string | CraftTypeResolver
+  props?: Record<string, unknown>
   nodes?: string[] // Child node IDs (for containers)
   custom?: Record<string, unknown>
+}
+
+/**
+ * Extract the component type name from a Craft.js node
+ */
+function getComponentType(node: CanvasNode): string {
+  if (typeof node.type === 'string') {
+    return node.type
+  }
+  if (node.type && typeof node.type === 'object' && 'resolvedName' in node.type) {
+    return node.type.resolvedName
+  }
+  return 'Unknown'
 }
 
 /**
@@ -120,7 +140,10 @@ function findRootNodes(nodes: Record<string, CanvasNode>): CanvasNode[] {
   }
 
   // Return nodes that are not children of any other node
-  return Object.values(nodes).filter((node) => !childIds.has(node.id))
+  // Also add the node id from the key if not present in the node object
+  return Object.entries(nodes)
+    .filter(([nodeId, node]) => !childIds.has(nodeId) && !childIds.has(node.id || ''))
+    .map(([nodeId, node]) => ({ ...node, id: node.id || nodeId }))
 }
 
 /**
@@ -131,22 +154,27 @@ function processNodeRecursive(
   allNodes: Record<string, CanvasNode>,
   allConfigs: RendererResult['componentConfig'][]
 ): RendererResult {
-  const renderer = getRenderer(node.type)
+  // Get the component type name
+  const componentType = getComponentType(node)
+  const renderer = getRenderer(componentType)
+
+  // Ensure node has an id
+  const nodeId = node.id || Object.keys(allNodes).find(k => allNodes[k] === node) || 'unknown'
 
   if (!renderer) {
     // Fallback for unknown component types
     return {
-      html: `<!-- Unknown component type: ${escapeHtml(node.type)} -->`,
+      html: `<!-- Unknown component type: ${escapeHtml(componentType)} -->`,
       componentConfig: {
-        id: node.id,
-        type: node.type,
-        props: node.props,
+        id: nodeId,
+        type: componentType,
+        props: node.props || {},
       },
     }
   }
 
   // Render this node
-  const result = renderer(node.id, node.props)
+  const result = renderer(nodeId, node.props || {})
 
   // Add this node's config to the collection
   if (result.componentConfig) {
@@ -166,7 +194,7 @@ function processNodeRecursive(
     }
 
     // For containers, insert child HTML inside the container element
-    if (node.type === 'Container' && result.html) {
+    if (componentType === 'Container' && result.html) {
       const childHtml = childHtmlParts.join('\n')
       // Insert children before the closing </div> of the container
       result.html = result.html.replace(/<\/div>\s*$/, `\n${childHtml}\n</div>`)
