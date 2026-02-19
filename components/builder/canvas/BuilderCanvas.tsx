@@ -3,6 +3,8 @@
 import { Editor, Frame, Element } from '@craftjs/core'
 import { useEffect, useState } from 'react'
 import { useBuilderStore } from '@/lib/stores/builder-store'
+import { useKeyboardShortcuts } from '@/lib/hooks/use-keyboard-shortcuts'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Page } from './Page'
 import { Text } from '../components/Text'
 import { Container } from '../components/Container'
@@ -38,6 +40,70 @@ interface BuilderCanvasProps {
   }
 }
 
+// Inner component that uses keyboard shortcuts (must be inside Editor context)
+function BuilderContent({ template, hasSavedState, isPreviewMode }: { 
+  template: BuilderCanvasProps['template']
+  hasSavedState: boolean
+  isPreviewMode: boolean 
+}) {
+  // Enable keyboard shortcuts
+  useKeyboardShortcuts()
+
+  return (
+    <>
+      <DropPositionTracker />
+      <BuilderTopbar />
+
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Sidebar - Toolbox (hidden in preview mode) */}
+        {!isPreviewMode && (
+          <aside className="w-64 border-r border-[rgba(0,255,200,0.1)] bg-[#050810] overflow-y-auto">
+            <Toolbox />
+          </aside>
+        )}
+
+        {/* Center - Canvas */}
+        <main className="flex-1 overflow-hidden relative bg-[#0a0f14]">
+          {/* Grid background - fixed, doesn't zoom */}
+          <GridOverlay />
+
+          {/* Preview Mode Indicator */}
+          {isPreviewMode && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#00ffc8] text-[#0a0f14] font-semibold text-sm shadow-lg shadow-[#00ffc8]/20">
+                <Eye className="w-4 h-4" />
+                Preview Mode - Data bindings are active
+              </div>
+            </div>
+          )}
+
+          <CanvasViewport>
+            <div className="relative min-h-screen">
+              {hasSavedState ? (
+                <Frame data={JSON.stringify(template.canvas_state)} />
+              ) : (
+                <Frame>
+                  <Element is={Page} canvas background="white" padding={40} pageSize="A4">
+                    <Text text="Welcome to the Template Builder" fontSize={28} fontWeight="bold" color="#333333" />
+                    <Text text="Drag components from the left panel to start building your report template." fontSize={16} color="#666666" />
+                  </Element>
+                </Frame>
+              )}
+            </div>
+          </CanvasViewport>
+        </main>
+
+        {/* Right Sidebar - Settings (hidden in preview mode) */}
+        {!isPreviewMode && (
+          <aside className="w-72 border-l border-[rgba(0,255,200,0.1)] bg-[#050810] overflow-hidden">
+            <RightSidebar />
+          </aside>
+        )}
+      </div>
+    </>
+  )
+}
+
 export function BuilderCanvas({ template }: BuilderCanvasProps) {
   const { setTemplateId, setTemplateName, setSampleData, isPreviewMode, setHasUnsavedChanges } = useBuilderStore()
   const [loaded, setLoaded] = useState(false)
@@ -70,66 +136,24 @@ export function BuilderCanvas({ template }: BuilderCanvasProps) {
 
   return (
     <div className="flex flex-col h-screen bg-[#0a0f14]">
-      <Editor
-        resolver={{ Page, Text, Container, Image, Table, Chart, Spacer, PageBreak, Indicator, Divider, PageNumber, DateTime, Gauge, ProgressBar, BulletList }}
-        enabled={!isPreviewMode}
-        indicator={{
-          success: 'transparent',
-          error: 'transparent',
-          thickness: 0,
-        }}
-        onNodesChange={handleNodesChange}
-      >
-        <DropPositionTracker />
-        <BuilderTopbar />
-
-        <div className="flex flex-1 overflow-hidden">
-          {/* Left Sidebar - Toolbox (hidden in preview mode) */}
-          {!isPreviewMode && (
-            <aside className="w-64 border-r border-[rgba(0,255,200,0.1)] bg-[#050810] overflow-y-auto">
-              <Toolbox />
-            </aside>
-          )}
-
-          {/* Center - Canvas */}
-          <main className="flex-1 overflow-hidden relative bg-[#0a0f14]">
-            {/* Grid background - fixed, doesn't zoom */}
-            <GridOverlay />
-
-            {/* Preview Mode Indicator */}
-            {isPreviewMode && (
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#00ffc8] text-[#0a0f14] font-semibold text-sm shadow-lg shadow-[#00ffc8]/20">
-                  <Eye className="w-4 h-4" />
-                  Preview Mode - Data bindings are active
-                </div>
-              </div>
-            )}
-
-            <CanvasViewport>
-              <div className="relative min-h-screen">
-                {hasSavedState ? (
-                  <Frame data={JSON.stringify(template.canvas_state)} />
-                ) : (
-                  <Frame>
-                    <Element is={Page} canvas background="white" padding={40} pageSize="A4">
-                      <Text text="Welcome to the Template Builder" fontSize={28} fontWeight="bold" color="#333333" />
-                      <Text text="Drag components from the left panel to start building your report template." fontSize={16} color="#666666" />
-                    </Element>
-                  </Frame>
-                )}
-              </div>
-            </CanvasViewport>
-          </main>
-
-          {/* Right Sidebar - Settings (hidden in preview mode) */}
-          {!isPreviewMode && (
-            <aside className="w-72 border-l border-[rgba(0,255,200,0.1)] bg-[#050810] overflow-hidden">
-              <RightSidebar />
-            </aside>
-          )}
-        </div>
-      </Editor>
+      <ErrorBoundary>
+        <Editor
+          resolver={{ Page, Text, Container, Image, Table, Chart, Spacer, PageBreak, Indicator, Divider, PageNumber, DateTime, Gauge, ProgressBar, BulletList }}
+          enabled={!isPreviewMode}
+          indicator={{
+            success: 'transparent',
+            error: 'transparent',
+            thickness: 0,
+          }}
+          onNodesChange={handleNodesChange}
+        >
+          <BuilderContent 
+            template={template} 
+            hasSavedState={hasSavedState} 
+            isPreviewMode={isPreviewMode} 
+          />
+        </Editor>
+      </ErrorBoundary>
     </div>
   )
 }

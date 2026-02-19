@@ -13,7 +13,10 @@ import { ExportButton } from '../export/ExportButton'
 const AUTOSAVE_DELAY = 2000
 
 export function BuilderTopbar() {
-  const { query, actions } = useEditor()
+  const { query, actions, canUndo, canRedo } = useEditor((state, query) => ({
+    canUndo: query.history.canUndo(),
+    canRedo: query.history.canRedo(),
+  }))
   const {
     templateId,
     templateName,
@@ -32,6 +35,7 @@ export function BuilderTopbar() {
   const [showSaved, setShowSaved] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const savePromiseRef = useRef<Promise<void> | null>(null)
 
   // Focus input when editing starts
   useEffect(() => {
@@ -47,35 +51,52 @@ export function BuilderTopbar() {
   }, [templateName])
 
   // Save function used by both manual save and autosave
-  const saveTemplate = useCallback(async () => {
-    if (isSaving || isPreviewMode) return
+  // Uses a ref to track pending saves and prevent concurrent operations
+  const saveTemplate = useCallback(async (isAutosave = false) => {
+    // Don't start new save if one is in progress
+    if (savePromiseRef.current) {
+      return savePromiseRef.current
+    }
+
+    // Don't save in preview mode
+    if (isPreviewMode) return
 
     setIsSaving(true)
-    const serializedState = query.serialize()
 
-    try {
-      const response = await fetch(`/api/templates/${templateId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          canvas_state: JSON.parse(serializedState),
-          sample_data: sampleData,
-        }),
-      })
+    savePromiseRef.current = (async () => {
+      const serializedState = query.serialize()
 
-      if (response.ok) {
-        setHasUnsavedChanges(false)
-        setShowSaved(true)
-        setTimeout(() => setShowSaved(false), 2000)
-      } else {
-        console.error('Save failed')
+      try {
+        const response = await fetch(`/api/templates/${templateId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            canvas_state: JSON.parse(serializedState),
+            sample_data: sampleData,
+          }),
+        })
+
+        if (response.ok) {
+          setHasUnsavedChanges(false)
+          // Only show "Saved" feedback for manual saves
+          if (!isAutosave) {
+            setShowSaved(true)
+            setTimeout(() => setShowSaved(false), 2000)
+          }
+        } else {
+          const error = await response.json().catch(() => ({}))
+          console.error('Save failed:', error)
+        }
+      } catch (error) {
+        console.error('Save failed:', error)
+      } finally {
+        savePromiseRef.current = null
+        setIsSaving(false)
       }
-    } catch (error) {
-      console.error('Save failed:', error)
-    } finally {
-      setIsSaving(false)
-    }
-  }, [isSaving, isPreviewMode, query, templateId, sampleData, setHasUnsavedChanges])
+    })()
+
+    return savePromiseRef.current
+  }, [isPreviewMode, query, templateId, sampleData, setHasUnsavedChanges])
 
   // Autosave effect - trigger save after delay when changes are detected
   useEffect(() => {
@@ -85,10 +106,10 @@ export function BuilderTopbar() {
       autosaveTimerRef.current = null
     }
 
-    // If there are unsaved changes and not in preview mode, set autosave timer
-    if (hasUnsavedChanges && !isPreviewMode && !isSaving) {
+    // If there are unsaved changes and not in preview mode and not currently saving, set autosave timer
+    if (hasUnsavedChanges && !isPreviewMode && !isSaving && !savePromiseRef.current) {
       autosaveTimerRef.current = setTimeout(() => {
-        saveTemplate()
+        saveTemplate(true)
       }, AUTOSAVE_DELAY)
     }
 
@@ -141,7 +162,7 @@ export function BuilderTopbar() {
       clearTimeout(autosaveTimerRef.current)
       autosaveTimerRef.current = null
     }
-    saveTemplate()
+    saveTemplate(false) // false = manual save (show "Saved" feedback)
   }
 
   const handleResetCanvas = () => {
@@ -235,8 +256,8 @@ export function BuilderTopbar() {
           variant="ghost"
           size="icon"
           onClick={() => actions.history.undo()}
-          title="Undo"
-          disabled={isPreviewMode}
+          title="Undo (Ctrl+Z)"
+          disabled={isPreviewMode || !canUndo}
         >
           <Undo className="w-4 h-4" />
         </Button>
@@ -245,8 +266,8 @@ export function BuilderTopbar() {
           variant="ghost"
           size="icon"
           onClick={() => actions.history.redo()}
-          title="Redo"
-          disabled={isPreviewMode}
+          title="Redo (Ctrl+Y)"
+          disabled={isPreviewMode || !canRedo}
         >
           <Redo className="w-4 h-4" />
         </Button>

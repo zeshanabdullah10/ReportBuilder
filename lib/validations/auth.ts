@@ -23,7 +23,13 @@ export const resetPasswordSchema = z.object({
   path: ['confirmPassword'],
 })
 
+export const updateProfileSchema = z.object({
+  fullName: z.string().min(1, 'Name is required').max(100, 'Name is too long'),
+  company: z.string().max(100, 'Company name is too long').optional(),
+})
+
 export type LoginInput = z.infer<typeof loginSchema>
 export type SignupInput = z.infer<typeof signupSchema>
 export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>
+export type UpdateProfileInput = z.infer<typeof updateProfileSchema>
