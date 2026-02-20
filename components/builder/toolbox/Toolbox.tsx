@@ -156,7 +156,7 @@ export function Toolbox() {
   }
 
   return (
-    <div className="h-full flex flex-col border-r border-[rgba(0,255,200,0.15)]" role="region" aria-label="Component toolbox">
+    <div className="h-full flex flex-col border-r-2 border-[#00ffc8]" role="region" aria-label="Component toolbox">
       <div className="p-4 border-b border-[rgba(0,255,200,0.1)]">
         <h3
           id="toolbox-title"
@@ -189,7 +189,7 @@ export function Toolbox() {
                 </button>
 
                 {isExpanded && (
-                  <div className="px-3 pb-2 space-y-1.5" role="list">
+                  <div className="px-3 pb-2 space-y-2" role="list">
                     {category.items.map((item) => (
                       <div
                         key={item.name}
@@ -201,13 +201,13 @@ export function Toolbox() {
                         role="listitem"
                         tabIndex={0}
                         aria-label={`Drag ${item.name}: ${item.description}`}
-                        className="flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-all bg-[rgba(0,255,200,0.03)] border border-[rgba(0,255,200,0.1)] hover:bg-[rgba(0,255,200,0.08)] hover:border-[rgba(0,255,200,0.25)] focus:ring-2 focus:ring-[#00ffc8] focus:ring-offset-1 focus:ring-offset-[#0a0f14] group"
+                        className="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all bg-[rgba(0,255,200,0.05)] border border-[rgba(0,255,200,0.15)] hover:bg-[rgba(0,255,200,0.1)] hover:border-[rgba(0,255,200,0.3)] focus:ring-2 focus:ring-[#00ffc8] focus:ring-offset-2 focus:ring-offset-[#0a0f14] group"
                       >
-                        <GripVertical className="w-3.5 h-3.5 text-gray-600 group-hover:text-[#00ffc8] transition-colors flex-shrink-0" aria-hidden="true" />
-                        <item.icon className="w-4 h-4 text-[#00ffc8] flex-shrink-0" aria-hidden="true" />
+                        <GripVertical className="w-4 h-4 text-gray-500 group-hover:text-[#00ffc8] transition-colors flex-shrink-0" aria-hidden="true" />
+                        <item.icon className="w-5 h-5 text-[#00ffc8] flex-shrink-0" aria-hidden="true" />
                         <div className="flex-1 min-w-0">
-                          <span className="text-xs text-gray-300 block">{item.name}</span>
-                          <span className="text-[10px] text-gray-600 truncate block">{item.description}</span>
+                          <span className="text-sm text-gray-300 block">{item.name}</span>
+                          <span className="text-xs text-gray-500 truncate block">{item.description}</span>
                         </div>
                       </div>
                     ))}

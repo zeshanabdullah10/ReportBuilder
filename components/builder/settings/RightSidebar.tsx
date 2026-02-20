@@ -11,7 +11,7 @@ export function RightSidebar() {
   const [activeTab, setActiveTab] = useState<Tab>('properties')
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full border-l-2 border-[#00ffc8]">
       {/* Tab Header */}
       <div className="flex border-b border-[rgba(0,255,200,0.1)]">
         <button

@@ -44,7 +44,7 @@ export function SettingsPanel() {
 
   return (
     <>
-      <div className="h-full flex flex-col border-l border-[rgba(0,255,200,0.15)]">
+      <div className="h-full flex flex-col">
         <div className="p-4 border-b border-[rgba(0,255,200,0.1)]">
           <h3
             className="text-sm font-semibold text-[#00ffc8] uppercase tracking-wider"
