@@ -288,7 +288,10 @@ export interface Database {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      increment_component_usage: {
+        Args: { component_id: string }
+        Returns: void
+      }
     }
     Enums: {
       plan_type: 'free' | 'pro' | 'enterprise'
