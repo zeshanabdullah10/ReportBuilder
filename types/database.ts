@@ -85,6 +85,7 @@ export interface Database {
           sample_data: Json | null
           settings: Json | null
           is_public: boolean
+          is_shared: boolean
           version: number
           created_at: string
           updated_at: string
@@ -98,6 +99,7 @@ export interface Database {
           sample_data?: Json | null
           settings?: Json | null
           is_public?: boolean
+          is_shared?: boolean
           version?: number
           created_at?: string
           updated_at?: string
@@ -111,6 +113,7 @@ export interface Database {
           sample_data?: Json | null
           settings?: Json | null
           is_public?: boolean
+          is_shared?: boolean
           version?: number
           created_at?: string
           updated_at?: string
@@ -146,6 +149,92 @@ export interface Database {
           created_at?: string
         }
         Relationships: []
+      }
+      template_versions: {
+        Row: {
+          id: string
+          template_id: string
+          version_number: number
+          canvas_state: Json
+          sample_data: Json | null
+          settings: Json | null
+          change_description: string | null
+          created_by: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          template_id: string
+          version_number: number
+          canvas_state: Json
+          sample_data?: Json | null
+          settings?: Json | null
+          change_description?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          template_id?: string
+          version_number?: number
+          canvas_state?: Json
+          sample_data?: Json | null
+          settings?: Json | null
+          change_description?: string | null
+          created_by?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          { foreignKeyName: 'template_versions_template_id_fkey'; columns: ['template_id']; referencedRelation: 'templates'; referencedColumns: ['id'] }
+        ]
+      }
+      template_shares: {
+        Row: {
+          id: string
+          template_id: string
+          share_type: 'link' | 'user' | 'org'
+          share_token: string | null
+          shared_with_email: string | null
+          organization_id: string | null
+          permission: 'view' | 'edit'
+          password_hash: string | null
+          expires_at: string | null
+          created_by: string
+          created_at: string
+          last_accessed_at: string | null
+        }
+        Insert: {
+          id?: string
+          template_id: string
+          share_type: 'link' | 'user' | 'org'
+          share_token?: string | null
+          shared_with_email?: string | null
+          organization_id?: string | null
+          permission?: 'view' | 'edit'
+          password_hash?: string | null
+          expires_at?: string | null
+          created_by: string
+          created_at?: string
+          last_accessed_at?: string | null
+        }
+        Update: {
+          id?: string
+          template_id?: string
+          share_type?: 'link' | 'user' | 'org'
+          share_token?: string | null
+          shared_with_email?: string | null
+          organization_id?: string | null
+          permission?: 'view' | 'edit'
+          password_hash?: string | null
+          expires_at?: string | null
+          created_by?: string
+          created_at?: string
+          last_accessed_at?: string | null
+        }
+        Relationships: [
+          { foreignKeyName: 'template_shares_template_id_fkey'; columns: ['template_id']; referencedRelation: 'templates'; referencedColumns: ['id'] },
+          { foreignKeyName: 'template_shares_created_by_fkey'; columns: ['created_by']; referencedRelation: 'profiles'; referencedColumns: ['id'] }
+        ]
       }
     }
     Views: {

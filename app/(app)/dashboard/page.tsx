@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { FilePlus } from 'lucide-react'
-import { TemplateGrid } from '@/components/dashboard/TemplateGrid'
+import { DashboardContent } from '@/components/dashboard/DashboardContent'
 
 // Helper to count components in canvas state
 function countComponents(canvasState: unknown): number {
@@ -134,16 +134,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* Templates */}
-      <div>
-        <h2
-          className="text-lg font-semibold text-white mb-4"
-          style={{ fontFamily: 'Space Grotesk, sans-serif' }}
-        >
-          Your Templates
-        </h2>
-
-        <TemplateGrid templates={processedTemplates} />
-      </div>
+      <DashboardContent templates={processedTemplates} />
     </div>
   )
 }
