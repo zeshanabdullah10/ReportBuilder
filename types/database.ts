@@ -236,6 +236,53 @@ export interface Database {
           { foreignKeyName: 'template_shares_created_by_fkey'; columns: ['created_by']; referencedRelation: 'profiles'; referencedColumns: ['id'] }
         ]
       }
+      custom_components: {
+        Row: {
+          id: string
+          user_id: string
+          name: string
+          description: string | null
+          category: string
+          component_type: string
+          config: Json
+          thumbnail_url: string | null
+          is_public: boolean
+          usage_count: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          name: string
+          description?: string | null
+          category?: string
+          component_type: string
+          config: Json
+          thumbnail_url?: string | null
+          is_public?: boolean
+          usage_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          name?: string
+          description?: string | null
+          category?: string
+          component_type?: string
+          config?: Json
+          thumbnail_url?: string | null
+          is_public?: boolean
+          usage_count?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          { foreignKeyName: 'custom_components_user_id_fkey'; columns: ['user_id']; referencedRelation: 'profiles'; referencedColumns: ['id'] }
+        ]
+      }
     }
     Views: {
       [_ in never]: never
