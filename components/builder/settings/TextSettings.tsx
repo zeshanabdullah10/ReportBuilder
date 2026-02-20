@@ -3,6 +3,7 @@
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
 import { PositionSettings } from './PositionSettings'
+import { VisibilityConditionSettings } from './VisibilityConditionSettings'
 import { AlignLeft, AlignCenter, AlignRight, AlignJustify } from 'lucide-react'
 
 const FONT_FAMILIES = [
@@ -38,6 +39,7 @@ export function TextSettings() {
     color,
     textAlign,
     binding,
+    visibilityCondition,
   } = useNode((node) => ({
     text: node.data.props.text,
     fontSize: node.data.props.fontSize,
@@ -46,6 +48,7 @@ export function TextSettings() {
     color: node.data.props.color,
     textAlign: node.data.props.textAlign,
     binding: node.data.props.binding,
+    visibilityCondition: node.data.props.visibilityCondition,
   }))
 
   const handleSizeToContent = () => {
@@ -191,6 +194,13 @@ export function TextSettings() {
             You can also use bindings directly in the text content.
           </p>
         </div>
+      </div>
+
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <VisibilityConditionSettings
+          value={visibilityCondition}
+          onChange={(value) => setProp((props: any) => (props.visibilityCondition = value))}
+        />
       </div>
 
       <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">

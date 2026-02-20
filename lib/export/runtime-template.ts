@@ -84,6 +84,48 @@ export const RUNTIME_TEMPLATE = `
     return !!(value && typeof value === 'string' && value.indexOf('{{') !== -1 && value.indexOf('}}') !== -1);
   }
 
+  /**
+   * Evaluate a visibility condition expression
+   * @param {string} condition - Condition expression (e.g., "data.status === 'pass'")
+   * @param {object} data - The data object to evaluate against
+   * @returns {boolean} True if condition passes or no condition
+   */
+  function evaluateCondition(condition, data) {
+    if (!condition) return true;
+    
+    try {
+      // Replace data references in the condition
+      var evaluatedCondition = condition;
+      
+      // Replace {{data.path}} patterns
+      evaluatedCondition = evaluatedCondition.replace(/\\{\\{([^}]+)\\}\\}/g, function(match, path) {
+        var value = resolveBinding(path.trim(), data);
+        if (value == null) return 'null';
+        if (typeof value === 'string') return '"' + value.replace(/"/g, '\\\\"') + '"';
+        if (typeof value === 'boolean') return value ? 'true' : 'false';
+        if (typeof value === 'number') return String(value);
+        return 'null';
+      });
+      
+      // Replace data.path patterns (without braces)
+      evaluatedCondition = evaluatedCondition.replace(/data\\.([a-zA-Z_][a-zA-Z0-9_\\.]*)/g, function(match, path) {
+        var value = resolveBinding('data.' + path, data);
+        if (value == null) return 'null';
+        if (typeof value === 'string') return '"' + value.replace(/"/g, '\\\\"') + '"';
+        if (typeof value === 'boolean') return value ? 'true' : 'false';
+        if (typeof value === 'number') return String(value);
+        return 'null';
+      });
+      
+      // Safely evaluate the condition
+      var fn = new Function('return (' + evaluatedCondition + ')');
+      return fn();
+    } catch (e) {
+      console.warn('[Runtime] Condition evaluation failed:', condition, e.message);
+      return true; // Default to visible on error
+    }
+  }
+
   // ============================================
   // Data Loading
   // ============================================
@@ -561,6 +603,31 @@ export const RUNTIME_TEMPLATE = `
   // ============================================
 
   /**
+   * Apply visibility conditions to all elements with data-visibility-condition
+   */
+  function applyVisibilityConditions(data) {
+    var elements = document.querySelectorAll('[data-visibility-condition]');
+    
+    for (var i = 0; i < elements.length; i++) {
+      var el = elements[i];
+      var condition = el.getAttribute('data-visibility-condition');
+      
+      if (!condition) continue;
+      
+      var isVisible = evaluateCondition(condition, data);
+      
+      if (!isVisible) {
+        el.style.display = 'none';
+      } else {
+        // Restore original display if it was hidden
+        if (el.style.display === 'none') {
+          el.style.display = '';
+        }
+      }
+    }
+  }
+
+  /**
    * Apply bindings to all components
    */
   function applyBindings(data) {
@@ -571,12 +638,18 @@ export const RUNTIME_TEMPLATE = `
 
     console.log('[Runtime] Applying bindings to', COMPONENTS.length, 'components');
 
+    // First, apply visibility conditions
+    applyVisibilityConditions(data);
+
     for (var i = 0; i < COMPONENTS.length; i++) {
       var comp = COMPONENTS[i];
       if (!comp) continue;
 
       var el = document.getElementById(comp.id);
       if (!el) continue;
+      
+      // Skip if element is hidden due to visibility condition
+      if (el.style.display === 'none') continue;
 
       switch (comp.type) {
         case 'text':

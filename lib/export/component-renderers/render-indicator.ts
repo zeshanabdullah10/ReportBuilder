@@ -17,6 +17,7 @@ interface IndicatorProps {
   failLabel?: string
   warningLabel?: string
   binding?: string
+  visibilityCondition?: string
   x?: number
   y?: number
   width?: number
@@ -92,6 +93,7 @@ export const renderIndicator: ComponentRenderer = (id, props): RendererResult =>
     failLabel = 'FAIL',
     warningLabel = 'WARNING',
     binding = '',
+    visibilityCondition = '',
     x = 0,
     y = 0,
     width = 120,
@@ -171,9 +173,14 @@ export const renderIndicator: ComponentRenderer = (id, props): RendererResult =>
 
   // Add data-binding attribute if binding exists
   const dataBindingAttr = binding ? `data-binding="${escapeHtml(binding)}"` : ''
+  
+  // Add visibility condition attribute if present
+  const visibilityAttr = visibilityCondition 
+    ? `data-visibility-condition="${escapeHtml(visibilityCondition)}"` 
+    : ''
 
   // Generate final HTML
-  const html = `<div id="${escapeHtml(id)}" data-component="indicator" data-status="${status}" style="${allStyles}" ${dataBindingAttr}>${badgeHtml}</div>`
+  const html = `<div id="${escapeHtml(id)}" data-component="indicator" data-status="${status}" style="${allStyles}" ${dataBindingAttr} ${visibilityAttr}>${badgeHtml}</div>`
 
   // Return component config if binding exists
   const componentConfig = binding

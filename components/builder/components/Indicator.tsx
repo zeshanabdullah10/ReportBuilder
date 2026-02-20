@@ -4,6 +4,7 @@ import { useNode } from '@craftjs/core'
 import { IndicatorSettings } from '../settings/IndicatorSettings'
 import { useBuilderStore } from '@/lib/stores/builder-store'
 import { hasBindings, resolveBindingOrValue } from '@/lib/utils/binding'
+import { evaluateCondition } from '@/lib/utils/condition'
 import { ResizableBox } from '../layout/ResizableBox'
 import { CheckCircle, XCircle, AlertCircle, MinusCircle } from 'lucide-react'
 
@@ -16,6 +17,7 @@ export interface IndicatorProps {
   failLabel?: string
   warningLabel?: string
   binding?: string
+  visibilityCondition?: string
   x?: number
   y?: number
   width?: number
@@ -84,6 +86,7 @@ export const Indicator = ({
   failLabel = 'FAIL',
   warningLabel = 'WARNING',
   binding = '',
+  visibilityCondition,
   x = 0,
   y = 0,
   width = 120,
@@ -104,6 +107,13 @@ export const Indicator = ({
   }))
 
   const { isPreviewMode, sampleData } = useBuilderStore()
+
+  // Check visibility condition
+  if (visible && visibilityCondition && isPreviewMode && sampleData) {
+    if (!evaluateCondition(visibilityCondition, sampleData)) {
+      return null
+    }
+  }
 
   if (!visible) return null
 
@@ -187,6 +197,7 @@ Indicator.craft = {
     failLabel: 'FAIL',
     warningLabel: 'WARNING',
     binding: '',
+    visibilityCondition: '',
     x: 0,
     y: 0,
     width: 120,

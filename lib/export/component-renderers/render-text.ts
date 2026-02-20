@@ -15,6 +15,7 @@ interface TextProps {
   color?: string
   textAlign?: 'left' | 'center' | 'right' | 'justify'
   binding?: string
+  visibilityCondition?: string
   x?: number
   y?: number
   width?: number
@@ -39,6 +40,7 @@ export const renderText: ComponentRenderer = (id, props): RendererResult => {
     color = '#000000',
     textAlign = 'left',
     binding = '',
+    visibilityCondition = '',
     x = 0,
     y = 0,
     width = 200,
@@ -91,8 +93,13 @@ export const renderText: ComponentRenderer = (id, props): RendererResult => {
     }
   }
 
+  // Add visibility condition attribute if present
+  const visibilityAttr = visibilityCondition 
+    ? `data-visibility-condition="${escapeHtml(visibilityCondition)}"` 
+    : ''
+
   // Generate HTML
-  const html = `<div id="${escapeHtml(id)}" data-component="text" style="${allStyles}" ${dataBindingAttr}>${content}</div>`
+  const html = `<div id="${escapeHtml(id)}" data-component="text" style="${allStyles}" ${dataBindingAttr} ${visibilityAttr}>${content}</div>`
 
   // Return componentConfig if there's a binding (for runtime resolution)
   if (binding && binding.trim() !== '') {

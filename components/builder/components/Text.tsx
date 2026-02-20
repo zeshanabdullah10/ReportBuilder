@@ -4,6 +4,7 @@ import { useNode } from '@craftjs/core'
 import { TextSettings } from '../settings/TextSettings'
 import { useBuilderStore } from '@/lib/stores/builder-store'
 import { interpolateText, hasBindings, resolveBindingOrValue } from '@/lib/utils/binding'
+import { evaluateCondition } from '@/lib/utils/condition'
 import { ResizableBox } from '../layout/ResizableBox'
 
 interface TextProps {
@@ -20,6 +21,7 @@ interface TextProps {
   height?: number
   zIndex?: number
   visible?: boolean
+  visibilityCondition?: string
 }
 
 export const Text = ({
@@ -36,6 +38,7 @@ export const Text = ({
   height = 50,
   zIndex = 1,
   visible = true,
+  visibilityCondition = '',
 }: TextProps) => {
   const {
     id,
@@ -50,6 +53,13 @@ export const Text = ({
   }))
 
   const { isPreviewMode, sampleData } = useBuilderStore()
+
+  // Check visibility condition in preview mode
+  if (isPreviewMode && visibilityCondition && sampleData) {
+    if (!evaluateCondition(visibilityCondition, sampleData)) {
+      return null
+    }
+  }
 
   if (!visible) return null
 
