@@ -44,65 +44,69 @@ export function SettingsPanel() {
 
   return (
     <>
-      <div className="p-4">
-        <h3
-          className="text-sm font-semibold text-[#00ffc8] mb-4 uppercase tracking-wider"
-          style={{ fontFamily: 'JetBrains Mono, monospace' }}
-        >
-          Properties
-        </h3>
+      <div className="h-full flex flex-col border-l border-[rgba(0,255,200,0.15)]">
+        <div className="p-4 border-b border-[rgba(0,255,200,0.1)]">
+          <h3
+            className="text-sm font-semibold text-[#00ffc8] uppercase tracking-wider"
+            style={{ fontFamily: 'JetBrains Mono, monospace' }}
+          >
+            Properties
+          </h3>
+        </div>
 
-        {!selected ? (
-          <p className="text-gray-500 text-sm">
-            Click on a component to edit its properties
-          </p>
-        ) : (
-          <div className="space-y-4">
-            <div className="pb-3 border-b border-[rgba(0,255,200,0.1)]">
-              <span className="text-white font-medium">{selected.name}</span>
-            </div>
-
-            {selected.settings && (
-              <div className="space-y-4">
-                {React.createElement(selected.settings)}
+        <div className="flex-1 overflow-y-auto p-4">
+          {!selected ? (
+            <p className="text-gray-500 text-sm">
+              Click on a component to edit its properties
+            </p>
+          ) : (
+            <div className="space-y-4">
+              <div className="pb-3 border-b border-[rgba(0,255,200,0.1)]">
+                <span className="text-white font-medium">{selected.name}</span>
               </div>
-            )}
 
-            {/* Layer Controls */}
-            <div className="pt-4 border-t border-[rgba(0,255,200,0.1)]">
-              <LayerControls />
-            </div>
+              {selected.settings && (
+                <div className="space-y-4">
+                  {React.createElement(selected.settings)}
+                </div>
+              )}
 
-            {/* Save as Custom Component */}
-            {selected.isDeletable && (
+              {/* Layer Controls */}
               <div className="pt-4 border-t border-[rgba(0,255,200,0.1)]">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowSaveDialog(true)}
-                  className="w-full text-[#00ffc8] border-[rgba(0,255,200,0.3)] hover:bg-[rgba(0,255,200,0.1)]"
-                >
-                  <Bookmark className="w-4 h-4 mr-2" />
-                  Save as Component
-                </Button>
+                <LayerControls />
               </div>
-            )}
 
-            {selected.isDeletable && (
-              <div className="pt-4 border-t border-[rgba(0,255,200,0.1)]">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDelete}
-                  className="w-full text-red-400 border-red-400/30 hover:bg-red-400/10"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete Component
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
+              {/* Save as Custom Component */}
+              {selected.isDeletable && (
+                <div className="pt-4 border-t border-[rgba(0,255,200,0.1)]">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowSaveDialog(true)}
+                    className="w-full text-[#00ffc8] border-[rgba(0,255,200,0.3)] hover:bg-[rgba(0,255,200,0.1)]"
+                  >
+                    <Bookmark className="w-4 h-4 mr-2" />
+                    Save as Component
+                  </Button>
+                </div>
+              )}
+
+              {selected.isDeletable && (
+                <div className="pt-4 border-t border-[rgba(0,255,200,0.1)]">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDelete}
+                    className="w-full text-red-400 border-red-400/30 hover:bg-red-400/10"
+                  >
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Component
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Save Component Dialog */}

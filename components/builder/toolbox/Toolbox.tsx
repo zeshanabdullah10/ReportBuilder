@@ -134,62 +134,96 @@ const toolboxItems = [
   },
 ]
 
+// Default expanded categories
+const defaultExpanded = ['Document', 'Charts & Data']
+
 export function Toolbox() {
   const { connectors } = useEditor()
-  const [showCustom, setShowCustom] = useState(false)
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
+    new Set([...defaultExpanded, 'Custom Components'])
+  )
+
+  const toggleCategory = (category: string) => {
+    setExpandedCategories((prev) => {
+      const next = new Set(prev)
+      if (next.has(category)) {
+        next.delete(category)
+      } else {
+        next.add(category)
+      }
+      return next
+    })
+  }
 
   return (
-    <div className="h-full flex flex-col" role="region" aria-label="Component toolbox">
-      <div className="p-4">
+    <div className="h-full flex flex-col border-r border-[rgba(0,255,200,0.15)]" role="region" aria-label="Component toolbox">
+      <div className="p-4 border-b border-[rgba(0,255,200,0.1)]">
         <h3
           id="toolbox-title"
-          className="text-sm font-semibold text-[#00ffc8] mb-4 uppercase tracking-wider"
+          className="text-sm font-semibold text-[#00ffc8] uppercase tracking-wider"
           style={{ fontFamily: 'JetBrains Mono, monospace' }}
         >
           Components
         </h3>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 pb-4">
-        <div className="space-y-6" role="list" aria-labelledby="toolbox-title">
-          {toolboxItems.map((category) => (
-            <div key={category.category} role="group" aria-label={category.category + ' components'}>
-              <h4 className="text-xs text-gray-500 uppercase tracking-wider mb-2 font-medium">
-                {category.category}
-              </h4>
-              <div className="space-y-2" role="list">
-                {category.items.map((item) => (
-                  <div
-                    key={item.name}
-                    ref={(ref) => {
-                      if (ref && item.component) {
-                        connectors.create(ref, item.component)
-                      }
-                    }}
-                    role="listitem"
-                    tabIndex={0}
-                    aria-label={`Drag ${item.name}: ${item.description}`}
-                    className="flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all bg-[rgba(0,255,200,0.05)] border border-[rgba(0,255,200,0.15)] hover:bg-[rgba(0,255,200,0.1)] hover:border-[rgba(0,255,200,0.3)] focus:ring-2 focus:ring-[#00ffc8] focus:ring-offset-2 focus:ring-offset-[#0a0f14] group"
-                  >
-                    <GripVertical className="w-4 h-4 text-gray-500 group-hover:text-[#00ffc8] transition-colors" aria-hidden="true" />
-                    <item.icon className="w-5 h-5 text-[#00ffc8]" aria-hidden="true" />
-                    <div className="flex-1">
-                      <span className="text-sm text-gray-300 block">{item.name}</span>
-                      <span className="text-xs text-gray-500">{item.description}</span>
-                    </div>
+      <div className="flex-1 overflow-y-auto">
+        <div className="py-2" role="list" aria-labelledby="toolbox-title">
+          {toolboxItems.map((category) => {
+            const isExpanded = expandedCategories.has(category.category)
+            return (
+              <div key={category.category} role="group" aria-label={category.category + ' components'}>
+                <button
+                  onClick={() => toggleCategory(category.category)}
+                  className="flex items-center gap-2 text-xs text-gray-500 uppercase tracking-wider font-medium w-full px-4 py-2 hover:text-gray-400 hover:bg-[rgba(0,255,200,0.03)] transition-colors"
+                >
+                  {isExpanded ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
+                  {category.category}
+                  <span className="ml-auto text-[10px] text-gray-600">
+                    {category.items.length}
+                  </span>
+                </button>
+
+                {isExpanded && (
+                  <div className="px-3 pb-2 space-y-1.5" role="list">
+                    {category.items.map((item) => (
+                      <div
+                        key={item.name}
+                        ref={(ref) => {
+                          if (ref && item.component) {
+                            connectors.create(ref, item.component)
+                          }
+                        }}
+                        role="listitem"
+                        tabIndex={0}
+                        aria-label={`Drag ${item.name}: ${item.description}`}
+                        className="flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-all bg-[rgba(0,255,200,0.03)] border border-[rgba(0,255,200,0.1)] hover:bg-[rgba(0,255,200,0.08)] hover:border-[rgba(0,255,200,0.25)] focus:ring-2 focus:ring-[#00ffc8] focus:ring-offset-1 focus:ring-offset-[#0a0f14] group"
+                      >
+                        <GripVertical className="w-3.5 h-3.5 text-gray-600 group-hover:text-[#00ffc8] transition-colors flex-shrink-0" aria-hidden="true" />
+                        <item.icon className="w-4 h-4 text-[#00ffc8] flex-shrink-0" aria-hidden="true" />
+                        <div className="flex-1 min-w-0">
+                          <span className="text-xs text-gray-300 block">{item.name}</span>
+                          <span className="text-[10px] text-gray-600 truncate block">{item.description}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
               </div>
-            </div>
-          ))}
+            )
+          })}
 
           {/* Custom Components Section */}
-          <div role="group" aria-label="Custom components">
+          <div role="group" aria-label="Custom components" className="border-t border-[rgba(0,255,200,0.1)] mt-2">
             <button
-              onClick={() => setShowCustom(!showCustom)}
-              className="flex items-center gap-2 text-xs text-gray-500 uppercase tracking-wider mb-2 font-medium w-full hover:text-gray-400 transition-colors"
+              onClick={() => toggleCategory('Custom Components')}
+              className="flex items-center gap-2 text-xs text-gray-500 uppercase tracking-wider font-medium w-full px-4 py-2 hover:text-gray-400 hover:bg-[rgba(0,255,200,0.03)] transition-colors"
             >
-              {showCustom ? (
+              {expandedCategories.has('Custom Components') ? (
                 <ChevronDown className="w-4 h-4" />
               ) : (
                 <ChevronRight className="w-4 h-4" />
@@ -198,9 +232,11 @@ export function Toolbox() {
               Custom Components
             </button>
 
-            {showCustom && (
-              <div className="mt-2 border border-[rgba(0,255,200,0.1)] rounded-lg overflow-hidden">
-                <CustomComponentsPanel />
+            {expandedCategories.has('Custom Components') && (
+              <div className="px-3 pb-2">
+                <div className="border border-[rgba(0,255,200,0.1)] rounded-lg overflow-hidden">
+                  <CustomComponentsPanel />
+                </div>
               </div>
             )}
           </div>
