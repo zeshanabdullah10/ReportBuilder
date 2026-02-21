@@ -16,11 +16,19 @@ import { DateTime } from '../components/DateTime'
 import { Gauge } from '../components/Gauge'
 import { ProgressBar } from '../components/ProgressBar'
 import { BulletList } from '../components/BulletList'
+import { QRCode } from '../components/QRCode'
+import { Barcode } from '../components/Barcode'
+import { SignatureLine } from '../components/SignatureLine'
+import { TestSummaryBox } from '../components/TestSummaryBox'
+import { MeasurementTable } from '../components/MeasurementTable'
+import { Histogram } from '../components/Histogram'
+import { ScatterPlot } from '../components/ScatterPlot'
 import { CustomComponentsPanel } from '../custom/CustomComponentsPanel'
 import {
   Type, Square, Image as ImageIcon, Table2, BarChart3, Minus,
   FileText, GripVertical, CheckCircle, Divide, Hash, Calendar,
-  Gauge as GaugeIcon, Loader, List, Bookmark, ChevronDown, ChevronRight
+  Gauge as GaugeIcon, Loader, List, Bookmark, ChevronDown, ChevronRight,
+  QrCode, Barcode as BarcodeIcon, PenLine, ClipboardCheck, TestTube, ScatterChart
 } from 'lucide-react'
 
 const toolboxItems = [
@@ -132,10 +140,58 @@ const toolboxItems = [
       },
     ],
   },
+  // Test Reports
+  {
+    category: 'Test Reports',
+    items: [
+      {
+        name: 'QR Code',
+        icon: QrCode,
+        component: <QRCode />,
+        description: 'Scannable QR codes',
+      },
+      {
+        name: 'Barcode',
+        icon: BarcodeIcon,
+        component: <Barcode />,
+        description: 'CODE128, EAN, UPC barcodes',
+      },
+      {
+        name: 'Signature Line',
+        icon: PenLine,
+        component: <SignatureLine />,
+        description: 'Approval signature areas',
+      },
+      {
+        name: 'Test Summary',
+        icon: ClipboardCheck,
+        component: <TestSummaryBox />,
+        description: 'Pass/fail summary box',
+      },
+      {
+        name: 'Measurement Table',
+        icon: TestTube,
+        component: <MeasurementTable />,
+        description: 'Measurements with tolerances',
+      },
+      {
+        name: 'Histogram',
+        icon: BarChart3,
+        component: <Histogram />,
+        description: 'Statistical distribution',
+      },
+      {
+        name: 'Scatter Plot',
+        icon: ScatterChart,
+        component: <ScatterPlot />,
+        description: 'Correlation analysis',
+      },
+    ],
+  },
 ]
 
 // Default expanded categories
-const defaultExpanded = ['Document', 'Charts & Data']
+const defaultExpanded = ['Document', 'Charts & Data', 'Test Reports']
 
 export function Toolbox() {
   const { connectors } = useEditor()
