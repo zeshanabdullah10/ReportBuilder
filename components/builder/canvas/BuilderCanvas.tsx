@@ -20,6 +20,13 @@ import { DateTime } from '../components/DateTime'
 import { Gauge } from '../components/Gauge'
 import { ProgressBar } from '../components/ProgressBar'
 import { BulletList } from '../components/BulletList'
+import { QRCode } from '../components/QRCode'
+import { Barcode } from '../components/Barcode'
+import { SignatureLine } from '../components/SignatureLine'
+import { TestSummaryBox } from '../components/TestSummaryBox'
+import { MeasurementTable } from '../components/MeasurementTable'
+import { Histogram } from '../components/Histogram'
+import { ScatterPlot } from '../components/ScatterPlot'
 import { Toolbox } from '../toolbox/Toolbox'
 import { RightSidebar } from '../settings/RightSidebar'
 import { BuilderTopbar } from '../topbar/BuilderTopbar'
@@ -240,7 +247,7 @@ export function BuilderCanvas({ template }: BuilderCanvasProps) {
       <ErrorBoundary>
         <Editor
           key={activePageId || 'default'}
-          resolver={{ Page, Text, Container, Image, Table, Chart, Spacer, PageBreak, Indicator, Divider, PageNumber, DateTime, Gauge, ProgressBar, BulletList }}
+          resolver={{ Page, Text, Container, Image, Table, Chart, Spacer, PageBreak, Indicator, Divider, PageNumber, DateTime, Gauge, ProgressBar, BulletList, QRCode, Barcode, SignatureLine, TestSummaryBox, MeasurementTable, Histogram, ScatterPlot }}
           enabled={!isPreviewMode}
           indicator={{
             success: 'transparent',
