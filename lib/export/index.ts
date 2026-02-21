@@ -8,6 +8,7 @@
 // Main compiler
 export {
   compileTemplate,
+  compileMultiPageTemplate,
   escapeHtml,
   processNodes,
   findRootNodes,
@@ -16,6 +17,8 @@ export {
   type CanvasNode,
   type RendererResult,
   type ComponentRenderer,
+  type PageState,
+  type MultiPageExportOptions,
 } from './html-compiler'
 
 // Runtime template

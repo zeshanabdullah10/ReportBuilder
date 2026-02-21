@@ -234,6 +234,163 @@ function generateConfigScript(
 }
 
 /**
+ * Page state for multi-page templates
+ */
+export interface PageState {
+  id: string
+  name: string
+  canvasState: CanvasState
+  settings: {
+    background?: string
+    padding?: number
+    pageSize?: string
+    customWidth?: number
+    customHeight?: number
+  }
+  order: number
+}
+
+/**
+ * Multi-page export options
+ */
+export interface MultiPageExportOptions extends ExportOptions {
+  pages: PageState[]
+}
+
+/**
+ * Compile a single page's canvas state into HTML
+ */
+function compilePageContent(
+  canvasState: CanvasState,
+  pageIndex: number,
+  totalPages: number
+): { html: string; components: RendererResult['componentConfig'][] } {
+  // Handle both wrapped and direct node structures
+  const nodes = canvasState.nodes || (canvasState as unknown as Record<string, CanvasNode>)
+  
+  // Process all nodes recursively
+  const result = processNodes(nodes)
+  
+  // Wrap in page container with page break
+  const pageBreak = pageIndex < totalPages - 1 ? '<div class="page-break"></div>' : ''
+  
+  return {
+    html: `<div class="report-page" data-page="${pageIndex + 1}">${result.html}</div>${pageBreak}`,
+    components: result.components
+  }
+}
+
+/**
+ * Compile multiple pages into a single HTML file
+ *
+ * @param pages - Array of page states with canvas data
+ * @param sampleData - Optional sample data to embed in the HTML
+ * @param options - Export options (page size, margins, watermark, etc.)
+ * @returns Complete HTML string ready to be saved as a file
+ */
+export async function compileMultiPageTemplate(
+  pages: PageState[],
+  sampleData: Record<string, unknown> | null,
+  options: ExportOptions
+): Promise<string> {
+  // Sort pages by order
+  const sortedPages = [...pages].sort((a, b) => a.order - b.order)
+  
+  // Compile each page
+  const pageResults = sortedPages.map((page, index) =>
+    compilePageContent(page.canvasState, index, sortedPages.length)
+  )
+  
+  // Combine all page HTML
+  const bodyHtml = pageResults.map(r => r.html).join('\n')
+  
+  // Combine all component configs
+  const allComponents = pageResults.flatMap(r => r.components)
+  
+  // Generate print CSS
+  const printCss = generatePrintStyles(options.pageSize, options.margins)
+  
+  // Get Chart.js script tag
+  const chartJsScript = getChartJsScriptTag(false)
+  
+  // Generate runtime config script
+  const configScript = generateConfigScript(allComponents, sampleData, options)
+  
+  // Get watermark HTML if needed
+  const watermarkHtml = options.includeWatermark ? WATERMARK_HTML : ''
+  
+  // Assemble the complete HTML document
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(options.filename)}</title>
+
+  <style>
+    /* Reset and base styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.5;
+      color: #000;
+      background: #fff;
+    }
+
+    /* Page container */
+    #report {
+      position: relative;
+      width: 100%;
+      min-height: 100vh;
+    }
+
+    /* Individual page wrapper */
+    .report-page {
+      position: relative;
+      page-break-inside: avoid;
+    }
+
+    /* Page break between pages */
+    .page-break {
+      page-break-after: always;
+      break-after: page;
+      height: 0;
+      margin: 0;
+      padding: 0;
+    }
+
+${printCss}
+  </style>
+
+  ${chartJsScript}
+</head>
+<body>
+  <div id="report">
+${bodyHtml}
+  </div>
+
+${watermarkHtml}
+
+  <script>
+${configScript}
+  </script>
+
+  <script>
+${RUNTIME_TEMPLATE}
+  </script>
+</body>
+</html>`
+
+  return html
+}
+
+/**
  * Compile a Craft.js canvas state into a standalone HTML file
  *
  * @param canvasState - The Craft.js canvas state to compile

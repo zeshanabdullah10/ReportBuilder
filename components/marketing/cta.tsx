@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Rocket, Sparkles } from 'lucide-react'
+import { ArrowRight, Rocket, Sparkles, CheckCircle2, FileText, Zap } from 'lucide-react'
 
 export function CTA() {
   return (
@@ -59,24 +59,22 @@ export function CTA() {
           className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white mb-6"
           style={{ fontFamily: "'Space Grotesk', sans-serif" }}
         >
-          Ready to build{' '}
+          Start building reports{' '}
           <span
             className="relative inline-block"
           >
             <span className="text-[#00ffc8]" style={{
               textShadow: '0 0 30px rgba(0, 255, 200, 0.6), 0 0 60px rgba(0, 255, 200, 0.3)'
-            }}>better reports</span>
+            }}>in minutes</span>
           </span>
-          ?
         </h2>
 
         <p className="text-lg text-gray-400 mb-10 max-w-2xl mx-auto">
-          Start with a free template. Upgrade when you need more.
-          Join engineers who've had enough of overpriced reporting tools.
+          Join engineers who've automated their test reporting. Design once, generate forever.
         </p>
 
         {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+        <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
           {/* Primary CTA */}
           <Link
             href="/signup"
@@ -113,19 +111,11 @@ export function CTA() {
         </div>
 
         {/* Trust indicators */}
-        <div className="mt-12 flex flex-wrap justify-center gap-8 text-sm text-gray-500">
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#39ff14]" />
-            <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>1 free template</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#39ff14]" />
-            <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>No watermarks on Pro</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-[#39ff14]" />
-            <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>Cancel anytime</span>
-          </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
+          <TrustItem icon={<FileText className="w-4 h-4" />} text="1 free template" />
+          <TrustItem icon={<Zap className="w-4 h-4" />} text="Works offline" />
+          <TrustItem icon={<CheckCircle2 className="w-4 h-4" />} text="No watermarks on Pro" />
+          <TrustItem icon={<CheckCircle2 className="w-4 h-4" />} text="Cancel anytime" />
         </div>
 
         {/* Terminal-style decoration */}
@@ -140,5 +130,14 @@ export function CTA() {
         </div>
       </div>
     </section>
+  )
+}
+
+function TrustItem({ icon, text }: { icon: React.ReactNode; text: string }) {
+  return (
+    <div className="flex items-center gap-2 text-sm text-gray-400">
+      <span className="text-[#39ff14]">{icon}</span>
+      <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>{text}</span>
+    </div>
   )
 }

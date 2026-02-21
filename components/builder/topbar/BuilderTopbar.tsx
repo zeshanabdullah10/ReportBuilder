@@ -30,6 +30,9 @@ export function BuilderTopbar() {
     sampleData,
     snapEnabled,
     toggleSnap,
+    pages,
+    activePageId,
+    updatePageCanvasState,
   } = useBuilderStore()
   const [isSaving, setIsSaving] = useState(false)
   const [isEditingName, setIsEditingName] = useState(false)
@@ -69,6 +72,11 @@ export function BuilderTopbar() {
 
     savePromiseRef.current = (async () => {
       const serializedState = query.serialize()
+      
+      // Update current page's canvas state before saving
+      if (activePageId) {
+        updatePageCanvasState(activePageId, JSON.parse(serializedState))
+      }
 
       try {
         const response = await fetch(`/api/templates/${templateId}`, {
@@ -77,6 +85,13 @@ export function BuilderTopbar() {
           body: JSON.stringify({
             canvas_state: JSON.parse(serializedState),
             sample_data: sampleData,
+            settings: {
+              pages: pages.map(p => ({
+                ...p,
+                // Update current page with latest state
+                canvasState: p.id === activePageId ? JSON.parse(serializedState) : p.canvasState
+              }))
+            },
           }),
         })
 
@@ -100,7 +115,7 @@ export function BuilderTopbar() {
     })()
 
     return savePromiseRef.current
-  }, [isPreviewMode, query, templateId, sampleData, setHasUnsavedChanges])
+  }, [isPreviewMode, query, templateId, sampleData, setHasUnsavedChanges, pages, activePageId, updatePageCanvasState])
 
   // Autosave effect - trigger save after delay when changes are detected
   useEffect(() => {

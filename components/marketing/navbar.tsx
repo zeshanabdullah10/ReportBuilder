@@ -29,7 +29,7 @@ export function Navbar() {
               </div>
               <div className="flex flex-col">
                 <span className="font-bold text-lg text-white tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                  LabVIEW Report Builder
+                  Report Builder
                 </span>
                 <span className="text-[10px] text-[#00ffc8]/60 font-mono tracking-wider">
                   PRECISION REPORTING

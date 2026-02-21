@@ -1,8 +1,8 @@
 'use client'
 
-import { Editor, Frame, Element } from '@craftjs/core'
-import { useEffect, useState } from 'react'
-import { useBuilderStore } from '@/lib/stores/builder-store'
+import { Editor, Frame, Element, useEditor } from '@craftjs/core'
+import { useEffect, useState, useCallback } from 'react'
+import { useBuilderStore, ReportPage } from '@/lib/stores/builder-store'
 import { useKeyboardShortcuts } from '@/lib/hooks/use-keyboard-shortcuts'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Page } from './Page'
@@ -26,6 +26,7 @@ import { BuilderTopbar } from '../topbar/BuilderTopbar'
 import { GridOverlay } from '../layout/GridOverlay'
 import { DropPositionTracker } from '../layout/DropPositionTracker'
 import { CanvasViewport } from '../layout/CanvasViewport'
+import { PageNavigation } from '../navigation/PageNavigation'
 import { Eye } from 'lucide-react'
 
 // Import the oscilloscope theme CSS
@@ -37,7 +38,27 @@ interface BuilderCanvasProps {
     name: string
     canvas_state: any
     sample_data: any
+    pages?: ReportPage[] // Optional multi-page support
   }
+}
+
+// Component to render the current page content
+function PageContent({ hasSavedState, canvasState }: { 
+  hasSavedState: boolean
+  canvasState: any 
+}) {
+  if (hasSavedState && canvasState) {
+    return <Frame data={JSON.stringify(canvasState)} />
+  }
+  
+  return (
+    <Frame>
+      <Element is={Page} canvas background="white" padding={40} pageSize="A4">
+        <Text text="Welcome to the Template Builder" fontSize={28} fontWeight="bold" color="#333333" />
+        <Text text="Drag components from the left panel to start building your report template." fontSize={16} color="#666666" />
+      </Element>
+    </Frame>
+  )
 }
 
 // Inner component that uses keyboard shortcuts (must be inside Editor context)
@@ -48,6 +69,38 @@ function BuilderContent({ template, hasSavedState, isPreviewMode }: {
 }) {
   // Enable keyboard shortcuts
   useKeyboardShortcuts()
+
+  const { 
+    pages, 
+    activePageId, 
+    updatePageCanvasState,
+  } = useBuilderStore()
+
+  // Get the current active page
+  const activePage = pages.find(p => p.id === activePageId) || pages[0]
+  const currentPageState = activePage?.canvasState
+
+  // Save canvas state when switching pages
+  const { query } = useEditor()
+
+  // Callback to save current page state before switching
+  const saveCurrentPageState = useCallback(() => {
+    if (activePageId) {
+      try {
+        const currentState = query.serialize()
+        updatePageCanvasState(activePageId, JSON.parse(currentState))
+      } catch (error) {
+        console.error('Error saving page state:', error)
+      }
+    }
+  }, [activePageId, query, updatePageCanvasState])
+
+  // Save state on unmount or page change
+  useEffect(() => {
+    return () => {
+      saveCurrentPageState()
+    }
+  }, [activePageId]) // Re-run when page changes
 
   return (
     <>
@@ -78,19 +131,16 @@ function BuilderContent({ template, hasSavedState, isPreviewMode }: {
           )}
 
           <CanvasViewport>
-            <div className="relative min-h-screen">
-              {hasSavedState ? (
-                <Frame data={JSON.stringify(template.canvas_state)} />
-              ) : (
-                <Frame>
-                  <Element is={Page} canvas background="white" padding={40} pageSize="A4">
-                    <Text text="Welcome to the Template Builder" fontSize={28} fontWeight="bold" color="#333333" />
-                    <Text text="Drag components from the left panel to start building your report template." fontSize={16} color="#666666" />
-                  </Element>
-                </Frame>
-              )}
+            <div className="relative min-h-screen pb-14">
+              <PageContent 
+                hasSavedState={hasSavedState} 
+                canvasState={currentPageState}
+              />
             </div>
           </CanvasViewport>
+
+          {/* Page Navigation - Bottom Bar */}
+          <PageNavigation />
         </main>
 
         {/* Right Sidebar - Settings (hidden in preview mode) */}
@@ -105,7 +155,17 @@ function BuilderContent({ template, hasSavedState, isPreviewMode }: {
 }
 
 export function BuilderCanvas({ template }: BuilderCanvasProps) {
-  const { setTemplateId, setTemplateName, setSampleData, isPreviewMode, setHasUnsavedChanges } = useBuilderStore()
+  const { 
+    setTemplateId, 
+    setTemplateName, 
+    setSampleData, 
+    isPreviewMode, 
+    setHasUnsavedChanges,
+    setPages,
+    setActivePage,
+    pages,
+  } = useBuilderStore()
+  
   const [loaded, setLoaded] = useState(false)
 
   // Initialize store with template data
@@ -113,8 +173,46 @@ export function BuilderCanvas({ template }: BuilderCanvasProps) {
     setTemplateId(template.id)
     setTemplateName(template.name)
     setSampleData(template.sample_data)
+
+    // Initialize pages from template
+    if (template.pages && template.pages.length > 0) {
+      // Multi-page template
+      setPages(template.pages)
+      setActivePage(template.pages[0].id)
+    } else if (template.canvas_state && Object.keys(template.canvas_state).length > 0) {
+      // Legacy single-page template - convert to multi-page format
+      const initialPage: ReportPage = {
+        id: `page-${Date.now()}`,
+        name: 'Page 1',
+        canvasState: template.canvas_state,
+        settings: {
+          background: 'white',
+          padding: 40,
+          pageSize: 'A4',
+        },
+        order: 0,
+      }
+      setPages([initialPage])
+      setActivePage(initialPage.id)
+    } else {
+      // New template - create default page
+      const defaultPage: ReportPage = {
+        id: `page-${Date.now()}`,
+        name: 'Page 1',
+        canvasState: null,
+        settings: {
+          background: 'white',
+          padding: 40,
+          pageSize: 'A4',
+        },
+        order: 0,
+      }
+      setPages([defaultPage])
+      setActivePage(defaultPage.id)
+    }
+
     setLoaded(true)
-  }, [template.id, template.name, template.sample_data, setTemplateId, setTemplateName, setSampleData])
+  }, [template.id, template.name, template.sample_data, template.canvas_state, template.pages, setTemplateId, setTemplateName, setSampleData, setPages, setActivePage])
 
   // Track changes
   const handleNodesChange = () => {
@@ -129,10 +227,11 @@ export function BuilderCanvas({ template }: BuilderCanvasProps) {
     )
   }
 
-  // Check if we have valid saved state
-  const hasSavedState = template.canvas_state &&
-    typeof template.canvas_state === 'object' &&
-    Object.keys(template.canvas_state).length > 0
+  // Check if we have valid saved state for the current page
+  const activePage = pages.find(p => p.id === pages[0]?.id)
+  const hasSavedState = activePage?.canvasState &&
+    typeof activePage.canvasState === 'object' &&
+    Object.keys(activePage.canvasState).length > 0
 
   return (
     <div className="flex flex-col h-screen bg-[#0a0f14]">

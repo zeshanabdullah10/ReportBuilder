@@ -3,11 +3,12 @@
  *
  * POST /api/templates/[id]/export
  * Compiles a template into a standalone HTML file for offline use with LabVIEW.
+ * Supports both single-page and multi-page templates.
  */
 
 import { createClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
-import { compileTemplate, ExportOptions, CanvasState } from '@/lib/export'
+import { compileTemplate, compileMultiPageTemplate, ExportOptions, CanvasState, PageState } from '@/lib/export'
 
 export async function POST(
   request: Request,
@@ -85,19 +86,58 @@ export async function POST(
 
   // 5. Compile template
   try {
-    const canvasState = template.canvas_state as unknown as CanvasState
     const sampleData = template.sample_data as Record<string, unknown> | null
-
-    const html = await compileTemplate(canvasState, sampleData, options)
-
-    // 6. Return HTML file with download headers
-    const filename = `${options.filename}.html`
-    return new NextResponse(html, {
-      headers: {
-        'Content-Type': 'text/html; charset=utf-8',
-        'Content-Disposition': `attachment; filename="${encodeURIComponent(filename)}"`,
-      },
-    })
+    
+    // Check if template has multiple pages stored in settings
+    const templateSettings = template.settings as Record<string, unknown> | null
+    const templatePages = templateSettings?.pages as PageState[] | null
+    
+    if (templatePages && Array.isArray(templatePages) && templatePages.length > 0) {
+      // Multi-page template
+      // Filter out pages without valid canvas state
+      const validPages = templatePages.filter(page => 
+        page.canvasState && 
+        typeof page.canvasState === 'object' &&
+        Object.keys(page.canvasState).length > 0
+      )
+      
+      if (validPages.length === 0) {
+        return NextResponse.json(
+          { error: 'No valid pages found in template' },
+          { status: 400 }
+        )
+      }
+      
+      const html = await compileMultiPageTemplate(validPages, sampleData, options)
+      
+      const filename = `${options.filename}.html`
+      return new NextResponse(html, {
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Content-Disposition': `attachment; filename="${encodeURIComponent(filename)}"`,
+        },
+      })
+    } else {
+      // Single-page template (legacy format)
+      const canvasState = template.canvas_state as unknown as CanvasState
+      
+      if (!canvasState || typeof canvasState !== 'object' || Object.keys(canvasState).length === 0) {
+        return NextResponse.json(
+          { error: 'Template has no content to export' },
+          { status: 400 }
+        )
+      }
+      
+      const html = await compileTemplate(canvasState, sampleData, options)
+      
+      const filename = `${options.filename}.html`
+      return new NextResponse(html, {
+        headers: {
+          'Content-Type': 'text/html; charset=utf-8',
+          'Content-Disposition': `attachment; filename="${encodeURIComponent(filename)}"`,
+        },
+      })
+    }
   } catch (error) {
     console.error('Export error:', error)
     return NextResponse.json(

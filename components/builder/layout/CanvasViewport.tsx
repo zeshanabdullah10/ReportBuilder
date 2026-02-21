@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react'
 import { useBuilderStore } from '@/lib/stores/builder-store'
-import { ZoomIn, ZoomOut, Maximize, Move } from 'lucide-react'
+import { ZoomIn, ZoomOut, Maximize, Move, Hand } from 'lucide-react'
 
 interface CanvasViewportProps {
   children: React.ReactNode
@@ -21,13 +21,15 @@ export function CanvasViewport({ children }: CanvasViewportProps) {
     setPan,
     setIsPanning,
     isPreviewMode,
+    handToolEnabled,
+    toggleHandTool,
   } = useBuilderStore()
 
   const containerRef = useRef<HTMLDivElement>(null)
   const [isSpacePressed, setIsSpacePressed] = useState(false)
   const lastPanPosition = useRef({ x: 0, y: 0 })
 
-  // Handle keyboard shortcuts for zoom
+  // Handle keyboard shortcuts for zoom and hand tool
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
     // Zoom shortcuts: Ctrl/Cmd + +/-/0
     if ((e.ctrlKey || e.metaKey) && !isPreviewMode) {
@@ -43,7 +45,17 @@ export function CanvasViewport({ children }: CanvasViewportProps) {
       }
     }
 
-    // Space bar for panning mode
+    // H key for hand tool toggle
+    if (e.key === 'h' || e.key === 'H') {
+      // Only toggle if not focused on an input
+      const target = e.target as HTMLElement
+      if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA' && !target.isContentEditable) {
+        e.preventDefault()
+        toggleHandTool()
+      }
+    }
+
+    // Space bar for temporary panning mode (while held)
     if (e.code === 'Space' && !e.repeat && !isPreviewMode) {
       // Only activate if not focused on an input
       const target = e.target as HTMLElement
@@ -52,7 +64,7 @@ export function CanvasViewport({ children }: CanvasViewportProps) {
         setIsSpacePressed(true)
       }
     }
-  }, [zoomIn, zoomOut, resetZoom, isPreviewMode])
+  }, [zoomIn, zoomOut, resetZoom, isPreviewMode, toggleHandTool])
 
   const handleKeyUp = useCallback((e: KeyboardEvent) => {
     if (e.code === 'Space') {
@@ -74,17 +86,21 @@ export function CanvasViewport({ children }: CanvasViewportProps) {
     }
   }, [zoom, setZoom, isPreviewMode])
 
-  // Handle panning with mouse drag (when space is held or middle mouse button)
+  // Handle panning with mouse drag
+  // Activates when: hand tool is enabled, space is held, or middle mouse button
   const handleMouseDown = useCallback((e: MouseEvent) => {
     if (isPreviewMode) return
 
-    // Middle mouse button or space + left click
-    if (e.button === 1 || (isSpacePressed && e.button === 0)) {
+    // Check if hand tool is enabled (toggled) or space is pressed (temporary)
+    const shouldPan = handToolEnabled || isSpacePressed
+
+    // Middle mouse button or left click with hand tool active
+    if (e.button === 1 || (shouldPan && e.button === 0)) {
       e.preventDefault()
       setIsPanning(true)
       lastPanPosition.current = { x: e.clientX, y: e.clientY }
     }
-  }, [isSpacePressed, setIsPanning, isPreviewMode])
+  }, [isSpacePressed, handToolEnabled, setIsPanning, isPreviewMode])
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
     if (!isPanning) return
@@ -128,17 +144,16 @@ export function CanvasViewport({ children }: CanvasViewportProps) {
     }
   }, [handleWheel, handleMouseDown, handleMouseMove, handleMouseUp])
 
-  const cursorClass = isSpacePressed
-    ? 'cursor-grab'
-    : isPanning
-    ? 'cursor-grabbing'
-    : ''
+  // Determine cursor state
+  // Priority: panning > space pressed > hand tool enabled > default
+  const shouldShowGrabCursor = handToolEnabled || isSpacePressed
+  const cursorStyle = isPanning ? 'grabbing' : shouldShowGrabCursor ? 'grab' : undefined
 
   return (
     <div
       ref={containerRef}
-      className={`absolute inset-0 overflow-hidden ${cursorClass}`}
-      style={{ cursor: isPanning ? 'grabbing' : isSpacePressed ? 'grab' : undefined }}
+      className={`absolute inset-0 overflow-hidden`}
+      style={{ cursor: cursorStyle }}
     >
       {/* Zoomable/Pannable content */}
       <div
@@ -148,6 +163,8 @@ export function CanvasViewport({ children }: CanvasViewportProps) {
           transformOrigin: '0 0',
           width: '100%',
           height: '100%',
+          // Prevent pointer events on content when hand tool is active (to allow panning)
+          pointerEvents: handToolEnabled && !isPanning ? 'none' : 'auto',
         }}
       >
         {children}
@@ -155,7 +172,22 @@ export function CanvasViewport({ children }: CanvasViewportProps) {
 
       {/* Zoom controls - fixed position */}
       {!isPreviewMode && (
-        <div className="absolute bottom-4 right-4 z-50 flex items-center gap-1 bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded-lg p-1 shadow-lg">
+        <div className="absolute bottom-16 right-4 z-50 flex items-center gap-1 bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded-lg p-1 shadow-lg">
+          {/* Hand Tool Toggle */}
+          <button
+            onClick={toggleHandTool}
+            className={`p-2 rounded transition-colors ${
+              handToolEnabled
+                ? 'text-[#0a0f14] bg-[#00ffc8]'
+                : 'text-gray-400 hover:text-[#00ffc8] hover:bg-[rgba(0,255,200,0.1)]'
+            }`}
+            title={`Hand Tool (H) - ${handToolEnabled ? 'Enabled' : 'Disabled'}`}
+          >
+            <Hand className="w-4 h-4" />
+          </button>
+
+          <div className="w-px h-5 bg-[rgba(0,255,200,0.2)]" />
+
           <button
             onClick={zoomOut}
             className="p-2 text-gray-400 hover:text-[#00ffc8] hover:bg-[rgba(0,255,200,0.1)] rounded transition-colors"
@@ -194,6 +226,16 @@ export function CanvasViewport({ children }: CanvasViewportProps) {
           <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-[#050810] border border-[rgba(0,255,200,0.3)] text-[#00ffc8] text-sm">
             <Move className="w-4 h-4" />
             Panning
+          </div>
+        </div>
+      )}
+
+      {/* Hand tool enabled indicator */}
+      {handToolEnabled && !isPanning && !isPreviewMode && (
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-[#00ffc8] text-[#0a0f14] text-sm font-medium">
+            <Hand className="w-4 h-4" />
+            Hand Tool Active (H to disable)
           </div>
         </div>
       )}

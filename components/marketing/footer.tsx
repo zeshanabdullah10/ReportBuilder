@@ -25,7 +25,7 @@ export function Footer() {
                   className="font-bold text-lg text-white"
                   style={{ fontFamily: "'Space Grotesk', sans-serif" }}
                 >
-                  LabVIEW Report Builder
+                  Report Builder
                 </span>
                 <span
                   className="text-[10px] text-[#00ffc8]/50 font-mono tracking-wider"
@@ -37,7 +37,7 @@ export function Footer() {
 
             <p className="mt-6 text-gray-400 max-w-sm leading-relaxed">
               Design professional report templates visually. Download self-contained HTML files
-              that work offline with LabVIEW integration. No DIAdem required.
+              that work offline with any test framework. No server required.
             </p>
 
             {/* Status indicators */}
@@ -110,7 +110,7 @@ export function Footer() {
               className="text-sm text-gray-500"
               style={{ fontFamily: "'JetBrains Mono', monospace" }}
             >
-              &copy; {new Date().getFullYear()} LabVIEW Report Builder. All rights reserved.
+              &copy; {new Date().getFullYear()} Report Builder. All rights reserved.
             </p>
 
             {/* Built with badge */}

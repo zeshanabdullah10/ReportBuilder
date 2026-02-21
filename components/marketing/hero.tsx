@@ -27,6 +27,15 @@ const floatingPoints = [
   { left: 61.23, top: 84.56, duration: 3.78, delay: 1.01 },
 ]
 
+// Language/platform icons for trust indicators
+const languages = [
+  { name: 'Python', color: '#3776AB' },
+  { name: 'C#', color: '#512BD4' },
+  { name: 'LabVIEW', color: '#FFDB00' },
+  { name: 'MATLAB', color: '#E16737' },
+  { name: 'JSON', color: '#00ffc8' },
+]
+
 export function Hero() {
   return (
     <section className="relative min-h-screen flex items-center overflow-hidden bg-[#0a0f14]">
@@ -77,7 +86,7 @@ export function Hero() {
                 className="text-xs text-[#00ffc8] uppercase tracking-widest"
                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
-                System Online • No DIAdem Required
+                System Online • Works With Any Test Framework
               </span>
             </div>
 
@@ -86,13 +95,12 @@ export function Hero() {
               className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight mb-6"
               style={{ fontFamily: "'Space Grotesk', sans-serif" }}
             >
-              <span className="block">Professional Reports</span>
+              <span className="block">Test Reports That</span>
               <span className="block mt-2">
-                for{' '}
                 <span className="relative inline-block">
                   <span className="text-[#00ffc8]" style={{
                     textShadow: '0 0 20px rgba(0, 255, 200, 0.5), 0 0 40px rgba(0, 255, 200, 0.2)'
-                  }}>LabVIEW</span>
+                  }}>Design Themselves</span>
                   {/* Underline glow */}
                   <svg className="absolute -bottom-2 left-0 w-full h-2" viewBox="0 0 200 8" preserveAspectRatio="none">
                     <path
@@ -112,9 +120,9 @@ export function Hero() {
 
             {/* Subheadline */}
             <p className="text-lg text-gray-400 mb-8 max-w-xl leading-relaxed">
-              Design report templates visually in your browser. Download self-contained HTML files
+              Design report templates visually in your browser. Export self-contained HTML files
               that generate PDFs offline.{' '}
-              <span className="text-[#00ffc8] font-mono text-sm">Zero dependencies. Full control.</span>
+              <span className="text-[#00ffc8] font-mono text-sm">Works with JSON from any language.</span>
             </p>
 
             {/* CTA Buttons */}
@@ -141,20 +149,20 @@ export function Hero() {
               </Link>
             </div>
 
-            {/* Trust indicators */}
-            <div className="flex items-center gap-6 text-sm text-gray-500">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#39ff14]" />
-                <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>Offline-first</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#39ff14]" />
-                <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>Self-contained HTML</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-[#39ff14]" />
-                <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>JSON data binding</span>
-              </div>
+            {/* Language/platform indicators */}
+            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
+              <span className="text-gray-400" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+                Works with:
+              </span>
+              {languages.map((lang) => (
+                <div key={lang.name} className="flex items-center gap-1.5">
+                  <div 
+                    className="w-2 h-2 rounded-full" 
+                    style={{ backgroundColor: lang.color }}
+                  />
+                  <span style={{ fontFamily: "'JetBrains Mono', monospace" }}>{lang.name}</span>
+                </div>
+              ))}
             </div>
           </div>
 
@@ -236,7 +244,7 @@ export function Hero() {
               <div className="mt-4 grid grid-cols-3 gap-3">
                 <FeaturePill icon={<Layers className="w-4 h-4" />} label="Visual Builder" />
                 <FeaturePill icon={<FileCode className="w-4 h-4" />} label="HTML Export" />
-                <FeaturePill icon={<Cpu className="w-4 h-4" />} label="LabVIEW" />
+                <FeaturePill icon={<Cpu className="w-4 h-4" />} label="Any Language" />
               </div>
             </div>
 
