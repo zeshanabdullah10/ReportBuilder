@@ -23,12 +23,19 @@ import { TestSummaryBox } from '../components/TestSummaryBox'
 import { MeasurementTable } from '../components/MeasurementTable'
 import { Histogram } from '../components/Histogram'
 import { ScatterPlot } from '../components/ScatterPlot'
+import { Logo } from '../components/Logo'
+import { Watermark } from '../components/Watermark'
+import { SpecBox } from '../components/SpecBox'
+import { ToleranceBand } from '../components/ToleranceBand'
+import { PassRateChart } from '../components/PassRateChart'
+import { RevisionBlock } from '../components/RevisionBlock'
 import { CustomComponentsPanel } from '../custom/CustomComponentsPanel'
 import {
   Type, Square, Image as ImageIcon, Table2, BarChart3, Minus,
   FileText, GripVertical, CheckCircle, Divide, Hash, Calendar,
   Gauge as GaugeIcon, Loader, List, Bookmark, ChevronDown, ChevronRight,
-  QrCode, Barcode as BarcodeIcon, PenLine, ClipboardCheck, TestTube, ScatterChart
+  QrCode, Barcode as BarcodeIcon, PenLine, ClipboardCheck, TestTube, ScatterChart,
+  Building2, Droplet, Box, Ruler, PieChart, GitCommit
 } from 'lucide-react'
 
 const toolboxItems = [
@@ -185,6 +192,42 @@ const toolboxItems = [
         icon: ScatterChart,
         component: <ScatterPlot />,
         description: 'Correlation analysis',
+      },
+      {
+        name: 'Logo',
+        icon: Building2,
+        component: <Logo />,
+        description: 'Company logo with fallback',
+      },
+      {
+        name: 'Watermark',
+        icon: Droplet,
+        component: <Watermark />,
+        description: 'Repeated text overlay',
+      },
+      {
+        name: 'Spec Box',
+        icon: Box,
+        component: <SpecBox />,
+        description: 'Specification with tolerance',
+      },
+      {
+        name: 'Tolerance Band',
+        icon: Ruler,
+        component: <ToleranceBand />,
+        description: 'Visual tolerance indicator',
+      },
+      {
+        name: 'Pass Rate Chart',
+        icon: PieChart,
+        component: <PassRateChart />,
+        description: 'Pass/fail donut chart',
+      },
+      {
+        name: 'Revision Block',
+        icon: GitCommit,
+        component: <RevisionBlock />,
+        description: 'Document revision history',
       },
     ],
   },

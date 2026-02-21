@@ -27,6 +27,12 @@ import { TestSummaryBox } from '../components/TestSummaryBox'
 import { MeasurementTable } from '../components/MeasurementTable'
 import { Histogram } from '../components/Histogram'
 import { ScatterPlot } from '../components/ScatterPlot'
+import { Logo } from '../components/Logo'
+import { Watermark } from '../components/Watermark'
+import { SpecBox } from '../components/SpecBox'
+import { ToleranceBand } from '../components/ToleranceBand'
+import { PassRateChart } from '../components/PassRateChart'
+import { RevisionBlock } from '../components/RevisionBlock'
 import { Toolbox } from '../toolbox/Toolbox'
 import { RightSidebar } from '../settings/RightSidebar'
 import { BuilderTopbar } from '../topbar/BuilderTopbar'
@@ -247,7 +253,7 @@ export function BuilderCanvas({ template }: BuilderCanvasProps) {
       <ErrorBoundary>
         <Editor
           key={activePageId || 'default'}
-          resolver={{ Page, Text, Container, Image, Table, Chart, Spacer, PageBreak, Indicator, Divider, PageNumber, DateTime, Gauge, ProgressBar, BulletList, QRCode, Barcode, SignatureLine, TestSummaryBox, MeasurementTable, Histogram, ScatterPlot }}
+          resolver={{ Page, Text, Container, Image, Table, Chart, Spacer, PageBreak, Indicator, Divider, PageNumber, DateTime, Gauge, ProgressBar, BulletList, QRCode, Barcode, SignatureLine, TestSummaryBox, MeasurementTable, Histogram, ScatterPlot, Logo, Watermark, SpecBox, ToleranceBand, PassRateChart, RevisionBlock }}
           enabled={!isPreviewMode}
           indicator={{
             success: 'transparent',
