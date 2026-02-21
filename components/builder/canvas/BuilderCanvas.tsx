@@ -132,8 +132,9 @@ function BuilderContent({ template, hasSavedState, isPreviewMode }: {
 
           <CanvasViewport>
             <div className="relative min-h-screen pb-14">
-              <PageContent 
-                hasSavedState={hasSavedState} 
+              <PageContent
+                key={activePageId || 'default'}
+                hasSavedState={hasSavedState}
                 canvasState={currentPageState}
               />
             </div>
@@ -155,15 +156,16 @@ function BuilderContent({ template, hasSavedState, isPreviewMode }: {
 }
 
 export function BuilderCanvas({ template }: BuilderCanvasProps) {
-  const { 
-    setTemplateId, 
-    setTemplateName, 
-    setSampleData, 
-    isPreviewMode, 
+  const {
+    setTemplateId,
+    setTemplateName,
+    setSampleData,
+    isPreviewMode,
     setHasUnsavedChanges,
     setPages,
     setActivePage,
     pages,
+    activePageId,
   } = useBuilderStore()
   
   const [loaded, setLoaded] = useState(false)
@@ -228,7 +230,7 @@ export function BuilderCanvas({ template }: BuilderCanvasProps) {
   }
 
   // Check if we have valid saved state for the current page
-  const activePage = pages.find(p => p.id === pages[0]?.id)
+  const activePage = pages.find(p => p.id === activePageId) || pages[0]
   const hasSavedState = activePage?.canvasState &&
     typeof activePage.canvasState === 'object' &&
     Object.keys(activePage.canvasState).length > 0
@@ -237,6 +239,7 @@ export function BuilderCanvas({ template }: BuilderCanvasProps) {
     <div className="flex flex-col h-screen bg-[#0a0f14]">
       <ErrorBoundary>
         <Editor
+          key={activePageId || 'default'}
           resolver={{ Page, Text, Container, Image, Table, Chart, Spacer, PageBreak, Indicator, Divider, PageNumber, DateTime, Gauge, ProgressBar, BulletList }}
           enabled={!isPreviewMode}
           indicator={{
@@ -246,10 +249,10 @@ export function BuilderCanvas({ template }: BuilderCanvasProps) {
           }}
           onNodesChange={handleNodesChange}
         >
-          <BuilderContent 
-            template={template} 
-            hasSavedState={hasSavedState} 
-            isPreviewMode={isPreviewMode} 
+          <BuilderContent
+            template={template}
+            hasSavedState={hasSavedState}
+            isPreviewMode={isPreviewMode}
           />
         </Editor>
       </ErrorBoundary>
