@@ -1,12 +1,7 @@
 import React from 'react';
 import { Composition } from 'remotion';
-import { loadFont } from '@remotion/google-fonts';
 import { Video } from './Video';
 import { theme } from './config/theme';
-
-// Load fonts for the video
-loadFont('SpaceGrotesk', { weights: ['400', '500', '600', '700'] });
-loadFont('JetBrainsMono', { weights: ['400', '500'] });
 
 const totalDuration = theme.timing.outro.start + theme.timing.outro.duration;
 
