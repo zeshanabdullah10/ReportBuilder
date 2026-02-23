@@ -1,5 +1,10 @@
 import React from 'react';
 import { Composition } from 'remotion';
+import { loadFont } from '@remotion/google-fonts';
+
+// Load fonts for the video
+loadFont('SpaceGrotesk', { weights: ['400', '500', '600', '700'] });
+loadFont('JetBrainsMono', { weights: ['400', '500'] });
 
 // Placeholder composition - will be updated with actual video
 const PlaceholderVideo: React.FC = () => {
