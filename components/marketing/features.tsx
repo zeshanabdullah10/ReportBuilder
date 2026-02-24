@@ -1,55 +1,133 @@
 'use client'
 
 import { useRef, useEffect, useState } from 'react'
-import { BarChart3, Table, Type, Image, CheckCircle, Layers, TrendingUp, ArrowUpRight } from 'lucide-react'
+import { 
+  BarChart3, Table, Type, Image, CheckCircle, Layers, TrendingUp, ArrowUpRight,
+  Palette, Eye, Paintbrush, Wifi, FileDown, HardDrive, Code, Braces, Globe
+} from 'lucide-react'
 
-const features = [
+// Features organized by value proposition category
+const categories = [
   {
-    icon: Type,
-    title: 'Rich Text Blocks',
-    description: 'Formatted text with variable bindings for dynamic data injection from LabVIEW.',
-    metric: '∞ variables',
-    status: 'ACTIVE',
+    title: 'Visual Design',
+    description: 'Build beautiful templates without coding',
+    icon: Palette,
+    color: '#00ffc8',
+    features: [
+      {
+        icon: Layers,
+        title: 'Drag-Drop Builder',
+        description: 'Intuitive canvas for template design. Position elements freely with pixel-perfect precision.',
+        metric: 'Zero code',
+        status: 'ACTIVE',
+      },
+      {
+        icon: Eye,
+        title: 'Real-time Preview',
+        description: 'See changes instantly as you design. What you see is what you get in the final PDF.',
+        metric: '<100ms render',
+        status: 'LIVE',
+      },
+      {
+        icon: Paintbrush,
+        title: 'Custom Styling',
+        description: 'Fonts, colors, borders, and branding options. Match your company style guide perfectly.',
+        metric: 'CSS flexible',
+        status: 'READY',
+      },
+    ],
   },
   {
-    icon: Table,
-    title: 'Dynamic Tables',
-    description: 'Auto-populate tables from array data in your JSON payload.',
-    metric: 'O(n) render',
-    status: 'OPTIMIZED',
+    title: 'Offline Capability',
+    description: 'Works anywhere, no server required',
+    icon: Wifi,
+    color: '#39ff14',
+    features: [
+      {
+        icon: FileDown,
+        title: 'Self-Contained HTML',
+        description: 'All assets embedded in a single file. No external dependencies or network calls needed.',
+        metric: '1 file',
+        status: 'OFFLINE',
+      },
+      {
+        icon: HardDrive,
+        title: 'No Server Required',
+        description: 'Generate PDFs without internet access. Perfect for secure facilities and air-gapped networks.',
+        metric: '100% offline',
+        status: 'SECURE',
+      },
+      {
+        icon: Layers,
+        title: 'Version Control Ready',
+        description: 'Track template changes in Git. Collaborate with your team using standard workflows.',
+        metric: 'Git-friendly',
+        status: 'TRACKED',
+      },
+    ],
   },
+  {
+    title: 'Universal Integration',
+    description: 'Works with any programming language',
+    icon: Code,
+    color: '#ffb000',
+    features: [
+      {
+        icon: Braces,
+        title: 'JSON Data Binding',
+        description: 'Connect any data source with simple {{variable}} syntax. Arrays, objects, and nested data supported.',
+        metric: 'Any data',
+        status: 'FLEXIBLE',
+      },
+      {
+        icon: Globe,
+        title: 'Multi-Language Support',
+        description: 'Python, C#, LabVIEW, MATLAB, or any language that can write JSON. No SDK required.',
+        metric: '5+ languages',
+        status: 'UNIVERSAL',
+      },
+      {
+        icon: Table,
+        title: 'Dynamic Tables',
+        description: 'Auto-populate tables from array data. Headers, rows, and formatting all configurable.',
+        metric: 'O(n) render',
+        status: 'OPTIMIZED',
+      },
+    ],
+  },
+]
+
+// Additional component features
+const componentFeatures = [
   {
     icon: BarChart3,
     title: 'Charts & Graphs',
     description: 'Line, bar, pie, and scatter visualizations powered by Chart.js.',
     metric: '8 chart types',
-    status: 'READY',
+  },
+  {
+    icon: Type,
+    title: 'Rich Text Blocks',
+    description: 'Formatted text with variable bindings for dynamic data injection.',
+    metric: '∞ variables',
   },
   {
     icon: Image,
     title: 'Images & Logos',
     description: 'Embed company logos, product images, or data-driven visual elements.',
     metric: 'Base64 embed',
-    status: 'OFFLINE',
   },
   {
     icon: CheckCircle,
     title: 'Pass/Fail Indicators',
     description: 'Visual status indicators for test results with customizable thresholds.',
     metric: '<1ms eval',
-    status: 'ACTIVE',
-  },
-  {
-    icon: Layers,
-    title: 'Flexible Layouts',
-    description: 'Grid-based layouts with containers, spacers, and page break controls.',
-    metric: 'A4/A3/Letter',
-    status: 'PRINT-READY',
   },
 ]
 
 export function Features() {
   const [isVisible, setIsVisible] = useState(false)
+  const [activeCategory, setActiveCategory] = useState(0)
   const sectionRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
@@ -99,26 +177,64 @@ export function Features() {
             Everything you need for{' '}
             <span className="text-[#00ffc8]" style={{
               textShadow: '0 0 20px rgba(0, 255, 200, 0.4)'
-            }}>test reports</span>
+            }}>professional reports</span>
           </h2>
 
           <p className="text-lg text-gray-400 max-w-2xl mx-auto">
-            Build professional reports with precision-engineered components.
-            No complexity. No bloat. Just results.
+            Three core pillars that make report generation effortless, no matter your tech stack.
           </p>
 
           {/* Stats bar */}
           <div className="flex flex-wrap justify-center gap-8 mt-8 pt-8 border-t border-[rgba(0,255,200,0.1)]">
-            <Stat value="6" label="Core modules" />
+            <Stat value="12" label="Core components" />
             <Stat value="0" label="External deps" />
             <Stat value="100%" label="Offline capable" />
             <Stat value="<50KB" label="Avg template" />
           </div>
         </div>
 
-        {/* Features grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {features.map((feature, index) => (
+        {/* Category tabs */}
+        <div className="flex flex-wrap justify-center gap-4 mb-12">
+          {categories.map((category, index) => (
+            <button
+              key={category.title}
+              onClick={() => setActiveCategory(index)}
+              className={`
+                flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-300
+                ${activeCategory === index
+                  ? 'bg-[rgba(0,255,200,0.1)] border-2'
+                  : 'bg-transparent border border-[rgba(0,255,200,0.2)] hover:border-[rgba(0,255,200,0.4)]'
+                }
+              `}
+              style={{
+                borderColor: activeCategory === index ? category.color : undefined,
+                fontFamily: "'JetBrains Mono', monospace",
+              }}
+            >
+              <category.icon 
+                className="w-5 h-5" 
+                style={{ color: activeCategory === index ? category.color : '#00ffc880' }}
+              />
+              <span 
+                className="text-sm"
+                style={{ color: activeCategory === index ? category.color : '#9ca3af' }}
+              >
+                {category.title}
+              </span>
+            </button>
+          ))}
+        </div>
+
+        {/* Active category description */}
+        <div className="text-center mb-12">
+          <p className="text-gray-400 text-lg">
+            {categories[activeCategory].description}
+          </p>
+        </div>
+
+        {/* Features grid for active category */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-20">
+          {categories[activeCategory].features.map((feature, index) => (
             <div
               key={feature.title}
               className={`
@@ -134,7 +250,10 @@ export function Features() {
               }}
             >
               {/* Top glow line */}
-              <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#00ffc8]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              <div 
+                className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#00ffc8]/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"
+                style={{ background: `linear-gradient(90deg, transparent, ${categories[activeCategory].color}50, transparent)` }}
+              />
 
               {/* Corner accents */}
               <div className="absolute top-0 left-0 w-3 h-3 border-l border-t border-[#00ffc8]/30 opacity-0 group-hover:opacity-100 transition-opacity" />
@@ -147,21 +266,35 @@ export function Features() {
                 <div className="flex items-center gap-3">
                   {/* Icon container */}
                   <div className="relative">
-                    <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-[rgba(0,255,200,0.1)] border border-[rgba(0,255,200,0.2)] group-hover:bg-[rgba(0,255,200,0.15)] transition-colors">
-                      <feature.icon className="w-5 h-5 text-[#00ffc8]" />
+                    <div 
+                      className="w-10 h-10 flex items-center justify-center rounded-lg border group-hover:bg-[rgba(0,255,200,0.15)] transition-colors"
+                      style={{
+                        backgroundColor: 'rgba(0,255,200,0.1)',
+                        borderColor: `${categories[activeCategory].color}40`,
+                      }}
+                    >
+                      <feature.icon className="w-5 h-5" style={{ color: categories[activeCategory].color }} />
                     </div>
                   </div>
 
                   {/* Status badge */}
                   <span
-                    className="text-[10px] px-2 py-0.5 rounded bg-[rgba(57,255,20,0.1)] text-[#39ff14] border border-[rgba(57,255,20,0.2)]"
-                    style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                    className="text-[10px] px-2 py-0.5 rounded border"
+                    style={{ 
+                      fontFamily: "'JetBrains Mono', monospace",
+                      backgroundColor: `${categories[activeCategory].color}10`,
+                      color: categories[activeCategory].color,
+                      borderColor: `${categories[activeCategory].color}30`,
+                    }}
                   >
                     {feature.status}
                   </span>
                 </div>
 
-                <ArrowUpRight className="w-4 h-4 text-gray-600 group-hover:text-[#00ffc8] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                <ArrowUpRight 
+                  className="w-4 h-4 text-gray-600 group-hover:text-[#00ffc8] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" 
+                  style={{ color: categories[activeCategory].color }}
+                />
               </div>
 
               {/* Content */}
@@ -185,14 +318,63 @@ export function Features() {
                   METRIC
                 </span>
                 <span
-                  className="text-sm text-[#00ffc8]"
-                  style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                  className="text-sm"
+                  style={{ fontFamily: "'JetBrains Mono', monospace", color: categories[activeCategory].color }}
                 >
                   {feature.metric}
                 </span>
               </div>
             </div>
           ))}
+        </div>
+
+        {/* Component features section */}
+        <div className="border-t border-[rgba(0,255,200,0.1)] pt-16">
+          <h3
+            className="text-2xl font-bold text-white text-center mb-4"
+            style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+          >
+            Report Components
+          </h3>
+          <p className="text-gray-400 text-center mb-12 max-w-xl mx-auto">
+            Pre-built components designed for test reports. Drag, configure, and done.
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {componentFeatures.map((feature, index) => (
+              <div
+                key={feature.title}
+                className={`
+                  p-4 rounded-lg bg-gradient-to-br from-[rgba(10,20,30,0.6)] to-[rgba(15,30,45,0.4)]
+                  border border-[rgba(0,255,200,0.1)] hover:border-[rgba(0,255,200,0.3)]
+                  transition-all duration-300
+                  ${isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}
+                `}
+                style={{
+                  transitionDelay: isVisible ? `${(index + 3) * 100}ms` : '0ms',
+                }}
+              >
+                <div className="flex items-center gap-3 mb-2">
+                  <feature.icon className="w-5 h-5 text-[#00ffc8]" />
+                  <h4
+                    className="font-semibold text-white"
+                    style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                  >
+                    {feature.title}
+                  </h4>
+                </div>
+                <p className="text-xs text-gray-400 mb-2">
+                  {feature.description}
+                </p>
+                <span
+                  className="text-xs text-[#00ffc8]"
+                  style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                >
+                  {feature.metric}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Bottom decoration */}

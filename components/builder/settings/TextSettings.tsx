@@ -3,6 +3,31 @@
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
 import { PositionSettings } from './PositionSettings'
+import { VisibilityConditionSettings } from './VisibilityConditionSettings'
+import { AlignLeft, AlignCenter, AlignRight, AlignJustify } from 'lucide-react'
+
+const FONT_FAMILIES = [
+  { value: 'inherit', label: 'Default' },
+  { value: 'Arial, sans-serif', label: 'Arial' },
+  { value: 'Helvetica, sans-serif', label: 'Helvetica' },
+  { value: 'Georgia, serif', label: 'Georgia' },
+  { value: 'Times New Roman, serif', label: 'Times New Roman' },
+  { value: 'Courier New, monospace', label: 'Courier New' },
+  { value: 'Verdana, sans-serif', label: 'Verdana' },
+  { value: 'Tahoma, sans-serif', label: 'Tahoma' },
+  { value: 'Trebuchet MS, sans-serif', label: 'Trebuchet MS' },
+  { value: 'Impact, sans-serif', label: 'Impact' },
+  { value: 'Comic Sans MS, cursive', label: 'Comic Sans MS' },
+  { value: 'Palatino Linotype, serif', label: 'Palatino' },
+  { value: 'Lucida Console, monospace', label: 'Lucida Console' },
+]
+
+const TEXT_ALIGN_OPTIONS = [
+  { value: 'left', icon: AlignLeft, label: 'Align Left' },
+  { value: 'center', icon: AlignCenter, label: 'Align Center' },
+  { value: 'right', icon: AlignRight, label: 'Align Right' },
+  { value: 'justify', icon: AlignJustify, label: 'Justify' },
+] as const
 
 export function TextSettings() {
   const {
@@ -10,15 +35,49 @@ export function TextSettings() {
     text,
     fontSize,
     fontWeight,
+    fontFamily,
     color,
+    textAlign,
     binding,
+    visibilityCondition,
   } = useNode((node) => ({
     text: node.data.props.text,
     fontSize: node.data.props.fontSize,
     fontWeight: node.data.props.fontWeight,
+    fontFamily: node.data.props.fontFamily,
     color: node.data.props.color,
+    textAlign: node.data.props.textAlign,
     binding: node.data.props.binding,
+    visibilityCondition: node.data.props.visibilityCondition,
   }))
+
+  const handleSizeToContent = () => {
+    // Create a temporary element to measure text dimensions
+    const tempEl = document.createElement('div')
+    tempEl.style.cssText = `
+      position: absolute;
+      visibility: hidden;
+      white-space: pre-wrap;
+      font-size: ${fontSize}px;
+      font-weight: ${fontWeight};
+      font-family: ${fontFamily || 'inherit'};
+      padding: 8px;
+      box-sizing: border-box;
+      max-width: 800px;
+    `
+    tempEl.textContent = text || 'Edit this text'
+    document.body.appendChild(tempEl)
+
+    const measuredWidth = tempEl.offsetWidth + 16 // Add some padding
+    const measuredHeight = tempEl.offsetHeight + 8
+
+    document.body.removeChild(tempEl)
+
+    setProp((props: any) => {
+      props.width = Math.max(50, Math.min(measuredWidth, 800))
+      props.height = Math.max(30, measuredHeight)
+    })
+  }
 
   return (
     <div className="space-y-4">
@@ -53,16 +112,70 @@ export function TextSettings() {
       </div>
 
       <div>
-        <label className="block text-sm text-gray-400 mb-1">Font Weight</label>
+        <label className="block text-sm text-gray-400 mb-1">Font Family</label>
         <select
-          value={fontWeight}
-          onChange={(e) => setProp((props: any) => (props.fontWeight = e.target.value))}
+          value={fontFamily || 'inherit'}
+          onChange={(e) => setProp((props: any) => (props.fontFamily = e.target.value))}
           className="w-full bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded-lg p-2 text-white text-sm"
         >
-          <option value="normal">Normal</option>
-          <option value="bold">Bold</option>
-          <option value="lighter">Light</option>
+          {FONT_FAMILIES.map((font) => (
+            <option key={font.value} value={font.value}>
+              {font.label}
+            </option>
+          ))}
         </select>
+      </div>
+
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Font Weight</label>
+          <select
+            value={fontWeight}
+            onChange={(e) => setProp((props: any) => (props.fontWeight = e.target.value))}
+            className="w-full bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded-lg p-2 text-white text-sm"
+          >
+            <option value="normal">Normal</option>
+            <option value="bold">Bold</option>
+            <option value="lighter">Light</option>
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Text Align</label>
+          <div className="flex gap-0.5 bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded-lg p-0.5">
+            {TEXT_ALIGN_OPTIONS.map((option) => {
+              const Icon = option.icon
+              return (
+                <button
+                  key={option.value}
+                  type="button"
+                  title={option.label}
+                  onClick={() => setProp((props: any) => (props.textAlign = option.value))}
+                  className={`flex-1 p-1 rounded transition-colors ${
+                    textAlign === option.value
+                      ? 'bg-[#00ffc8] text-[#0a0f14]'
+                      : 'text-gray-400 hover:text-white hover:bg-[rgba(0,255,200,0.1)]'
+                  }`}
+                >
+                  <Icon className="w-3.5 h-3.5 mx-auto" />
+                </button>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <button
+          type="button"
+          onClick={handleSizeToContent}
+          className="w-full py-2 px-3 bg-[rgba(0,255,200,0.1)] border border-[rgba(0,255,200,0.3)] rounded-lg text-[#00ffc8] text-sm hover:bg-[rgba(0,255,200,0.2)] transition-colors"
+        >
+          Size to Content
+        </button>
+        <p className="text-xs text-gray-500 mt-1 text-center">
+          Auto-size the component to fit the text
+        </p>
       </div>
 
       <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
@@ -81,6 +194,13 @@ export function TextSettings() {
             You can also use bindings directly in the text content.
           </p>
         </div>
+      </div>
+
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <VisibilityConditionSettings
+          value={visibilityCondition}
+          onChange={(value) => setProp((props: any) => (props.visibilityCondition = value))}
+        />
       </div>
 
       <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">

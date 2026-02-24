@@ -4,25 +4,31 @@ import { useNode } from '@craftjs/core'
 import { TextSettings } from '../settings/TextSettings'
 import { useBuilderStore } from '@/lib/stores/builder-store'
 import { interpolateText, hasBindings, resolveBindingOrValue } from '@/lib/utils/binding'
+import { evaluateCondition } from '@/lib/utils/condition'
 import { ResizableBox } from '../layout/ResizableBox'
 
 interface TextProps {
   text?: string
   fontSize?: number
   fontWeight?: string
+  fontFamily?: string
   color?: string
-  textAlign?: 'left' | 'center' | 'right'
+  textAlign?: 'left' | 'center' | 'right' | 'justify'
   binding?: string
   x?: number
   y?: number
   width?: number
   height?: number
+  zIndex?: number
+  visible?: boolean
+  visibilityCondition?: string
 }
 
 export const Text = ({
   text = 'Edit this text',
   fontSize = 16,
   fontWeight = 'normal',
+  fontFamily = 'inherit',
   color = '#000000',
   textAlign = 'left',
   binding = '',
@@ -30,6 +36,9 @@ export const Text = ({
   y = 0,
   width = 200,
   height = 50,
+  zIndex = 1,
+  visible = true,
+  visibilityCondition = '',
 }: TextProps) => {
   const {
     id,
@@ -44,6 +53,15 @@ export const Text = ({
   }))
 
   const { isPreviewMode, sampleData } = useBuilderStore()
+
+  // Check visibility condition in preview mode
+  if (isPreviewMode && visibilityCondition && sampleData) {
+    if (!evaluateCondition(visibilityCondition, sampleData)) {
+      return null
+    }
+  }
+
+  if (!visible) return null
 
   const handlePositionChange = (newPos: { x?: number; y?: number; width?: number; height?: number }) => {
     setProp((props: TextProps) => {
@@ -100,11 +118,13 @@ export const Text = ({
       nodeId={id}
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
+      zIndex={zIndex}
     >
       <p
         style={{
           fontSize: `${fontSize}px`,
           fontWeight,
+          fontFamily,
           color: getDisplayColor(),
           textAlign,
           margin: 0,
@@ -132,6 +152,7 @@ Text.craft = {
     text: 'Edit this text',
     fontSize: 16,
     fontWeight: 'normal',
+    fontFamily: 'inherit',
     color: '#000000',
     textAlign: 'left',
     binding: '',
@@ -139,6 +160,8 @@ Text.craft = {
     y: 0,
     width: 200,
     height: 50,
+    zIndex: 1,
+    visible: true,
   },
   related: {
     settings: TextSettings,

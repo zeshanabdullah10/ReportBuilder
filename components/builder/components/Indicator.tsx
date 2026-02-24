@@ -4,6 +4,7 @@ import { useNode } from '@craftjs/core'
 import { IndicatorSettings } from '../settings/IndicatorSettings'
 import { useBuilderStore } from '@/lib/stores/builder-store'
 import { hasBindings, resolveBindingOrValue } from '@/lib/utils/binding'
+import { evaluateCondition } from '@/lib/utils/condition'
 import { ResizableBox } from '../layout/ResizableBox'
 import { CheckCircle, XCircle, AlertCircle, MinusCircle } from 'lucide-react'
 
@@ -16,10 +17,13 @@ export interface IndicatorProps {
   failLabel?: string
   warningLabel?: string
   binding?: string
+  visibilityCondition?: string
   x?: number
   y?: number
   width?: number
   height?: number
+  zIndex?: number
+  visible?: boolean
 }
 
 const statusConfig = {
@@ -82,10 +86,13 @@ export const Indicator = ({
   failLabel = 'FAIL',
   warningLabel = 'WARNING',
   binding = '',
+  visibilityCondition,
   x = 0,
   y = 0,
   width = 120,
   height = 44,
+  zIndex = 1,
+  visible = true,
 }: IndicatorProps) => {
   const {
     id,
@@ -100,6 +107,15 @@ export const Indicator = ({
   }))
 
   const { isPreviewMode, sampleData } = useBuilderStore()
+
+  // Check visibility condition
+  if (visible && visibilityCondition && isPreviewMode && sampleData) {
+    if (!evaluateCondition(visibilityCondition, sampleData)) {
+      return null
+    }
+  }
+
+  if (!visible) return null
 
   // Resolve status based on preview mode and binding
   const getDisplayStatus = (): IndicatorStatus => {
@@ -150,6 +166,7 @@ export const Indicator = ({
       nodeId={id}
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
+      zIndex={zIndex}
     >
       <div
         className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 ${config.bgColor} ${config.borderColor} transition-all`}
@@ -180,10 +197,13 @@ Indicator.craft = {
     failLabel: 'FAIL',
     warningLabel: 'WARNING',
     binding: '',
+    visibilityCondition: '',
     x: 0,
     y: 0,
     width: 120,
     height: 44,
+    zIndex: 1,
+    visible: true,
   },
   related: {
     settings: IndicatorSettings,

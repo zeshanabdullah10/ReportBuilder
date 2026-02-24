@@ -1,32 +1,44 @@
 'use client'
 
 import { useRef, useEffect, useState } from 'react'
-import { Palette, Download, FileJson, ArrowRight, Zap } from 'lucide-react'
+import { Palette, Download, FileJson, FileText, ArrowRight, Zap, Code2 } from 'lucide-react'
 
 const steps = [
   {
     step: '01',
     icon: Palette,
-    title: 'Design Your Template',
-    description: 'Use the visual builder to create your report layout. Drag components, configure styles, and define data bindings.',
-    code: 'template.create()',
+    title: 'Design Template',
+    description: 'Use the visual builder to create your report layout. Drag components, configure styles, and define data bindings with {{variable}} syntax.',
+    code: 'template.design()',
     color: '#00ffc8',
+    detail: 'Visual drag-drop canvas',
   },
   {
     step: '02',
     icon: Download,
-    title: 'Download HTML',
-    description: 'Export your template as a single self-contained HTML file with all dependencies embedded inline.',
+    title: 'Export HTML',
+    description: 'Download your template as a single self-contained HTML file. All dependencies, styles, and scripts are embedded inline.',
     code: 'export.html()',
     color: '#39ff14',
+    detail: 'Self-contained file',
   },
   {
     step: '03',
-    icon: FileJson,
-    title: 'Integrate with LabVIEW',
-    description: 'Write test data to a JSON file. LabVIEW calls headless Chrome to generate PDFs automatically.',
-    code: 'generate.pdf()',
+    icon: Code2,
+    title: 'Add Your Data',
+    description: 'Write test data to JSON from any programming language. Python, C#, LabVIEW, MATLAB — if it can write JSON, it works.',
+    code: 'data.write_json()',
     color: '#ffb000',
+    detail: 'Any language, any data',
+  },
+  {
+    step: '04',
+    icon: FileText,
+    title: 'Generate PDF',
+    description: 'Call headless Chrome from your code to render the HTML with data and export as PDF. Automate with your test pipeline.',
+    code: 'chrome --print-to-pdf',
+    color: '#ff6b6b',
+    detail: 'Automated PDF generation',
   },
 ]
 
@@ -37,7 +49,7 @@ export function HowItWorks() {
   useEffect(() => {
     const interval = setInterval(() => {
       setActiveStep((prev) => (prev + 1) % steps.length)
-    }, 3000)
+    }, 4000)
     return () => clearInterval(interval)
   }, [])
 
@@ -82,20 +94,21 @@ export function HowItWorks() {
             From design to PDF{' '}
             <span className="text-[#00ffc8]" style={{
               textShadow: '0 0 20px rgba(0, 255, 200, 0.4)'
-            }}>in 3 steps</span>
+            }}>in 4 steps</span>
           </h2>
 
           <p className="text-lg text-gray-400 max-w-xl mx-auto">
             Streamlined workflow designed for engineers who value their time.
+            No complex setup, no server infrastructure.
           </p>
         </div>
 
-        {/* Steps */}
-        <div className="relative">
+        {/* Steps - Desktop */}
+        <div className="hidden lg:block relative">
           {/* Connection line */}
-          <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[rgba(0,255,200,0.2)] to-transparent hidden lg:block" />
+          <div className="absolute top-1/2 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[rgba(0,255,200,0.2)] to-transparent" />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-12">
+          <div className="grid grid-cols-4 gap-8">
             {steps.map((step, index) => (
               <div
                 key={step.step}
@@ -229,12 +242,12 @@ export function HowItWorks() {
 
                 {/* Arrow to next step */}
                 {index < steps.length - 1 && (
-                  <div className="hidden lg:flex absolute top-1/2 -right-6 transform -translate-y-1/2 z-10">
+                  <div className="absolute top-1/2 -right-4 transform -translate-y-1/2 z-10">
                     <ArrowRight
-                      className="w-5 h-5 text-[#00ffc8]/30"
+                      className="w-5 h-5"
                       style={{
                         filter: activeStep === index ? 'drop-shadow(0 0 4px rgba(0,255,200,0.5))' : 'none',
-                        color: activeStep === index ? '#00ffc8' : undefined
+                        color: activeStep === index ? '#00ffc8' : 'rgba(0,255,200,0.3)'
                       }}
                     />
                   </div>
@@ -244,6 +257,76 @@ export function HowItWorks() {
           </div>
         </div>
 
+        {/* Steps - Mobile */}
+        <div className="lg:hidden space-y-6">
+          {steps.map((step, index) => (
+            <div
+              key={step.step}
+              className={`
+                relative p-6 rounded-lg
+                bg-gradient-to-b from-[rgba(10,20,30,0.8)] to-[rgba(5,10,15,0.9)]
+                border transition-all duration-300
+                ${activeStep === index
+                  ? 'border-[rgba(0,255,200,0.3)]'
+                  : 'border-[rgba(0,255,200,0.1)]'
+                }
+              `}
+              onClick={() => setActiveStep(index)}
+            >
+              <div className="flex items-start gap-4">
+                {/* Step number */}
+                <div
+                  className="flex-shrink-0 w-12 h-12 flex items-center justify-center rounded-lg"
+                  style={{
+                    background: `${step.color}20`,
+                    border: `1px solid ${step.color}40`,
+                  }}
+                >
+                  <span
+                    className="text-lg font-bold"
+                    style={{
+                      fontFamily: "'JetBrains Mono', monospace",
+                      color: step.color,
+                    }}
+                  >
+                    {step.step}
+                  </span>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <step.icon className="w-5 h-5" style={{ color: step.color }} />
+                    <h3
+                      className="text-lg font-semibold text-white"
+                      style={{ fontFamily: "'Space Grotesk', sans-serif" }}
+                    >
+                      {step.title}
+                    </h3>
+                  </div>
+                  <p className="text-gray-400 text-sm leading-relaxed mb-3">
+                    {step.description}
+                  </p>
+                  <div
+                    className="inline-flex items-center gap-2 px-3 py-1 rounded bg-[rgba(0,0,0,0.3)] border border-[rgba(0,255,200,0.1)]"
+                    style={{ fontFamily: "'JetBrains Mono', monospace" }}
+                  >
+                    <span className="text-gray-500">&gt;</span>
+                    <span className="text-xs" style={{ color: step.color }}>{step.code}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Arrow */}
+              {index < steps.length - 1 && (
+                <div className="flex justify-center mt-4">
+                  <ArrowRight className="w-5 h-5 text-[#00ffc8]/30 rotate-90" />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
         {/* Progress indicator */}
         <div className="flex justify-center gap-2 mt-12">
           {steps.map((step, index) => (
@@ -251,17 +334,25 @@ export function HowItWorks() {
               key={step.step}
               onClick={() => setActiveStep(index)}
               className={`
-                w-2 h-2 rounded-full transition-all duration-300
+                h-2 rounded-full transition-all duration-300
                 ${activeStep === index
-                  ? 'w-8 bg-[#00ffc8]'
-                  : 'bg-[rgba(0,255,200,0.2)] hover:bg-[rgba(0,255,200,0.4)]'
+                  ? 'w-8'
+                  : 'w-2 bg-[rgba(0,255,200,0.2)] hover:bg-[rgba(0,255,200,0.4)]'
                 }
               `}
               style={{
-                boxShadow: activeStep === index ? '0 0 10px rgba(0,255,200,0.5)' : 'none'
+                backgroundColor: activeStep === index ? step.color : undefined,
+                boxShadow: activeStep === index ? `0 0 10px ${step.color}50` : 'none'
               }}
             />
           ))}
+        </div>
+
+        {/* Bottom note */}
+        <div className="text-center mt-12">
+          <p className="text-gray-500 text-sm" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
+            No server required • Works offline • Integrates with any test framework
+          </p>
         </div>
       </div>
 

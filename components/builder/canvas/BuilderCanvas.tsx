@@ -1,8 +1,10 @@
 'use client'
 
-import { Editor, Frame, Element } from '@craftjs/core'
-import { useEffect, useState } from 'react'
-import { useBuilderStore } from '@/lib/stores/builder-store'
+import { Editor, Frame, Element, useEditor } from '@craftjs/core'
+import { useEffect, useState, useCallback } from 'react'
+import { useBuilderStore, ReportPage } from '@/lib/stores/builder-store'
+import { useKeyboardShortcuts } from '@/lib/hooks/use-keyboard-shortcuts'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Page } from './Page'
 import { Text } from '../components/Text'
 import { Container } from '../components/Container'
@@ -12,11 +14,32 @@ import { Chart } from '../components/Chart'
 import { Spacer } from '../components/Spacer'
 import { PageBreak } from '../components/PageBreak'
 import { Indicator } from '../components/Indicator'
+import { Divider } from '../components/Divider'
+import { PageNumber } from '../components/PageNumber'
+import { DateTime } from '../components/DateTime'
+import { Gauge } from '../components/Gauge'
+import { ProgressBar } from '../components/ProgressBar'
+import { BulletList } from '../components/BulletList'
+import { QRCode } from '../components/QRCode'
+import { Barcode } from '../components/Barcode'
+import { SignatureLine } from '../components/SignatureLine'
+import { TestSummaryBox } from '../components/TestSummaryBox'
+import { MeasurementTable } from '../components/MeasurementTable'
+import { Histogram } from '../components/Histogram'
+import { ScatterPlot } from '../components/ScatterPlot'
+import { Logo } from '../components/Logo'
+import { Watermark } from '../components/Watermark'
+import { SpecBox } from '../components/SpecBox'
+import { ToleranceBand } from '../components/ToleranceBand'
+import { PassRateChart } from '../components/PassRateChart'
+import { RevisionBlock } from '../components/RevisionBlock'
 import { Toolbox } from '../toolbox/Toolbox'
-import { SettingsPanel } from '../settings/SettingsPanel'
+import { RightSidebar } from '../settings/RightSidebar'
 import { BuilderTopbar } from '../topbar/BuilderTopbar'
 import { GridOverlay } from '../layout/GridOverlay'
-import { AlignmentGuides } from '../layout/AlignmentGuides'
+import { DropPositionTracker } from '../layout/DropPositionTracker'
+import { CanvasViewport } from '../layout/CanvasViewport'
+import { PageNavigation } from '../navigation/PageNavigation'
 import { Eye } from 'lucide-react'
 
 // Import the oscilloscope theme CSS
@@ -28,11 +51,136 @@ interface BuilderCanvasProps {
     name: string
     canvas_state: any
     sample_data: any
+    pages?: ReportPage[] // Optional multi-page support
   }
 }
 
+// Component to render the current page content
+function PageContent({ hasSavedState, canvasState }: { 
+  hasSavedState: boolean
+  canvasState: any 
+}) {
+  if (hasSavedState && canvasState) {
+    return <Frame data={JSON.stringify(canvasState)} />
+  }
+  
+  return (
+    <Frame>
+      <Element is={Page} canvas background="white" padding={40} pageSize="A4">
+        <Text text="Welcome to the Template Builder" fontSize={28} fontWeight="bold" color="#333333" />
+        <Text text="Drag components from the left panel to start building your report template." fontSize={16} color="#666666" />
+      </Element>
+    </Frame>
+  )
+}
+
+// Inner component that uses keyboard shortcuts (must be inside Editor context)
+function BuilderContent({ template, hasSavedState, isPreviewMode }: { 
+  template: BuilderCanvasProps['template']
+  hasSavedState: boolean
+  isPreviewMode: boolean 
+}) {
+  // Enable keyboard shortcuts
+  useKeyboardShortcuts()
+
+  const { 
+    pages, 
+    activePageId, 
+    updatePageCanvasState,
+  } = useBuilderStore()
+
+  // Get the current active page
+  const activePage = pages.find(p => p.id === activePageId) || pages[0]
+  const currentPageState = activePage?.canvasState
+
+  // Save canvas state when switching pages
+  const { query } = useEditor()
+
+  // Callback to save current page state before switching
+  const saveCurrentPageState = useCallback(() => {
+    if (activePageId) {
+      try {
+        const currentState = query.serialize()
+        updatePageCanvasState(activePageId, JSON.parse(currentState))
+      } catch (error) {
+        console.error('Error saving page state:', error)
+      }
+    }
+  }, [activePageId, query, updatePageCanvasState])
+
+  // Save state on unmount or page change
+  useEffect(() => {
+    return () => {
+      saveCurrentPageState()
+    }
+  }, [activePageId]) // Re-run when page changes
+
+  return (
+    <>
+      <DropPositionTracker />
+      <BuilderTopbar />
+
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Sidebar - Toolbox (hidden in preview mode) */}
+        {!isPreviewMode && (
+          <aside className="w-64 border-r border-[rgba(0,255,200,0.1)] bg-[#050810] overflow-y-auto">
+            <Toolbox />
+          </aside>
+        )}
+
+        {/* Center - Canvas */}
+        <main className="flex-1 overflow-hidden relative bg-[#0a0f14]">
+          {/* Grid background - fixed, doesn't zoom */}
+          <GridOverlay />
+
+          {/* Preview Mode Indicator */}
+          {isPreviewMode && (
+            <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20">
+              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#00ffc8] text-[#0a0f14] font-semibold text-sm shadow-lg shadow-[#00ffc8]/20">
+                <Eye className="w-4 h-4" />
+                Preview Mode - Data bindings are active
+              </div>
+            </div>
+          )}
+
+          <CanvasViewport>
+            <div className="relative min-h-screen pb-14">
+              <PageContent
+                key={activePageId || 'default'}
+                hasSavedState={hasSavedState}
+                canvasState={currentPageState}
+              />
+            </div>
+          </CanvasViewport>
+
+          {/* Page Navigation - Bottom Bar */}
+          <PageNavigation />
+        </main>
+
+        {/* Right Sidebar - Settings (hidden in preview mode) */}
+        {!isPreviewMode && (
+          <aside className="w-72 border-l border-[rgba(0,255,200,0.1)] bg-[#050810] overflow-hidden">
+            <RightSidebar />
+          </aside>
+        )}
+      </div>
+    </>
+  )
+}
+
 export function BuilderCanvas({ template }: BuilderCanvasProps) {
-  const { setTemplateId, setTemplateName, setSampleData, isPreviewMode, setHasUnsavedChanges } = useBuilderStore()
+  const {
+    setTemplateId,
+    setTemplateName,
+    setSampleData,
+    isPreviewMode,
+    setHasUnsavedChanges,
+    setPages,
+    setActivePage,
+    pages,
+    activePageId,
+  } = useBuilderStore()
+  
   const [loaded, setLoaded] = useState(false)
 
   // Initialize store with template data
@@ -40,8 +188,46 @@ export function BuilderCanvas({ template }: BuilderCanvasProps) {
     setTemplateId(template.id)
     setTemplateName(template.name)
     setSampleData(template.sample_data)
+
+    // Initialize pages from template
+    if (template.pages && template.pages.length > 0) {
+      // Multi-page template
+      setPages(template.pages)
+      setActivePage(template.pages[0].id)
+    } else if (template.canvas_state && Object.keys(template.canvas_state).length > 0) {
+      // Legacy single-page template - convert to multi-page format
+      const initialPage: ReportPage = {
+        id: `page-${Date.now()}`,
+        name: 'Page 1',
+        canvasState: template.canvas_state,
+        settings: {
+          background: 'white',
+          padding: 40,
+          pageSize: 'A4',
+        },
+        order: 0,
+      }
+      setPages([initialPage])
+      setActivePage(initialPage.id)
+    } else {
+      // New template - create default page
+      const defaultPage: ReportPage = {
+        id: `page-${Date.now()}`,
+        name: 'Page 1',
+        canvasState: null,
+        settings: {
+          background: 'white',
+          padding: 40,
+          pageSize: 'A4',
+        },
+        order: 0,
+      }
+      setPages([defaultPage])
+      setActivePage(defaultPage.id)
+    }
+
     setLoaded(true)
-  }, [template.id, template.name, template.sample_data, setTemplateId, setTemplateName, setSampleData])
+  }, [template.id, template.name, template.sample_data, template.canvas_state, template.pages, setTemplateId, setTemplateName, setSampleData, setPages, setActivePage])
 
   // Track changes
   const handleNodesChange = () => {
@@ -56,73 +242,33 @@ export function BuilderCanvas({ template }: BuilderCanvasProps) {
     )
   }
 
-  // Check if we have valid saved state
-  const hasSavedState = template.canvas_state &&
-    typeof template.canvas_state === 'object' &&
-    Object.keys(template.canvas_state).length > 0
+  // Check if we have valid saved state for the current page
+  const activePage = pages.find(p => p.id === activePageId) || pages[0]
+  const hasSavedState = activePage?.canvasState &&
+    typeof activePage.canvasState === 'object' &&
+    Object.keys(activePage.canvasState).length > 0
 
   return (
     <div className="flex flex-col h-screen bg-[#0a0f14]">
-      <Editor
-        resolver={{ Page, Text, Container, Image, Table, Chart, Spacer, PageBreak, Indicator }}
-        enabled={!isPreviewMode}
-        indicator={{
-          success: '#00ffc8',
-          error: '#e34850',
-          transition: 'all 0.2s ease',
-          thickness: 2,
-        }}
-        onNodesChange={handleNodesChange}
-      >
-        <BuilderTopbar />
-
-        <div className="flex flex-1 overflow-hidden">
-          {/* Left Sidebar - Toolbox (hidden in preview mode) */}
-          {!isPreviewMode && (
-            <aside className="w-64 border-r border-[rgba(0,255,200,0.1)] bg-[#050810] overflow-y-auto">
-              <Toolbox />
-            </aside>
-          )}
-
-          {/* Center - Canvas */}
-          <main className={`flex-1 overflow-auto relative bg-oscilloscope-grid ${isPreviewMode ? '' : ''}`}>
-            <div className="absolute inset-0 bg-mesh-gradient opacity-30 pointer-events-none" />
-
-            {!isPreviewMode && <GridOverlay />}
-            <AlignmentGuides />
-
-            {/* Preview Mode Indicator */}
-            {isPreviewMode && (
-              <div className="absolute top-4 left-1/2 -translate-x-1/2 z-10">
-                <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-[#00ffc8] text-[#0a0f14] font-semibold text-sm shadow-lg shadow-[#00ffc8]/20">
-                  <Eye className="w-4 h-4" />
-                  Preview Mode - Data bindings are active
-                </div>
-              </div>
-            )}
-
-            <div className="relative h-full">
-              {hasSavedState ? (
-                <Frame data={JSON.stringify(template.canvas_state)} />
-              ) : (
-                <Frame>
-                  <Element is={Page} canvas background="transparent" padding={20}>
-                    <Text text="Welcome to the Template Builder" fontSize={28} fontWeight="bold" color="#ffffff" />
-                    <Text text="Drag components from the left panel to start building your report template." fontSize={16} color="#9ca3af" />
-                  </Element>
-                </Frame>
-              )}
-            </div>
-          </main>
-
-          {/* Right Sidebar - Settings (hidden in preview mode) */}
-          {!isPreviewMode && (
-            <aside className="w-72 border-l border-[rgba(0,255,200,0.1)] bg-[#050810] overflow-y-auto">
-              <SettingsPanel />
-            </aside>
-          )}
-        </div>
-      </Editor>
+      <ErrorBoundary>
+        <Editor
+          key={activePageId || 'default'}
+          resolver={{ Page, Text, Container, Image, Table, Chart, Spacer, PageBreak, Indicator, Divider, PageNumber, DateTime, Gauge, ProgressBar, BulletList, QRCode, Barcode, SignatureLine, TestSummaryBox, MeasurementTable, Histogram, ScatterPlot, Logo, Watermark, SpecBox, ToleranceBand, PassRateChart, RevisionBlock }}
+          enabled={!isPreviewMode}
+          indicator={{
+            success: 'transparent',
+            error: 'transparent',
+            thickness: 0,
+          }}
+          onNodesChange={handleNodesChange}
+        >
+          <BuilderContent
+            template={template}
+            hasSavedState={hasSavedState}
+            isPreviewMode={isPreviewMode}
+          />
+        </Editor>
+      </ErrorBoundary>
     </div>
   )
 }

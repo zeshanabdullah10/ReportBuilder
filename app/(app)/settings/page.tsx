@@ -1,7 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
+import { ProfileForm } from '@/components/settings/ProfileForm'
+import { CreditBalance } from '@/components/billing/credit-balance'
+import { Zap, ArrowUpCircle } from 'lucide-react'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -35,62 +37,54 @@ export default async function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Full Name
-                </label>
-                <Input
-                  name="fullName"
-                  defaultValue={profile?.full_name ?? ''}
-                  placeholder="Your name"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Company
-                </label>
-                <Input
-                  name="company"
-                  defaultValue={profile?.company ?? ''}
-                  placeholder="Your company"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
-                  Email
-                </label>
-                <Input
-                  name="email"
-                  type="email"
-                  defaultValue={user?.email ?? ''}
-                  disabled
-                />
-                <p className="mt-1 text-xs text-gray-500">
-                  Email cannot be changed
-                </p>
-              </div>
-              <Button type="submit">Save changes</Button>
-            </form>
+            <ProfileForm
+              initialFullName={profile?.full_name ?? ''}
+              initialCompany={profile?.company ?? ''}
+            />
+            <div className="mt-6 pt-6 border-t border-gray-700">
+              <label className="block text-sm font-medium text-gray-300 mb-1">
+                Email
+              </label>
+              <Input
+                name="email"
+                type="email"
+                defaultValue={user?.email ?? ''}
+                disabled
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Email cannot be changed
+              </p>
+            </div>
           </CardContent>
         </Card>
 
-        {/* Subscription */}
+        {/* Export Credits */}
         <Card>
           <CardHeader>
-            <CardTitle>Subscription</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Zap className="w-5 h-5 text-[#00ffc8]" />
+              Export Credits
+            </CardTitle>
             <CardDescription>
-              Manage your subscription and billing
+              Purchase credits for clean (unwatermarked) exports
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-4">
               <div>
-                <p className="font-medium text-white">Free Plan</p>
-                <p className="text-sm text-gray-400">1 template, watermarked PDFs</p>
+                <CreditBalance showBuyButton={false} />
               </div>
-              <Button variant="outline">Upgrade to Pro</Button>
+              <a
+                href="/pricing"
+                className="px-4 py-2 rounded-md border border-[#00ffc8] text-[#00ffc8] hover:bg-[#00ffc8]/10 transition-colors text-sm font-medium flex items-center gap-2"
+              >
+                <ArrowUpCircle className="w-4 h-4" />
+                Buy Credits
+              </a>
             </div>
+            <p className="text-xs text-gray-500">
+              Watermarked exports are always free. Credits never expire.
+            </p>
           </CardContent>
         </Card>
       </div>

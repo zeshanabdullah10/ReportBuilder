@@ -3,6 +3,7 @@
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
 import { PositionSettings } from './PositionSettings'
+import { VisibilityConditionSettings } from './VisibilityConditionSettings'
 import type { IndicatorStatus } from '../components/Indicator'
 
 export function IndicatorSettings() {
@@ -14,6 +15,7 @@ export function IndicatorSettings() {
     failLabel,
     warningLabel,
     binding,
+    visibilityCondition,
   } = useNode((node) => ({
     status: node.data.props.status,
     label: node.data.props.label,
@@ -21,6 +23,7 @@ export function IndicatorSettings() {
     failLabel: node.data.props.failLabel,
     warningLabel: node.data.props.warningLabel,
     binding: node.data.props.binding,
+    visibilityCondition: node.data.props.visibilityCondition,
   }))
 
   return (
@@ -98,6 +101,13 @@ export function IndicatorSettings() {
             Bind to a boolean or string value. Use "pass", "fail", "warning", or true/false.
           </p>
         </div>
+      </div>
+
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <VisibilityConditionSettings
+          value={visibilityCondition}
+          onChange={(value) => setProp((props: any) => (props.visibilityCondition = value))}
+        />
       </div>
 
       <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">

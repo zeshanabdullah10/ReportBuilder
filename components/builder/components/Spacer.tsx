@@ -9,9 +9,11 @@ interface SpacerProps {
   x?: number
   y?: number
   width?: number
+  zIndex?: number
+  visible?: boolean
 }
 
-export const Spacer = ({ height = 40, x = 0, y = 0, width = 100 }: SpacerProps) => {
+export const Spacer = ({ height = 40, x = 0, y = 0, width = 100, zIndex = 1, visible = true }: SpacerProps) => {
   const {
     id,
     connectors: { connect },
@@ -21,6 +23,8 @@ export const Spacer = ({ height = 40, x = 0, y = 0, width = 100 }: SpacerProps) 
     id: node.id,
     selected: node.events.selected,
   }))
+
+  if (!visible) return null
 
   const handlePositionChange = (newPos: { x?: number; y?: number; width?: number; height?: number }) => {
     setProp((props: SpacerProps) => {
@@ -43,6 +47,7 @@ export const Spacer = ({ height = 40, x = 0, y = 0, width = 100 }: SpacerProps) 
       nodeId={id}
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
+      zIndex={zIndex}
     >
       <div
         style={{ height: '100%', width: '100%' }}
@@ -63,6 +68,8 @@ Spacer.craft = {
     x: 0,
     y: 0,
     width: 100,
+    zIndex: 1,
+    visible: true,
   },
   related: {
     settings: SpacerSettings,

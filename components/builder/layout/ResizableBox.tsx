@@ -15,6 +15,7 @@ interface ResizableBoxProps {
   onPositionChange: (pos: { x?: number; y?: number; width?: number; height?: number }) => void
   children: React.ReactNode
   connectRef?: (ref: HTMLDivElement | null) => void
+  zIndex?: number
 }
 
 type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w'
@@ -51,6 +52,7 @@ export function ResizableBox({
   onPositionChange,
   children,
   connectRef,
+  zIndex = 1,
 }: ResizableBoxProps) {
   const boxRef = useRef<HTMLDivElement>(null)
   const { snapEnabled, gridSize, setActiveDrag } = useBuilderStore()
@@ -349,7 +351,7 @@ export function ResizableBox({
         width: `${currentPos.width}px`,
         height: `${currentPos.height}px`,
         userSelect: isActive ? 'none' : 'auto',
-        zIndex: selected ? 10 : 1,
+        zIndex: selected ? Math.max(zIndex, 10) : zIndex,
       }}
     >
       {/* Drag handle overlay - only when selected, covers everything except resize handles */}

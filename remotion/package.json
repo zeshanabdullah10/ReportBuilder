@@ -1,0 +1,26 @@
+{
+  "name": "labview-report-builder-video",
+  "version": "1.0.0",
+  "description": "Marketing video for LabVIEW Report Builder",
+  "scripts": {
+    "dev": "remotion studio",
+    "build": "remotion bundle",
+    "render": "remotion render LabVIEWDemo-16x9 out/labview-demo-16x9.mp4",
+    "render-all": "npm run render-16x9 && npm run render-9x16 && npm run render-1x1",
+    "render-16x9": "remotion render LabVIEWDemo-16x9 out/labview-demo-16x9.mp4",
+    "render-9x16": "remotion render LabVIEWDemo-9x16 out/labview-demo-9x16.mp4",
+    "render-1x1": "remotion render LabVIEWDemo-1x1 out/labview-demo-1x1.mp4"
+  },
+  "dependencies": {
+    "@remotion/google-fonts": "^4.0.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "remotion": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.2.0",
+    "@types/react-dom": "^18.2.0",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.0.0"
+  }
+}

@@ -17,6 +17,8 @@ interface TableProps {
   y?: number
   width?: number
   height?: number
+  zIndex?: number
+  visible?: boolean
 }
 
 interface TableRow {
@@ -34,6 +36,8 @@ export const Table = ({
   y = 0,
   width = 400,
   height = 150,
+  zIndex = 1,
+  visible = true,
 }: TableProps) => {
   const {
     id,
@@ -46,6 +50,8 @@ export const Table = ({
   }))
 
   const { isPreviewMode, sampleData } = useBuilderStore()
+
+  if (!visible) return null
 
   // Resolve table data based on preview mode and bindings
   const getTableData = (): TableRow[] => {
@@ -128,6 +134,7 @@ export const Table = ({
       nodeId={id}
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
+      zIndex={zIndex}
     >
       <div
         className="overflow-x-auto"
@@ -179,6 +186,8 @@ Table.craft = {
     y: 0,
     width: 400,
     height: 150,
+    zIndex: 1,
+    visible: true,
   },
   related: {
     settings: TableSettings,
