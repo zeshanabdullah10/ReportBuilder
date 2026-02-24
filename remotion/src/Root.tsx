@@ -3,6 +3,7 @@ import { Composition } from 'remotion';
 import { Video } from './Video';
 import { theme } from './config/theme';
 
+// 45 seconds total (1350 frames at 30fps)
 const totalDuration = theme.timing.outro.start + theme.timing.outro.duration;
 
 export const RemotionRoot: React.FC = () => {

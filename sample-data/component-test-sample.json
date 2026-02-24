@@ -1,0 +1,131 @@
+{
+  "meta": {
+    "reportTitle": "PCB Assembly Test Report",
+    "reportVersion": "1.0",
+    "generatedBy": "LabVIEW Test System",
+    "projectName": "Project Alpha - Rev 2.1"
+  },
+  
+  "testInfo": {
+    "testName": "PCB Functional Test",
+    "testDate": "2026-02-24T14:30:00",
+    "operator": "John Smith",
+    "workOrder": "WO-2026-0224-001",
+    "serialNumber": "SN-PCB-001234",
+    "stationId": "TEST-STN-05"
+  },
+  
+  "summary": {
+    "totalTests": 200,
+    "passed": 142,
+    "failed": 5,
+    "skipped": 3,
+    "passRate": 94.67,
+    "overallStatus": "pass",
+    "testDuration": "00:12:45"
+  },
+  
+  "measurements": [
+    { "id": 1, "name": "Voltage Ch1", "nominal": 5.0, "measured": 5.02, "unit": "V", "tolerance": "±5%", "status": "pass" },
+    { "id": 2, "name": "Voltage Ch2", "nominal": 3.3, "measured": 3.31, "unit": "V", "tolerance": "±5%", "status": "pass" },
+    { "id": 3, "name": "Voltage Ch3", "nominal": 12.0, "measured": 12.15, "unit": "V", "tolerance": "±3%", "status": "pass" },
+    { "id": 4, "name": "Current Draw", "nominal": 0.25, "measured": 0.28, "unit": "A", "tolerance": "±10%", "status": "warning" },
+    { "id": 5, "name": "Frequency", "nominal": 60.0, "measured": 60.1, "unit": "Hz", "tolerance": "±1%", "status": "pass" },
+    { "id": 6, "name": "Temperature", "nominal": 45.0, "measured": 44.2, "unit": "°C", "tolerance": "±5%", "status": "pass" },
+    { "id": 7, "name": "Resistance R1", "nominal": 1000, "measured": 998, "unit": "Ω", "tolerance": "±1%", "status": "pass" },
+    { "id": 8, "name": "Resistance R2", "nominal": 4700, "measured": 4750, "unit": "Ω", "tolerance": "±5%", "status": "pass" },
+    { "id": 9, "name": "Capacitance C1", "nominal": 100, "measured": 98.5, "unit": "µF", "tolerance": "±10%", "status": "pass" },
+    { "id": 10, "name": "Ripple Voltage", "nominal": 50, "measured": 78, "unit": "mV", "tolerance": "±50%", "status": "fail" }
+  ],
+  
+  "chartData": {
+    "labels": ["Test 1", "Test 2", "Test 3", "Test 4", "Test 5", "Test 6", "Test 7", "Test 8"],
+    "values": [95, 87, 92, 78, 91, 88, 94, 85]
+  },
+  
+  "trendData": {
+    "labels": ["6AM", "7AM", "8AM", "9AM", "10AM", "11AM", "12PM", "1PM"],
+    "passRates": [98, 96, 94, 97, 95, 93, 96, 94],
+    "testCounts": [12, 15, 18, 14, 16, 19, 13, 17]
+  },
+  
+  "scatterData": [
+    { "x": 1.0, "y": 5.02, "label": "V1" },
+    { "x": 1.5, "y": 5.01, "label": "V2" },
+    { "x": 2.0, "y": 5.03, "label": "V3" },
+    { "x": 2.5, "y": 4.99, "label": "V4" },
+    { "x": 3.0, "y": 5.00, "label": "V5" },
+    { "x": 3.5, "y": 5.02, "label": "V6" },
+    { "x": 4.0, "y": 5.01, "label": "V7" },
+    { "x": 4.5, "y": 5.04, "label": "V8" }
+  ],
+  
+  "histogramData": {
+    "bins": ["4.95-4.97", "4.97-4.99", "4.99-5.01", "5.01-5.03", "5.03-5.05"],
+    "counts": [2, 5, 12, 8, 3]
+  },
+  
+  "gaugeData": {
+    "mainVoltage": {
+      "value": 5.02,
+      "min": 4.5,
+      "max": 5.5,
+      "unit": "V",
+      "zones": {
+        "danger": { "low": 4.5, "high": 4.7 },
+        "warning": { "low": 4.7, "high": 4.85 },
+        "safe": { "low": 4.85, "high": 5.15 },
+        "warning2": { "low": 5.15, "high": 5.3 },
+        "danger2": { "low": 5.3, "high": 5.5 }
+      }
+    },
+    "temperature": {
+      "value": 44.2,
+      "min": 0,
+      "max": 100,
+      "unit": "°C"
+    }
+  },
+  
+  "status": {
+    "overall": "pass",
+    "voltageTest": "pass",
+    "currentTest": "warning",
+    "frequencyTest": "pass",
+    "temperatureTest": "pass",
+    "functionalTest": "pass"
+  },
+  
+  "progress": {
+    "completion": 100,
+    "currentStep": "Final Validation",
+    "totalSteps": 10,
+    "completedSteps": 10
+  },
+  
+  "specifications": {
+    "title": "Test Specifications",
+    "items": [
+      { "parameter": "Input Voltage", "spec": "120V AC ±10%", "actual": "118V AC", "status": "pass" },
+      { "parameter": "Output Voltage", "spec": "5.0V DC ±5%", "actual": "5.02V DC", "status": "pass" },
+      { "parameter": "Max Current", "spec": "≤500mA", "actual": "280mA", "status": "pass" },
+      { "parameter": "Operating Temp", "spec": "0-70°C", "actual": "44.2°C", "status": "pass" }
+    ]
+  },
+  
+  "revisions": [
+    { "rev": "A", "date": "2026-02-20", "author": "J. Smith", "description": "Initial test procedure" },
+    { "rev": "B", "date": "2026-02-22", "author": "M. Johnson", "description": "Added voltage tolerance checks" },
+    { "rev": "C", "date": "2026-02-24", "author": "J. Smith", "description": "Updated pass/fail criteria" }
+  ],
+  
+  "notes": "All measurements taken at ambient temperature (23°C). Unit under test was powered for 30 minutes before measurements.",
+  
+  "approval": {
+    "testedBy": "John Smith",
+    "testedDate": "2026-02-24",
+    "approvedBy": "",
+    "approvedDate": "",
+    "status": "pending"
+  }
+}
