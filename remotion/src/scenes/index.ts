@@ -1,7 +1,6 @@
-export * from './Intro';
-export * from './Homepage';
-export * from './Signup';
-export * from './Dashboard';
-export * from './Builder';
-export * from './Export';
-export * from './Outro';
+export { Intro } from './Intro';
+export { Builder } from './Builder';
+export { Preview } from './Preview';
+export { Export } from './Export';
+export { Output } from './Output';
+export { Outro } from './Outro';

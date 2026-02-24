@@ -41,3 +41,13 @@ next-env.d.ts
 .vscode
 *.swp
 *.swo
+
+# Bmad workflow files
+_bmad/
+.kilocodemodes
+.kilocode/
+
+# Remotion cache and build artifacts
+remotion/node_modules/.cache/
+remotion/node_modules/.remotion/
+remotion/out/

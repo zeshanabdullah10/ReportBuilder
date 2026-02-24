@@ -10,7 +10,9 @@
     "lint": "next lint",
     "test": "vitest",
     "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "video": "remotion studio",
+    "video:render": "remotion render ProjectShowcase out/project-showcase.mp4"
   },
   "dependencies": {
     "@craftjs/core": "^0.2.12",
@@ -34,6 +36,9 @@
     "zustand": "^4.4.7"
   },
   "devDependencies": {
+    "@remotion/cli": "^4.0.428",
+    "@remotion/player": "^4.0.428",
+    "@remotion/transitions": "^4.0.428",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/jsbarcode": "^3.11.4",
@@ -49,6 +54,7 @@
     "eslint-config-next": "^16.1.6",
     "jsdom": "^28.1.0",
     "postcss": "^8.4.32",
+    "remotion": "^4.0.428",
     "tailwindcss": "^3.3.6",
     "typescript": "^5.3.2",
     "vitest": "^4.0.18"

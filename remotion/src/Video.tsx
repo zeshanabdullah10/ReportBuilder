@@ -2,11 +2,10 @@ import React from 'react';
 import { Sequence } from 'remotion';
 import {
   Intro,
-  Homepage,
-  Signup,
-  Dashboard,
   Builder,
+  Preview,
   Export,
+  Output,
   Outro,
 } from './scenes';
 import { theme } from './config/theme';
@@ -20,24 +19,20 @@ export const Video: React.FC = () => {
         <Intro />
       </Sequence>
 
-      <Sequence from={timing.homepage.start} durationInFrames={timing.homepage.duration}>
-        <Homepage />
-      </Sequence>
-
-      <Sequence from={timing.signup.start} durationInFrames={timing.signup.duration}>
-        <Signup />
-      </Sequence>
-
-      <Sequence from={timing.dashboard.start} durationInFrames={timing.dashboard.duration}>
-        <Dashboard />
-      </Sequence>
-
       <Sequence from={timing.builder.start} durationInFrames={timing.builder.duration}>
         <Builder />
       </Sequence>
 
+      <Sequence from={timing.preview.start} durationInFrames={timing.preview.duration}>
+        <Preview />
+      </Sequence>
+
       <Sequence from={timing.export.start} durationInFrames={timing.export.duration}>
         <Export />
+      </Sequence>
+
+      <Sequence from={timing.output.start} durationInFrames={timing.output.duration}>
+        <Output />
       </Sequence>
 
       <Sequence from={timing.outro.start} durationInFrames={timing.outro.duration}>
