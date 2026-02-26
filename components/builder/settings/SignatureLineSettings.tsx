@@ -1,6 +1,7 @@
 'use client'
 
 import { useNode } from '@craftjs/core'
+import { ColorPicker } from '@/components/ui/color-picker'
 import { PositionSettings } from './PositionSettings'
 
 export function SignatureLineSettings() {
@@ -53,11 +54,9 @@ export function SignatureLineSettings() {
       {/* Line Color */}
       <div className="space-y-1">
         <label className="text-xs text-gray-400">Line Color</label>
-        <input
-          type="color"
+        <ColorPicker
           value={lineColor}
-          onChange={(e) => setProp((props: any) => props.lineColor = e.target.value)}
-          className="w-full h-8 rounded cursor-pointer"
+          onChange={(value) => setProp((props: any) => props.lineColor = value)}
         />
       </div>
 

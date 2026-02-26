@@ -2,6 +2,7 @@
 
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
+import { ColorPicker } from '@/components/ui/color-picker'
 import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 
@@ -174,19 +175,17 @@ export const SpecBoxSettings = () => {
       {showStatus && (
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Pass Color</label>
-            <Input
-              type="color"
+            <label className="block text-xs text-gray-400 mb-1">Pass Color</label>
+            <ColorPicker
               value={passColor}
-              onChange={(e) => setProp((props: any) => (props.passColor = e.target.value))}
+              onChange={(value) => setProp((props: any) => (props.passColor = value))}
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Fail Color</label>
-            <Input
-              type="color"
+            <label className="block text-xs text-gray-400 mb-1">Fail Color</label>
+            <ColorPicker
               value={failColor}
-              onChange={(e) => setProp((props: any) => (props.failColor = e.target.value))}
+              onChange={(value) => setProp((props: any) => (props.failColor = value))}
             />
           </div>
         </div>

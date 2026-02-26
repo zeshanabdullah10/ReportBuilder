@@ -2,6 +2,7 @@
 
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
+import { ColorPicker } from '@/components/ui/color-picker'
 import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 
@@ -238,45 +239,40 @@ export function TestSummaryBoxSettings() {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Pass Color</label>
-            <Input
-              type="color"
+            <label className="block text-xs text-gray-400 mb-1">Pass Color</label>
+            <ColorPicker
               value={passColor}
-              onChange={(e) => setProp((props: any) => props.passColor = e.target.value)}
+              onChange={(value) => setProp((props: any) => props.passColor = value)}
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Fail Color</label>
-            <Input
-              type="color"
+            <label className="block text-xs text-gray-400 mb-1">Fail Color</label>
+            <ColorPicker
               value={failColor}
-              onChange={(e) => setProp((props: any) => props.failColor = e.target.value)}
+              onChange={(value) => setProp((props: any) => props.failColor = value)}
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Skip Color</label>
-            <Input
-              type="color"
+            <label className="block text-xs text-gray-400 mb-1">Skip Color</label>
+            <ColorPicker
               value={skipColor}
-              onChange={(e) => setProp((props: any) => props.skipColor = e.target.value)}
+              onChange={(value) => setProp((props: any) => props.skipColor = value)}
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Border Color</label>
-            <Input
-              type="color"
+            <label className="block text-xs text-gray-400 mb-1">Border Color</label>
+            <ColorPicker
               value={borderColor}
-              onChange={(e) => setProp((props: any) => props.borderColor = e.target.value)}
+              onChange={(value) => setProp((props: any) => props.borderColor = value)}
             />
           </div>
         </div>
 
         <div className="mt-3">
-          <label className="block text-sm text-gray-400 mb-1">Background Color</label>
-          <Input
-            type="color"
+          <label className="block text-xs text-gray-400 mb-1">Background Color</label>
+          <ColorPicker
             value={backgroundColor}
-            onChange={(e) => setProp((props: any) => props.backgroundColor = e.target.value)}
+            onChange={(value) => setProp((props: any) => props.backgroundColor = value)}
           />
         </div>
       </div>

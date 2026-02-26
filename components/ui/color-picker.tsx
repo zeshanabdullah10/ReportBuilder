@@ -82,8 +82,8 @@ export function ColorPicker({
             type="button"
             disabled={disabled}
             className={cn(
-              'w-full h-10 rounded-lg border border-[rgba(0,255,200,0.2)] bg-[#050810]',
-              'flex items-center gap-2 px-3',
+              'w-full h-8 rounded-lg border border-[rgba(0,255,200,0.2)] bg-[#050810]',
+              'flex items-center gap-2 px-2',
               'focus:outline-none focus:ring-2 focus:ring-[#00ffc8] focus:border-[#00ffc8]',
               'disabled:cursor-not-allowed disabled:opacity-50',
               'transition-all duration-200'
@@ -91,7 +91,7 @@ export function ColorPicker({
           >
             {/* Color preview with checkered background for transparency */}
             <div
-              className="w-6 h-6 rounded border border-[rgba(255,255,255,0.1)]"
+              className="w-5 h-5 rounded border border-[rgba(255,255,255,0.1)] flex-shrink-0"
               style={{
                 background: `
                   linear-gradient(45deg, #333 25%, transparent 25%),
@@ -99,8 +99,8 @@ export function ColorPicker({
                   linear-gradient(45deg, transparent 75%, #333 75%),
                   linear-gradient(-45deg, transparent 75%, #333 75%)
                 `,
-                backgroundSize: '8px 8px',
-                backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px',
+                backgroundSize: '6px 6px',
+                backgroundPosition: '0 0, 0 3px, 3px -3px, -3px 0px',
               }}
             >
               <div
@@ -108,132 +108,99 @@ export function ColorPicker({
                 style={{ backgroundColor: displayColor }}
               />
             </div>
-            <span className="text-sm text-white font-mono flex-1 text-left">
+            <span className="text-xs text-white font-mono flex-1 text-left truncate">
               {internalColor.a === 0 ? 'Transparent' : displayHex}
             </span>
             {internalColor.a < 1 && internalColor.a > 0 && (
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-gray-500 flex-shrink-0">
                 {Math.round(internalColor.a * 100)}%
               </span>
             )}
           </button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-64 p-3 bg-[#0a0f14] border border-[rgba(0,255,200,0.2)] rounded-lg shadow-xl z-50"
+          className="w-52 p-2 bg-[#0a0f14] border border-[rgba(0,255,200,0.2)] rounded-lg shadow-xl z-50"
           align="start"
         >
-          <div className="space-y-3">
-            {/* Color picker */}
-            <div className="color-picker-wrapper">
+          <div className="space-y-2">
+            {/* Color picker - compact */}
+            <div className="color-picker-compact">
               <RgbaColorPicker
                 color={internalColor}
                 onChange={(color) => handleColorChange(color)}
               />
             </div>
 
-            {/* Alpha slider */}
+            {/* Alpha slider - compact */}
             {showAlpha && (
-              <div className="space-y-1">
-                <label className="text-xs text-gray-400">Opacity</label>
-                <div className="flex items-center gap-2">
-                  <div
-                    className="flex-1 h-2 rounded-full"
-                    style={{
-                      background: `
-                        linear-gradient(45deg, #333 25%, transparent 25%),
-                        linear-gradient(-45deg, #333 25%, transparent 25%),
-                        linear-gradient(45deg, transparent 75%, #333 75%),
-                        linear-gradient(-45deg, transparent 75%, #333 75%)
-                      `,
-                      backgroundSize: '8px 8px',
-                      backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px',
-                    }}
-                  >
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        background: `linear-gradient(to right, transparent, ${toHex(internalColor)})`,
-                        width: '100%',
-                      }}
-                    />
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={internalColor.a}
-                    onChange={(e) => handleAlphaChange(parseFloat(e.target.value))}
-                    className="alpha-slider w-full h-2 rounded-full appearance-none cursor-pointer"
-                    style={{
-                      background: `linear-gradient(to right, transparent, ${displayColor})`,
-                    }}
-                  />
-                  <span className="text-xs text-gray-400 w-8 text-right">
-                    {Math.round(internalColor.a * 100)}%
-                  </span>
-                </div>
+              <div className="flex items-center gap-2">
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={internalColor.a}
+                  onChange={(e) => handleAlphaChange(parseFloat(e.target.value))}
+                  className="alpha-slider flex-1 h-1.5 rounded-full appearance-none cursor-pointer"
+                />
+                <span className="text-xs text-gray-400 w-7 text-right">
+                  {Math.round(internalColor.a * 100)}%
+                </span>
               </div>
             )}
 
-            {/* Hex input */}
-            <div className="space-y-1">
-              <label className="text-xs text-gray-400">Hex Color</label>
-              <div className="flex gap-2">
+            {/* Hex input - compact */}
+            <div className="flex gap-1.5">
+              <input
+                type="text"
+                value={displayHex}
+                onChange={(e) => handleHexChange(e.target.value)}
+                placeholder="#000000"
+                className="flex-1 h-7 px-2 bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded text-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#00ffc8]"
+              />
+              {showAlpha && (
                 <input
-                  type="text"
-                  value={displayHex}
-                  onChange={(e) => handleHexChange(e.target.value)}
-                  placeholder="#000000"
-                  className="flex-1 h-8 px-2 bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded text-white text-sm font-mono focus:outline-none focus:ring-1 focus:ring-[#00ffc8]"
+                  type="number"
+                  min="0"
+                  max="100"
+                  value={Math.round(internalColor.a * 100)}
+                  onChange={(e) => handleAlphaChange(parseInt(e.target.value) / 100)}
+                  className="w-12 h-7 px-1 bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded text-white text-xs text-center focus:outline-none focus:ring-1 focus:ring-[#00ffc8]"
+                  title="Opacity %"
                 />
-                {showAlpha && (
-                  <input
-                    type="number"
-                    min="0"
-                    max="100"
-                    value={Math.round(internalColor.a * 100)}
-                    onChange={(e) => handleAlphaChange(parseInt(e.target.value) / 100)}
-                    className="w-16 h-8 px-2 bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded text-white text-sm text-center focus:outline-none focus:ring-1 focus:ring-[#00ffc8]"
-                    title="Opacity %"
-                  />
-                )}
-              </div>
+              )}
             </div>
 
-            {/* Preset colors */}
+            {/* Preset colors - compact */}
             {showPresets && (
-              <div className="space-y-1">
-                <label className="text-xs text-gray-400">Presets</label>
-                <div className="grid grid-cols-5 gap-1.5">
-                  {PRESET_COLORS.map((preset, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      title={preset.label}
-                      onClick={() => handlePresetClick(preset.color)}
-                      className={cn(
-                        'w-full aspect-square rounded border transition-all',
-                        'hover:scale-110 hover:border-[#00ffc8]',
-                        preset.color === 'rgba(0, 0, 0, 0)'
-                          ? 'border-[rgba(255,255,255,0.2)]'
-                          : 'border-[rgba(255,255,255,0.1)]'
-                      )}
-                      style={{
-                        background: preset.color === 'rgba(0, 0, 0, 0)'
-                          ? `
-                            linear-gradient(45deg, #333 25%, transparent 25%),
-                            linear-gradient(-45deg, #333 25%, transparent 25%),
-                            linear-gradient(45deg, transparent 75%, #333 75%),
-                            linear-gradient(-45deg, transparent 75%, #333 75%)
-                          `
-                          : preset.color,
-                        backgroundSize: preset.color === 'rgba(0, 0, 0, 0)' ? '6px 6px' : undefined,
-                        backgroundPosition: preset.color === 'rgba(0, 0, 0, 0)' ? '0 0, 0 3px, 3px -3px, -3px 0px' : undefined,
-                      }}
-                    />
-                  ))}
-                </div>
+              <div className="grid grid-cols-5 gap-1">
+                {PRESET_COLORS.map((preset, index) => (
+                  <button
+                    key={index}
+                    type="button"
+                    title={preset.label}
+                    onClick={() => handlePresetClick(preset.color)}
+                    className={cn(
+                      'w-full aspect-square rounded border transition-all',
+                      'hover:scale-110 hover:border-[#00ffc8]',
+                      preset.color === 'rgba(0, 0, 0, 0)'
+                        ? 'border-[rgba(255,255,255,0.2)]'
+                        : 'border-[rgba(255,255,255,0.1)]'
+                    )}
+                    style={{
+                      background: preset.color === 'rgba(0, 0, 0, 0)'
+                        ? `
+                          linear-gradient(45deg, #333 25%, transparent 25%),
+                          linear-gradient(-45deg, #333 25%, transparent 25%),
+                          linear-gradient(45deg, transparent 75%, #333 75%),
+                          linear-gradient(-45deg, transparent 75%, #333 75%)
+                        `
+                        : preset.color,
+                      backgroundSize: preset.color === 'rgba(0, 0, 0, 0)' ? '4px 4px' : undefined,
+                      backgroundPosition: preset.color === 'rgba(0, 0, 0, 0)' ? '0 0, 0 2px, 2px -2px, -2px 0px' : undefined,
+                    }}
+                  />
+                ))}
               </div>
             )}
           </div>

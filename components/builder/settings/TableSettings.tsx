@@ -2,6 +2,7 @@
 
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
+import { ColorPicker } from '@/components/ui/color-picker'
 import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 
@@ -44,18 +45,16 @@ export function TableSettings() {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-sm text-gray-400 mb-1">Header Color</label>
-          <Input
-            type="color"
+          <ColorPicker
             value={headerColor}
-            onChange={(e) => setProp((props: any) => (props.headerColor = e.target.value))}
+            onChange={(value) => setProp((props: any) => (props.headerColor = value))}
           />
         </div>
         <div>
           <label className="block text-sm text-gray-400 mb-1">Row Color</label>
-          <Input
-            type="color"
+          <ColorPicker
             value={rowColor}
-            onChange={(e) => setProp((props: any) => (props.rowColor = e.target.value))}
+            onChange={(value) => setProp((props: any) => (props.rowColor = value))}
           />
         </div>
       </div>

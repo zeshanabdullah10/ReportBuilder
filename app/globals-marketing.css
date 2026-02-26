@@ -448,3 +448,24 @@
   cursor: pointer;
   box-shadow: 0 0 4px rgba(0, 255, 200, 0.5);
 }
+
+/* Compact Color Picker for Settings Panel */
+.color-picker-compact .react-colorful {
+  width: 100% !important;
+  height: 120px !important;
+  border-radius: 6px;
+}
+
+.color-picker-compact .react-colorful__saturation {
+  border-radius: 6px 6px 0 0;
+}
+
+.color-picker-compact .react-colorful__hue,
+.color-picker-compact .react-colorful__alpha {
+  height: 12px !important;
+}
+
+.color-picker-compact .react-colorful__pointer {
+  width: 16px !important;
+  height: 16px !important;
+}
