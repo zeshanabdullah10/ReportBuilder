@@ -1,6 +1,8 @@
 'use client'
 
 import { useNode } from '@craftjs/core'
+import { Input } from '@/components/ui/input'
+import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 
 export const ToleranceBandSettings = () => {
@@ -43,93 +45,85 @@ export const ToleranceBandSettings = () => {
     <div className="space-y-4">
       {/* Nominal Value */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Nominal Value
-        </label>
-        <input
+        <label className="block text-sm text-gray-400 mb-1">Nominal Value</label>
+        <Input
           type="number"
           value={nominal}
           onChange={(e) => setProp((props: any) => (props.nominal = parseFloat(e.target.value) || 0))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
         />
-        <input
-          type="text"
-          value={nominalBinding}
-          onChange={(e) => setProp((props: any) => (props.nominalBinding = e.target.value))}
-          placeholder="{{spec.nominal}}"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm mt-1"
-        />
+        <div className="mt-2">
+          <DataBindingInput
+            value={nominalBinding}
+            onChange={(value) => setProp((props: any) => (props.nominalBinding = value))}
+            placeholder="{{spec.nominal}}"
+            expectedType="number"
+          />
+        </div>
       </div>
 
       {/* Tolerance */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Tolerance (±)
-        </label>
-        <input
+        <label className="block text-sm text-gray-400 mb-1">Tolerance (±)</label>
+        <Input
           type="number"
           value={tolerance}
           onChange={(e) => setProp((props: any) => (props.tolerance = parseFloat(e.target.value) || 0))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
         />
-        <input
-          type="text"
-          value={toleranceBinding}
-          onChange={(e) => setProp((props: any) => (props.toleranceBinding = e.target.value))}
-          placeholder="{{spec.tolerance}}"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm mt-1"
-        />
+        <div className="mt-2">
+          <DataBindingInput
+            value={toleranceBinding}
+            onChange={(value) => setProp((props: any) => (props.toleranceBinding = value))}
+            placeholder="{{spec.tolerance}}"
+            expectedType="number"
+          />
+        </div>
       </div>
 
       {/* Measured Value */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Measured Value
-        </label>
-        <input
+        <label className="block text-sm text-gray-400 mb-1">Measured Value</label>
+        <Input
           type="number"
           value={measured}
           onChange={(e) => setProp((props: any) => (props.measured = parseFloat(e.target.value) || 0))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
         />
-        <input
-          type="text"
-          value={measuredBinding}
-          onChange={(e) => setProp((props: any) => (props.measuredBinding = e.target.value))}
-          placeholder="{{measurement.value}}"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm mt-1"
-        />
+        <div className="mt-2">
+          <DataBindingInput
+            value={measuredBinding}
+            onChange={(value) => setProp((props: any) => (props.measuredBinding = value))}
+            placeholder="{{measurement.value}}"
+            expectedType="number"
+          />
+        </div>
       </div>
 
       {/* Scale Settings */}
       <div>
-        <label className="flex items-center gap-2 mb-2">
+        <label className="flex items-center gap-2 cursor-pointer mb-2">
           <input
             type="checkbox"
             checked={autoScale}
             onChange={(e) => setProp((props: any) => (props.autoScale = e.target.checked))}
-            className="rounded border-gray-300"
+            className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
           />
-          <span className="text-sm font-medium text-gray-700">Auto Scale</span>
+          <span className="text-sm text-gray-400">Auto Scale</span>
         </label>
         {!autoScale && (
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Min</label>
-              <input
+              <label className="block text-sm text-gray-400 mb-1">Min</label>
+              <Input
                 type="number"
                 value={minScale}
                 onChange={(e) => setProp((props: any) => (props.minScale = parseFloat(e.target.value) || 0))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
               />
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Max</label>
-              <input
+              <label className="block text-sm text-gray-400 mb-1">Max</label>
+              <Input
                 type="number"
                 value={maxScale}
                 onChange={(e) => setProp((props: any) => (props.maxScale = parseFloat(e.target.value) || 100))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
               />
             </div>
           </div>
@@ -137,82 +131,80 @@ export const ToleranceBandSettings = () => {
       </div>
 
       {/* Colors */}
-      <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">Colors</label>
-        <div className="grid grid-cols-3 gap-2">
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
+          Colors
+        </label>
+        <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Tolerance</label>
-            <div className="flex gap-1">
-              <input
-                type="color"
-                value={bandColor}
-                onChange={(e) => setProp((props: any) => (props.bandColor = e.target.value))}
-                className="w-8 h-8 rounded border border-gray-300"
-              />
-            </div>
+            <label className="block text-sm text-gray-400 mb-1">Tolerance</label>
+            <Input
+              type="color"
+              value={bandColor}
+              onChange={(e) => setProp((props: any) => (props.bandColor = e.target.value))}
+            />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Center</label>
-            <div className="flex gap-1">
-              <input
-                type="color"
-                value={centerColor}
-                onChange={(e) => setProp((props: any) => (props.centerColor = e.target.value))}
-                className="w-8 h-8 rounded border border-gray-300"
-              />
-            </div>
+            <label className="block text-sm text-gray-400 mb-1">Center</label>
+            <Input
+              type="color"
+              value={centerColor}
+              onChange={(e) => setProp((props: any) => (props.centerColor = e.target.value))}
+            />
           </div>
           <div>
-            <label className="block text-xs text-gray-500 mb-1">Measured</label>
-            <div className="flex gap-1">
-              <input
-                type="color"
-                value={measuredColor}
-                onChange={(e) => setProp((props: any) => (props.measuredColor = e.target.value))}
-                className="w-8 h-8 rounded border border-gray-300"
-              />
-            </div>
+            <label className="block text-sm text-gray-400 mb-1">Measured</label>
+            <Input
+              type="color"
+              value={measuredColor}
+              onChange={(e) => setProp((props: any) => (props.measuredColor = e.target.value))}
+            />
           </div>
         </div>
       </div>
 
       {/* Display Options */}
-      <div className="space-y-2">
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={showLabels}
-            onChange={(e) => setProp((props: any) => (props.showLabels = e.target.checked))}
-            className="rounded border-gray-300"
-          />
-          <span className="text-sm font-medium text-gray-700">Show Min/Max Labels</span>
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
+          Display Options
         </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={showValue}
-            onChange={(e) => setProp((props: any) => (props.showValue = e.target.checked))}
-            className="rounded border-gray-300"
-          />
-          <span className="text-sm font-medium text-gray-700">Show Value Summary</span>
-        </label>
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showLabels}
+              onChange={(e) => setProp((props: any) => (props.showLabels = e.target.checked))}
+              className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
+            />
+            <span className="text-sm text-gray-400">Show Min/Max Labels</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showValue}
+              onChange={(e) => setProp((props: any) => (props.showValue = e.target.checked))}
+              className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
+            />
+            <span className="text-sm text-gray-400">Show Value Summary</span>
+          </label>
+        </div>
       </div>
 
       {/* Visibility */}
-      <div>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={visible}
-            onChange={(e) => setProp((props: any) => (props.visible = e.target.checked))}
-            className="rounded border-gray-300"
-          />
-          <span className="text-sm font-medium text-gray-700">Visible</span>
-        </label>
-      </div>
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={visible}
+          onChange={(e) => setProp((props: any) => (props.visible = e.target.checked))}
+          className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
+        />
+        <span className="text-sm text-gray-400">Visible</span>
+      </label>
 
       {/* Position Settings */}
-      <PositionSettings />
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <PositionSettings />
+      </div>
     </div>
   )
 }

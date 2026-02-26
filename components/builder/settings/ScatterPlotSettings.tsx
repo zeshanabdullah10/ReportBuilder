@@ -3,6 +3,7 @@
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
 import { ColorPicker } from '@/components/ui/color-picker'
+import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 
 export function ScatterPlotSettings() {
@@ -42,15 +43,13 @@ export function ScatterPlotSettings() {
       {/* Data Binding */}
       <div>
         <label className="block text-sm text-gray-400 mb-1">Data Binding (Array of {`{x, y}`})</label>
-        <Input
-          type="text"
+        <DataBindingInput
           value={dataBinding}
-          onChange={(e) => setProp((props: any) => props.dataBinding = e.target.value)}
+          onChange={(value) => setProp((props: any) => props.dataBinding = value)}
           placeholder="{{data.points}}"
+          expectedType="array"
+          hint="Expected: Array of objects with x and y properties"
         />
-        <p className="text-xs text-gray-500 mt-1">
-          Expected: Array of objects with x and y properties
-        </p>
       </div>
 
       {/* Title */}

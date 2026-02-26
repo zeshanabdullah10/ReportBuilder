@@ -3,6 +3,7 @@
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
 import { ColorPicker } from '@/components/ui/color-picker'
+import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 
 export function QRCodeSettings() {
@@ -45,11 +46,11 @@ export function QRCodeSettings() {
       {/* Binding */}
       <div>
         <label className="block text-sm text-gray-400 mb-1">Data Binding</label>
-        <Input
-          type="text"
+        <DataBindingInput
           value={binding}
-          onChange={(e) => setProp((props: any) => props.binding = e.target.value)}
+          onChange={(value) => setProp((props: any) => props.binding = value)}
           placeholder="{{data.url}}"
+          expectedType="string"
         />
       </div>
 

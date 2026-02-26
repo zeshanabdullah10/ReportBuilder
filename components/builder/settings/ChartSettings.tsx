@@ -3,6 +3,7 @@
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
 import { ColorPicker } from '@/components/ui/color-picker'
+import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 import { Plus, Trash2 } from 'lucide-react'
 
@@ -266,11 +267,11 @@ export function ChartSettings() {
 
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">Binding Path</label>
-                  <Input
-                    type="text"
+                  <DataBindingInput
                     value={ds.binding || ''}
-                    onChange={(e) => updateDataset(index, { binding: e.target.value })}
+                    onChange={(value) => updateDataset(index, { binding: value })}
                     placeholder="{{data.dataset1}}"
+                    expectedType="array"
                   />
                 </div>
               </div>
@@ -340,15 +341,13 @@ export function ChartSettings() {
           </label>
           <div>
             <label className="block text-sm text-gray-400 mb-1">Binding Path</label>
-            <Input
+            <DataBindingInput
               value={binding}
-              onChange={(e) => setProp((props: any) => (props.binding = e.target.value))}
+              onChange={(value) => setProp((props: any) => (props.binding = value))}
               placeholder="{{data.chartData}}"
+              expectedType="array"
+              hint="Array of numbers or {label, value} objects"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Bind to an array of numbers or objects with <code className="text-[#00ffc8]">{'{label, value}'}</code> format.
-              Overrides static data points when bound.
-            </p>
           </div>
         </div>
       )}

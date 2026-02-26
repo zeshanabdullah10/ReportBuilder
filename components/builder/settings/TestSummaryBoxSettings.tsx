@@ -1,6 +1,8 @@
 'use client'
 
 import { useNode } from '@craftjs/core'
+import { Input } from '@/components/ui/input'
+import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 
 export function TestSummaryBoxSettings() {
@@ -52,116 +54,111 @@ export function TestSummaryBoxSettings() {
   return (
     <div className="space-y-4">
       {/* Data Bindings Section */}
-      <div className="border-b border-gray-700 pb-3">
-        <h4 className="text-xs font-semibold text-cyan-400 mb-2">Data Bindings</h4>
-        
-        <div className="space-y-2">
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Total Tests Binding</label>
-            <input
-              type="text"
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
+          Data Bindings
+        </label>
+
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Total Tests Binding</label>
+            <DataBindingInput
               value={totalTestsBinding}
-              onChange={(e) => setProp((props: any) => props.totalTestsBinding = e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white font-mono"
+              onChange={(value) => setProp((props: any) => props.totalTestsBinding = value)}
               placeholder="{{data.summary.total}}"
+              expectedType="number"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Passed Binding</label>
-            <input
-              type="text"
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Passed Binding</label>
+            <DataBindingInput
               value={passedBinding}
-              onChange={(e) => setProp((props: any) => props.passedBinding = e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white font-mono"
+              onChange={(value) => setProp((props: any) => props.passedBinding = value)}
               placeholder="{{data.summary.passed}}"
+              expectedType="number"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Failed Binding</label>
-            <input
-              type="text"
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Failed Binding</label>
+            <DataBindingInput
               value={failedBinding}
-              onChange={(e) => setProp((props: any) => props.failedBinding = e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white font-mono"
+              onChange={(value) => setProp((props: any) => props.failedBinding = value)}
               placeholder="{{data.summary.failed}}"
+              expectedType="number"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Skipped Binding</label>
-            <input
-              type="text"
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Skipped Binding</label>
+            <DataBindingInput
               value={skippedBinding}
-              onChange={(e) => setProp((props: any) => props.skippedBinding = e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white font-mono"
+              onChange={(value) => setProp((props: any) => props.skippedBinding = value)}
               placeholder="{{data.summary.skipped}}"
+              expectedType="number"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Status Binding</label>
-            <input
-              type="text"
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Status Binding</label>
+            <DataBindingInput
               value={overallStatusBinding}
-              onChange={(e) => setProp((props: any) => props.overallStatusBinding = e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white font-mono"
+              onChange={(value) => setProp((props: any) => props.overallStatusBinding = value)}
               placeholder="{{data.summary.status}}"
+              expectedType="string"
             />
           </div>
         </div>
       </div>
 
       {/* Static Values (Fallback) */}
-      <div className="border-b border-gray-700 pb-3">
-        <h4 className="text-xs font-semibold text-cyan-400 mb-2">Static Values (Fallback)</h4>
-        
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Total</label>
-            <input
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
+          Static Values (Fallback)
+        </label>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Total</label>
+            <Input
               type="number"
               value={totalTests}
               onChange={(e) => setProp((props: any) => props.totalTests = parseInt(e.target.value) || 0)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Passed</label>
-            <input
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Passed</label>
+            <Input
               type="number"
               value={passed}
               onChange={(e) => setProp((props: any) => props.passed = parseInt(e.target.value) || 0)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Failed</label>
-            <input
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Failed</label>
+            <Input
               type="number"
               value={failed}
               onChange={(e) => setProp((props: any) => props.failed = parseInt(e.target.value) || 0)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Skipped</label>
-            <input
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Skipped</label>
+            <Input
               type="number"
               value={skipped}
               onChange={(e) => setProp((props: any) => props.skipped = parseInt(e.target.value) || 0)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
             />
           </div>
         </div>
 
-        <div className="space-y-1 mt-2">
-          <label className="text-xs text-gray-400">Overall Status</label>
+        <div className="mt-3">
+          <label className="block text-sm text-gray-400 mb-1">Overall Status</label>
           <select
             value={overallStatus}
             onChange={(e) => setProp((props: any) => props.overallStatus = e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+            className="w-full bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded-lg p-2 text-white text-sm"
           >
             <option value="PASS">PASS</option>
             <option value="FAIL">FAIL</option>
@@ -171,15 +168,17 @@ export function TestSummaryBoxSettings() {
       </div>
 
       {/* Display Options */}
-      <div className="border-b border-gray-700 pb-3">
-        <h4 className="text-xs font-semibold text-cyan-400 mb-2">Display Options</h4>
-        
-        <div className="space-y-1">
-          <label className="text-xs text-gray-400">Layout</label>
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
+          Display Options
+        </label>
+
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Layout</label>
           <select
             value={layout}
             onChange={(e) => setProp((props: any) => props.layout = e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+            className="w-full bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded-lg p-2 text-white text-sm"
           >
             <option value="horizontal">Horizontal</option>
             <option value="vertical">Vertical</option>
@@ -187,104 +186,104 @@ export function TestSummaryBoxSettings() {
           </select>
         </div>
 
-        <div className="flex items-center gap-2 mt-2">
-          <input
-            type="checkbox"
-            checked={showTitle}
-            onChange={(e) => setProp((props: any) => props.showTitle = e.target.checked)}
-            className="rounded"
-          />
-          <label className="text-xs text-gray-400">Show Title</label>
-        </div>
-
-        {showTitle && (
-          <div className="space-y-1 mt-2">
-            <label className="text-xs text-gray-400">Title Text</label>
+        <div className="space-y-2 mt-3">
+          <label className="flex items-center gap-2 cursor-pointer">
             <input
-              type="text"
-              value={title}
-              onChange={(e) => setProp((props: any) => props.title = e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+              type="checkbox"
+              checked={showTitle}
+              onChange={(e) => setProp((props: any) => props.showTitle = e.target.checked)}
+              className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
             />
-          </div>
-        )}
+            <span className="text-sm text-gray-400">Show Title</span>
+          </label>
 
-        <div className="flex items-center gap-2 mt-2">
-          <input
-            type="checkbox"
-            checked={showSkipped}
-            onChange={(e) => setProp((props: any) => props.showSkipped = e.target.checked)}
-            className="rounded"
-          />
-          <label className="text-xs text-gray-400">Show Skipped</label>
-        </div>
+          {showTitle && (
+            <div className="ml-6">
+              <Input
+                type="text"
+                value={title}
+                onChange={(e) => setProp((props: any) => props.title = e.target.value)}
+                placeholder="Test Summary"
+              />
+            </div>
+          )}
 
-        <div className="flex items-center gap-2 mt-2">
-          <input
-            type="checkbox"
-            checked={showPercentage}
-            onChange={(e) => setProp((props: any) => props.showPercentage = e.target.checked)}
-            className="rounded"
-          />
-          <label className="text-xs text-gray-400">Show Percentage</label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showSkipped}
+              onChange={(e) => setProp((props: any) => props.showSkipped = e.target.checked)}
+              className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
+            />
+            <span className="text-sm text-gray-400">Show Skipped</span>
+          </label>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showPercentage}
+              onChange={(e) => setProp((props: any) => props.showPercentage = e.target.checked)}
+              className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
+            />
+            <span className="text-sm text-gray-400">Show Percentage</span>
+          </label>
         </div>
       </div>
 
       {/* Colors */}
-      <div className="border-b border-gray-700 pb-3">
-        <h4 className="text-xs font-semibold text-cyan-400 mb-2">Colors</h4>
-        
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Pass Color</label>
-            <input
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
+          Colors
+        </label>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Pass Color</label>
+            <Input
               type="color"
               value={passColor}
               onChange={(e) => setProp((props: any) => props.passColor = e.target.value)}
-              className="w-full h-8 rounded cursor-pointer"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Fail Color</label>
-            <input
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Fail Color</label>
+            <Input
               type="color"
               value={failColor}
               onChange={(e) => setProp((props: any) => props.failColor = e.target.value)}
-              className="w-full h-8 rounded cursor-pointer"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Skip Color</label>
-            <input
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Skip Color</label>
+            <Input
               type="color"
               value={skipColor}
               onChange={(e) => setProp((props: any) => props.skipColor = e.target.value)}
-              className="w-full h-8 rounded cursor-pointer"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Border Color</label>
-            <input
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Border Color</label>
+            <Input
               type="color"
               value={borderColor}
               onChange={(e) => setProp((props: any) => props.borderColor = e.target.value)}
-              className="w-full h-8 rounded cursor-pointer"
             />
           </div>
         </div>
 
-        <div className="space-y-1 mt-2">
-          <label className="text-xs text-gray-400">Background Color</label>
-          <input
+        <div className="mt-3">
+          <label className="block text-sm text-gray-400 mb-1">Background Color</label>
+          <Input
             type="color"
             value={backgroundColor}
             onChange={(e) => setProp((props: any) => props.backgroundColor = e.target.value)}
-            className="w-full h-8 rounded cursor-pointer"
           />
         </div>
       </div>
 
-      <PositionSettings />
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <PositionSettings />
+      </div>
     </div>
   )
 }

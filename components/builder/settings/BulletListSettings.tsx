@@ -3,6 +3,7 @@
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
 import { ColorPicker } from '@/components/ui/color-picker'
+import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 
 const FONT_FAMILIES = [
@@ -122,14 +123,13 @@ export function BulletListSettings() {
         </label>
         <div>
           <label className="block text-sm text-gray-400 mb-1">Binding Path</label>
-          <Input
+          <DataBindingInput
             value={binding}
-            onChange={(e) => setProp((props: any) => (props.binding = e.target.value))}
+            onChange={(value) => setProp((props: any) => (props.binding = value))}
             placeholder="{{data.items}}"
+            expectedType="array"
+            hint="Bind to an array of strings or objects"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Bind to an array of strings or objects. Overrides static items when bound.
-          </p>
         </div>
       </div>
 

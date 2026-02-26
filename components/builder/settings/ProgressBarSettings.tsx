@@ -3,6 +3,7 @@
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
 import { ColorPicker } from '@/components/ui/color-picker'
+import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 
 export function ProgressBarSettings() {
@@ -128,14 +129,13 @@ export function ProgressBarSettings() {
         </label>
         <div>
           <label className="block text-sm text-gray-400 mb-1">Binding Path</label>
-          <Input
+          <DataBindingInput
             value={binding}
-            onChange={(e) => setProp((props: any) => (props.binding = e.target.value))}
+            onChange={(value) => setProp((props: any) => (props.binding = value))}
             placeholder="{{data.progress}}"
+            expectedType="number"
+            hint="Bind to a numeric value (0-100)"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Bind to a numeric value (0-100). Overrides static value when bound.
-          </p>
         </div>
       </div>
 

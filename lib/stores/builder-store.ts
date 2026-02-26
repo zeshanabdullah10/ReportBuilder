@@ -1,4 +1,5 @@
 import { create } from 'zustand'
+import { extractDataPaths, DataPathInfo } from '@/lib/utils/data-paths'
 
 interface ActiveDrag {
   nodeId: string
@@ -42,6 +43,7 @@ interface BuilderState {
   templateId: string | null
   templateName: string
   sampleData: Record<string, unknown> | null
+  availableDataPaths: DataPathInfo[] | null
   selectedNodeId: string | null
   isPreviewMode: boolean
   hasUnsavedChanges: boolean
@@ -129,6 +131,7 @@ const initialState = {
   templateId: null,
   templateName: 'Untitled Template',
   sampleData: null,
+  availableDataPaths: null,
   selectedNodeId: null,
   isPreviewMode: false,
   hasUnsavedChanges: false,
@@ -153,7 +156,10 @@ export const useBuilderStore = create<BuilderState>()((set, get) => ({
 
   setTemplateId: (id) => set({ templateId: id }),
   setTemplateName: (name) => set({ templateName: name }),
-  setSampleData: (data) => set({ sampleData: data }),
+  setSampleData: (data) => set({
+    sampleData: data,
+    availableDataPaths: data ? extractDataPaths(data) : null
+  }),
   setSelectedNodeId: (id) => set({ selectedNodeId: id }),
   togglePreviewMode: () => set((state) => ({ isPreviewMode: !state.isPreviewMode })),
   setHasUnsavedChanges: (value) => set({ hasUnsavedChanges: value }),

@@ -3,6 +3,7 @@
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
 import { ColorPicker } from '@/components/ui/color-picker'
+import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 
 export const PassRateChartSettings = () => {
@@ -58,13 +59,14 @@ export const PassRateChartSettings = () => {
           value={passCount}
           onChange={(e) => setProp((props: any) => (props.passCount = parseInt(e.target.value) || 0))}
         />
-        <Input
-          type="text"
-          value={passCountBinding}
-          onChange={(e) => setProp((props: any) => (props.passCountBinding = e.target.value))}
-          placeholder="{{summary.passCount}}"
-          className="mt-2"
-        />
+        <div className="mt-2">
+          <DataBindingInput
+            value={passCountBinding}
+            onChange={(value) => setProp((props: any) => (props.passCountBinding = value))}
+            placeholder="{{summary.passCount}}"
+            expectedType="number"
+          />
+        </div>
       </div>
 
       {/* Fail Count */}
@@ -77,13 +79,14 @@ export const PassRateChartSettings = () => {
           value={failCount}
           onChange={(e) => setProp((props: any) => (props.failCount = parseInt(e.target.value) || 0))}
         />
-        <Input
-          type="text"
-          value={failCountBinding}
-          onChange={(e) => setProp((props: any) => (props.failCountBinding = e.target.value))}
-          placeholder="{{summary.failCount}}"
-          className="mt-2"
-        />
+        <div className="mt-2">
+          <DataBindingInput
+            value={failCountBinding}
+            onChange={(value) => setProp((props: any) => (props.failCountBinding = value))}
+            placeholder="{{summary.failCount}}"
+            expectedType="number"
+          />
+        </div>
       </div>
 
       {/* Chart Type */}

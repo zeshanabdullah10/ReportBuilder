@@ -3,6 +3,7 @@
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
 import { ColorPicker } from '@/components/ui/color-picker'
+import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 import { VisibilityConditionSettings } from './VisibilityConditionSettings'
 import { AlignLeft, AlignCenter, AlignRight, AlignJustify } from 'lucide-react'
@@ -184,15 +185,12 @@ export function TextSettings() {
         </label>
         <div>
           <label className="block text-sm text-gray-400 mb-1">Binding Path</label>
-          <Input
+          <DataBindingInput
             value={binding}
-            onChange={(e) => setProp((props: any) => (props.binding = e.target.value))}
+            onChange={(value) => setProp((props: any) => (props.binding = value))}
             placeholder="{{data.fieldName}}"
+            hint="Use the picker or type a path like {{data.path}}"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Use <code className="text-[#00ffc8]">{'{{data.path}}'}</code> to bind to sample data.
-            You can also use bindings directly in the text content.
-          </p>
         </div>
       </div>
 

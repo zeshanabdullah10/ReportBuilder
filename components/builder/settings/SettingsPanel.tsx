@@ -4,7 +4,6 @@ import React, { useState } from 'react'
 import { useEditor } from '@craftjs/core'
 import { Trash2, Bookmark } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { LayerControls } from './LayerControls'
 import { SaveComponentDialog } from '../custom/SaveComponentDialog'
 
 export function SettingsPanel() {
@@ -70,11 +69,6 @@ export function SettingsPanel() {
                   {React.createElement(selected.settings)}
                 </div>
               )}
-
-              {/* Layer Controls */}
-              <div className="pt-4 border-t border-[rgba(0,255,200,0.1)]">
-                <LayerControls />
-              </div>
 
               {/* Save as Custom Component */}
               {selected.isDeletable && (

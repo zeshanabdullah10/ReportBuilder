@@ -3,6 +3,7 @@
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
 import { ColorPicker } from '@/components/ui/color-picker'
+import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 import { AlignLeft, AlignCenter, AlignRight } from 'lucide-react'
 
@@ -144,14 +145,13 @@ export function DateTimeSettings() {
         </label>
         <div>
           <label className="block text-sm text-gray-400 mb-1">Binding Path</label>
-          <Input
+          <DataBindingInput
             value={binding}
-            onChange={(e) => setProp((props: any) => (props.binding = e.target.value))}
+            onChange={(value) => setProp((props: any) => (props.binding = value))}
             placeholder="{{data.timestamp}}"
+            expectedType="string"
+            hint="Bind to a date field (shows current date if empty)"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Bind to a date field. If empty, shows current date/time.
-          </p>
         </div>
       </div>
 

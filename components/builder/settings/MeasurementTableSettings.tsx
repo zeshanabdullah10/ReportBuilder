@@ -3,6 +3,7 @@
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
 import { ColorPicker } from '@/components/ui/color-picker'
+import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 
 export function MeasurementTableSettings() {
@@ -34,15 +35,13 @@ export function MeasurementTableSettings() {
       {/* Data Binding */}
       <div>
         <label className="block text-sm text-gray-400 mb-1">Data Binding</label>
-        <Input
-          type="text"
+        <DataBindingInput
           value={dataBinding}
-          onChange={(e) => setProp((props: any) => props.dataBinding = e.target.value)}
+          onChange={(value) => setProp((props: any) => props.dataBinding = value)}
           placeholder="{{data.measurements}}"
+          expectedType="array"
+          hint="Array with parameter, nominal, measured, unit, min, max, status"
         />
-        <p className="text-xs text-gray-500 mt-1">
-          Expected: Array of objects with parameter, nominal, measured, unit, min, max, status
-        </p>
       </div>
 
       {/* Display Options */}
