@@ -452,6 +452,7 @@
 /* Compact Color Picker for Settings Panel */
 .color-picker-compact .react-colorful {
   width: 100% !important;
+  max-width: 100% !important;
   height: 120px !important;
   border-radius: 6px;
 }

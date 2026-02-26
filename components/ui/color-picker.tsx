@@ -119,16 +119,15 @@ export function ColorPicker({
           </button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-52 p-2 bg-[#0a0f14] border border-[rgba(0,255,200,0.2)] rounded-lg shadow-xl z-50"
-          align="start"
-          side="bottom"
+          className="w-56 p-2 bg-[#0a0f14] border border-[rgba(0,255,200,0.2)] rounded-lg shadow-xl z-50 overflow-hidden"
+          align="center"
           sideOffset={4}
           collisionPadding={16}
           avoidCollisions={true}
         >
-          <div className="space-y-2">
+          <div className="space-y-2 w-full">
             {/* Color picker - compact */}
-            <div className="color-picker-compact">
+            <div className="color-picker-compact w-full">
               <RgbaColorPicker
                 color={internalColor}
                 onChange={(color) => handleColorChange(color)}
