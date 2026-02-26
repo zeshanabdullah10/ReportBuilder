@@ -100,7 +100,10 @@ export function DataBindingPicker({
       <PopoverContent
         className="w-80 p-0"
         align="start"
+        side="bottom"
         sideOffset={4}
+        collisionPadding={16}
+        avoidCollisions={true}
       >
         <div className="p-3">
           <div className="flex items-center justify-between mb-2">
