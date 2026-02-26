@@ -2,8 +2,10 @@
 
 import { useNode } from '@craftjs/core'
 import { ResizableBox } from '../layout/ResizableBox'
+import { useBuilderStore, PAGE_SIZE_PRESETS } from '@/lib/stores/builder-store'
 
 interface PageBreakProps {
+  spanFullWidth?: boolean
   x?: number
   y?: number
   width?: number
@@ -13,6 +15,7 @@ interface PageBreakProps {
 }
 
 export const PageBreak = ({
+  spanFullWidth = true,
   x = 0,
   y = 0,
   width = 400,
@@ -20,6 +23,8 @@ export const PageBreak = ({
   zIndex = 1,
   visible = true,
 }: PageBreakProps) => {
+  const { pages, activePageId } = useBuilderStore()
+
   const {
     id,
     connectors: { connect },
@@ -32,28 +37,51 @@ export const PageBreak = ({
 
   if (!visible) return null
 
+  // Get page dimensions for spanFullWidth
+  const activePage = pages.find(p => p.id === activePageId)
+  const pageSettings = activePage?.settings
+  const pageSize = pageSettings?.pageSize || 'A4'
+  const preset = PAGE_SIZE_PRESETS[pageSize as keyof typeof PAGE_SIZE_PRESETS]
+  const pageWidth = pageSize === 'Custom' ? (pageSettings?.customWidth || 794) : preset.width
+  const padding = pageSettings?.padding || 40
+  const contentWidth = pageWidth - (padding * 2)
+
+  // Calculate actual dimensions based on spanFullWidth
+  const actualX = spanFullWidth ? 0 : x
+  const actualWidth = spanFullWidth ? contentWidth : width
+
   const handlePositionChange = (newPos: { x?: number; y?: number; width?: number; height?: number }) => {
-    setProp((props: PageBreakProps) => {
-      if (newPos.x !== undefined) props.x = newPos.x
-      if (newPos.y !== undefined) props.y = newPos.y
-      if (newPos.width !== undefined) props.width = newPos.width
-      if (newPos.height !== undefined) props.height = newPos.height
-    })
+    if (spanFullWidth) {
+      // Only allow changing y position when spanning full width
+      if (newPos.y !== undefined) {
+        setProp((props: PageBreakProps) => {
+          props.y = newPos.y
+        })
+      }
+    } else {
+      setProp((props: PageBreakProps) => {
+        if (newPos.x !== undefined) props.x = newPos.x
+        if (newPos.y !== undefined) props.y = newPos.y
+        if (newPos.width !== undefined) props.width = newPos.width
+        if (newPos.height !== undefined) props.height = newPos.height
+      })
+    }
   }
 
   return (
     <ResizableBox
-      x={x}
+      x={actualX}
       y={y}
-      width={width}
+      width={actualWidth}
       height={height}
-      minWidth={100}
+      minWidth={spanFullWidth ? actualWidth : 100}
       minHeight={30}
       selected={selected}
       nodeId={id}
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
       zIndex={zIndex}
+      resizable={!spanFullWidth}
     >
       <div
         style={{
@@ -82,6 +110,7 @@ export const PageBreak = ({
 PageBreak.craft = {
   displayName: 'Page Break',
   props: {
+    spanFullWidth: true,
     x: 0,
     y: 0,
     width: 400,

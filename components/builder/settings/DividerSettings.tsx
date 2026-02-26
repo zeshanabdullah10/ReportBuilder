@@ -12,11 +12,13 @@ export function DividerSettings() {
     style,
     color,
     thickness,
+    spanFullWidth,
   } = useNode((node) => ({
     orientation: node.data.props.orientation,
     style: node.data.props.style,
     color: node.data.props.color,
     thickness: node.data.props.thickness,
+    spanFullWidth: node.data.props.spanFullWidth,
   }))
 
   return (
@@ -82,6 +84,17 @@ export function DividerSettings() {
           />
         </div>
       </div>
+
+      {/* Full Width Toggle */}
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={spanFullWidth}
+          onChange={(e) => setProp((props: any) => (props.spanFullWidth = e.target.checked))}
+          className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
+        />
+        <span className="text-sm text-gray-400">Span Full Page Width</span>
+      </label>
 
       <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
         <PositionSettings />

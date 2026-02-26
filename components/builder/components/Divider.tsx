@@ -1,15 +1,16 @@
 'use client'
 
-import { useNode } from '@craftjs/core'
+import { useNode, useEditor } from '@craftjs/core'
 import { DividerSettings } from '../settings/DividerSettings'
 import { ResizableBox } from '../layout/ResizableBox'
+import { useBuilderStore, PAGE_SIZE_PRESETS } from '@/lib/stores/builder-store'
 
 interface DividerProps {
   orientation?: 'horizontal' | 'vertical'
   style?: 'solid' | 'dashed' | 'dotted' | 'double'
   color?: string
   thickness?: number
-  length?: string // '100%' or custom
+  spanFullWidth?: boolean
   x?: number
   y?: number
   width?: number
@@ -23,6 +24,7 @@ export const Divider = ({
   style = 'solid',
   color = 'rgba(255, 255, 255, 0.3)',
   thickness = 1,
+  spanFullWidth = true,
   x = 0,
   y = 0,
   width = 200,
@@ -30,6 +32,8 @@ export const Divider = ({
   zIndex = 1,
   visible = true,
 }: DividerProps) => {
+  const { pages, activePageId } = useBuilderStore()
+
   const {
     id,
     connectors: { connect },
@@ -42,13 +46,35 @@ export const Divider = ({
 
   if (!visible) return null
 
+  // Get page dimensions for spanFullWidth
+  const activePage = pages.find(p => p.id === activePageId)
+  const pageSettings = activePage?.settings
+  const pageSize = pageSettings?.pageSize || 'A4'
+  const preset = PAGE_SIZE_PRESETS[pageSize as keyof typeof PAGE_SIZE_PRESETS]
+  const pageWidth = pageSize === 'Custom' ? (pageSettings?.customWidth || 794) : preset.width
+  const padding = pageSettings?.padding || 40
+  const contentWidth = pageWidth - (padding * 2)
+
+  // Calculate actual dimensions based on spanFullWidth
+  const actualX = spanFullWidth ? 0 : x
+  const actualWidth = spanFullWidth ? contentWidth : width
+
   const handlePositionChange = (newPos: { x?: number; y?: number; width?: number; height?: number }) => {
-    setProp((props: DividerProps) => {
-      if (newPos.x !== undefined) props.x = newPos.x
-      if (newPos.y !== undefined) props.y = newPos.y
-      if (newPos.width !== undefined) props.width = newPos.width
-      if (newPos.height !== undefined) props.height = newPos.height
-    })
+    if (spanFullWidth) {
+      // Only allow changing y position when spanning full width
+      if (newPos.y !== undefined) {
+        setProp((props: DividerProps) => {
+          props.y = newPos.y
+        })
+      }
+    } else {
+      setProp((props: DividerProps) => {
+        if (newPos.x !== undefined) props.x = newPos.x
+        if (newPos.y !== undefined) props.y = newPos.y
+        if (newPos.width !== undefined) props.width = newPos.width
+        if (newPos.height !== undefined) props.height = newPos.height
+      })
+    }
   }
 
   const isHorizontal = orientation === 'horizontal'
@@ -76,17 +102,18 @@ export const Divider = ({
 
   return (
     <ResizableBox
-      x={x}
+      x={actualX}
       y={y}
-      width={width}
+      width={actualWidth}
       height={height}
-      minWidth={isHorizontal ? 50 : 10}
+      minWidth={spanFullWidth ? actualWidth : (isHorizontal ? 50 : 10)}
       minHeight={isHorizontal ? 10 : 50}
       selected={selected}
       nodeId={id}
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
       zIndex={zIndex}
+      resizable={!spanFullWidth}
     >
       <div
         style={{
@@ -113,6 +140,7 @@ Divider.craft = {
     style: 'solid',
     color: 'rgba(0, 0, 0, 0.3)',
     thickness: 1,
+    spanFullWidth: true,
     x: 0,
     y: 0,
     width: 200,

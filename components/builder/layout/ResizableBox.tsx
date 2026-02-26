@@ -16,6 +16,7 @@ interface ResizableBoxProps {
   children: React.ReactNode
   connectRef?: (ref: HTMLDivElement | null) => void
   zIndex?: number
+  resizable?: boolean
 }
 
 type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w'
@@ -53,6 +54,7 @@ export function ResizableBox({
   children,
   connectRef,
   zIndex = 1,
+  resizable = true,
 }: ResizableBoxProps) {
   const boxRef = useRef<HTMLDivElement>(null)
   const { snapEnabled, gridSize, setActiveDrag } = useBuilderStore()
@@ -374,8 +376,8 @@ export function ResizableBox({
         {children}
       </div>
 
-      {/* Resize handles - only visible when selected */}
-      {selected && (
+      {/* Resize handles - only visible when selected and resizable */}
+      {selected && resizable && (
         <>
           {(Object.keys(handlePositions) as ResizeHandle[]).map((handle) => (
             <div
