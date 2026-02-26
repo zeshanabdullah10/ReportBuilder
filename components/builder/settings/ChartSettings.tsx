@@ -26,6 +26,7 @@ export function ChartSettings() {
     label,
     dataPoints,
     labels,
+    labelsBinding,
     binding,
     primaryColor,
     backgroundColor,
@@ -38,6 +39,7 @@ export function ChartSettings() {
     label: node.data.props.label,
     dataPoints: node.data.props.dataPoints,
     labels: node.data.props.labels,
+    labelsBinding: node.data.props.labelsBinding,
     binding: node.data.props.binding,
     primaryColor: node.data.props.primaryColor,
     backgroundColor: node.data.props.backgroundColor,
@@ -308,7 +310,7 @@ export function ChartSettings() {
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Labels (comma-separated, optional)</label>
+              <label className="block text-sm text-gray-400 mb-1">Labels (comma-separated)</label>
               <Input
                 type="text"
                 value={labels}
@@ -322,14 +324,26 @@ export function ChartSettings() {
 
       {/* Common Labels - for multi-dataset */}
       {useMultiDataset && (
-        <div>
-          <label className="block text-sm text-gray-400 mb-1">X-Axis Labels (comma-separated)</label>
-          <Input
-            type="text"
-            value={labels}
-            onChange={(e) => setProp((props: any) => (props.labels = e.target.value))}
-            placeholder="Mon, Tue, Wed, Thu, Fri"
-          />
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">X-Axis Labels (comma-separated)</label>
+            <Input
+              type="text"
+              value={labels}
+              onChange={(e) => setProp((props: any) => (props.labels = e.target.value))}
+              placeholder="Mon, Tue, Wed, Thu, Fri"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Labels Binding</label>
+            <DataBindingInput
+              value={labelsBinding || ''}
+              onChange={(value) => setProp((props: any) => (props.labelsBinding = value))}
+              placeholder="{{data.labels}}"
+              expectedType="array"
+              hint="Array of label strings"
+            />
+          </div>
         </div>
       )}
 
@@ -339,15 +353,27 @@ export function ChartSettings() {
           <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
             Data Binding
           </label>
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Binding Path</label>
-            <DataBindingInput
-              value={binding}
-              onChange={(value) => setProp((props: any) => (props.binding = value))}
-              placeholder="{{data.chartData}}"
-              expectedType="array"
-              hint="Array of numbers or {label, value} objects"
-            />
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Data Binding Path</label>
+              <DataBindingInput
+                value={binding}
+                onChange={(value) => setProp((props: any) => (props.binding = value))}
+                placeholder="{{data.chartData}}"
+                expectedType="array"
+                hint="Array of numbers or {label, value} objects"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Labels Binding Path</label>
+              <DataBindingInput
+                value={labelsBinding || ''}
+                onChange={(value) => setProp((props: any) => (props.labelsBinding = value))}
+                placeholder="{{data.chartLabels}}"
+                expectedType="array"
+                hint="Array of label strings for X-axis"
+              />
+            </div>
           </div>
         </div>
       )}

@@ -41,6 +41,7 @@ interface ChartProps {
   label?: string
   dataPoints?: string
   labels?: string
+  labelsBinding?: string
   binding?: string
   // Color options
   primaryColor?: string
@@ -69,6 +70,7 @@ export const Chart = ({
   label = 'Dataset',
   dataPoints = '65, 59, 80, 81, 56',
   labels = '',
+  labelsBinding = '',
   binding = '',
   primaryColor = '#00ffc8',
   backgroundColor = 'rgba(0, 255, 200, 0.5)',
@@ -122,12 +124,25 @@ export const Chart = ({
     return { values, labels: dataLabels }
   }
 
-  // Get chart labels (from primary dataset or provided labels)
+  // Get chart labels (from binding, static labels, or derived from data)
   const getChartLabels = () => {
+    // First priority: resolve labels binding if in preview mode
+    if (isPreviewMode && sampleData && labelsBinding && hasBindings(labelsBinding)) {
+      const resolved = resolveBindingOrValue(labelsBinding, sampleData)
+      if (Array.isArray(resolved)) {
+        return resolved.map((item: any) => {
+          if (typeof item === 'string') return item
+          return item?.label ?? item?.name ?? String(item)
+        })
+      }
+    }
+
+    // Second priority: static labels
     if (labels && labels.trim()) {
       return labels.split(',').map((l) => l.trim())
     }
-    // Get labels from first dataset or primary data
+
+    // Third priority: get labels from first dataset or primary data
     if (datasets && datasets.length > 0) {
       const firstDataset = datasets[0]
       const parsed = parseData(firstDataset.dataPoints || '', firstDataset.binding || '')
@@ -307,6 +322,7 @@ Chart.craft = {
     label: 'Dataset',
     dataPoints: '65, 59, 80, 81, 56',
     labels: '',
+    labelsBinding: '',
     binding: '',
     primaryColor: '#0066cc',
     backgroundColor: 'rgba(0, 102, 204, 0.5)',
