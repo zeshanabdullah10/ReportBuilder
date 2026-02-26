@@ -2,6 +2,7 @@
 
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
+import { ColorPicker } from '@/components/ui/color-picker'
 import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 
@@ -137,27 +138,24 @@ export const ToleranceBandSettings = () => {
         </label>
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Tolerance</label>
-            <Input
-              type="color"
+            <label className="block text-xs text-gray-400 mb-1">Tolerance</label>
+            <ColorPicker
               value={bandColor}
-              onChange={(e) => setProp((props: any) => (props.bandColor = e.target.value))}
+              onChange={(value) => setProp((props: any) => (props.bandColor = value))}
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Center</label>
-            <Input
-              type="color"
+            <label className="block text-xs text-gray-400 mb-1">Center</label>
+            <ColorPicker
               value={centerColor}
-              onChange={(e) => setProp((props: any) => (props.centerColor = e.target.value))}
+              onChange={(value) => setProp((props: any) => (props.centerColor = value))}
             />
           </div>
           <div>
-            <label className="block text-sm text-gray-400 mb-1">Measured</label>
-            <Input
-              type="color"
+            <label className="block text-xs text-gray-400 mb-1">Measured</label>
+            <ColorPicker
               value={measuredColor}
-              onChange={(e) => setProp((props: any) => (props.measuredColor = e.target.value))}
+              onChange={(value) => setProp((props: any) => (props.measuredColor = value))}
             />
           </div>
         </div>

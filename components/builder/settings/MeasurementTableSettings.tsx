@@ -117,9 +117,6 @@ export function MeasurementTableSettings() {
               onChange={(value) => setProp((props: any) => props.failColor = value)}
             />
           </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-3 mt-3">
           <div>
             <label className="block text-sm text-gray-400 mb-1">Header Background</label>
             <ColorPicker

@@ -2,6 +2,7 @@
 
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
+import { ColorPicker } from '@/components/ui/color-picker'
 import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 import { Plus, Trash2 } from 'lucide-react'
@@ -127,18 +128,16 @@ export const RevisionBlockSettings = () => {
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label className="block text-sm text-gray-400 mb-1">Header Color</label>
-            <Input
-              type="color"
+            <ColorPicker
               value={headerColor}
-              onChange={(e) => setProp((props: any) => (props.headerColor = e.target.value))}
+              onChange={(value) => setProp((props: any) => (props.headerColor = value))}
             />
           </div>
           <div>
             <label className="block text-sm text-gray-400 mb-1">Border Color</label>
-            <Input
-              type="color"
+            <ColorPicker
               value={borderColor}
-              onChange={(e) => setProp((props: any) => (props.borderColor = e.target.value))}
+              onChange={(value) => setProp((props: any) => (props.borderColor = value))}
             />
           </div>
         </div>
