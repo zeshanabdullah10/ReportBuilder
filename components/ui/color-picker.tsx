@@ -121,6 +121,10 @@ export function ColorPicker({
         <PopoverContent
           className="w-52 p-2 bg-[#0a0f14] border border-[rgba(0,255,200,0.2)] rounded-lg shadow-xl z-50"
           align="start"
+          side="bottom"
+          sideOffset={4}
+          collisionPadding={16}
+          avoidCollisions={true}
         >
           <div className="space-y-2">
             {/* Color picker - compact */}
