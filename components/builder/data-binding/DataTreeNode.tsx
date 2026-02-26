@@ -39,6 +39,10 @@ export function DataTreeNode({
   const isContainer = node.type === 'object' || node.type === 'array'
   const isSelected = selectedPath === node.path
 
+  // Check if this node can be selected (non-container or matches filter type)
+  const matchesFilterType = filterType && node.type === filterType
+  const isSelectable = !isContainer || matchesFilterType
+
   // Check if this node matches the filter type
   const matchesFilter = !filterType || node.type === filterType || isContainer
 
@@ -64,8 +68,7 @@ export function DataTreeNode({
 
   const handleSelect = (e: React.MouseEvent) => {
     e.stopPropagation()
-    // Only allow selecting non-container types (leaf values)
-    if (!isContainer) {
+    if (isSelectable) {
       onSelect(node.path)
     }
   }
@@ -74,8 +77,8 @@ export function DataTreeNode({
     <div className="select-none">
       <div
         className={cn(
-          'flex items-center gap-1 py-0.5 px-1 rounded cursor-pointer group',
-          'hover:bg-[rgba(0,255,200,0.1)]',
+          'flex items-center gap-1 py-0.5 px-1 rounded group',
+          isSelectable ? 'cursor-pointer hover:bg-[rgba(0,255,200,0.1)]' : 'cursor-default',
           isSelected && 'bg-[rgba(0,255,200,0.2)] text-[#00ffc8]'
         )}
         style={{ paddingLeft: `${level * 12 + 4}px` }}
