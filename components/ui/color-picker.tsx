@@ -119,7 +119,7 @@ export function ColorPicker({
           </button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-56 p-2 bg-[#0a0f14] border border-[rgba(0,255,200,0.2)] rounded-lg shadow-xl z-50 overflow-hidden"
+          className="w-52 p-2 bg-[#0a0f14] border border-[rgba(0,255,200,0.2)] rounded-lg shadow-xl z-50 overflow-hidden"
           align="center"
           sideOffset={4}
           collisionPadding={16}
@@ -153,13 +153,13 @@ export function ColorPicker({
             )}
 
             {/* Hex input - compact */}
-            <div className="flex gap-1.5">
+            <div className="grid grid-cols-2 gap-1.5">
               <input
                 type="text"
                 value={displayHex}
                 onChange={(e) => handleHexChange(e.target.value)}
                 placeholder="#000000"
-                className="flex-1 h-7 px-2 bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded text-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#00ffc8]"
+                className="h-7 px-2 bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded text-white text-xs font-mono focus:outline-none focus:ring-1 focus:ring-[#00ffc8]"
               />
               {showAlpha && (
                 <input
@@ -168,7 +168,7 @@ export function ColorPicker({
                   max="100"
                   value={Math.round(internalColor.a * 100)}
                   onChange={(e) => handleAlphaChange(parseInt(e.target.value) / 100)}
-                  className="w-12 h-7 px-1 bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded text-white text-xs text-center focus:outline-none focus:ring-1 focus:ring-[#00ffc8]"
+                  className="h-7 px-1 bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded text-white text-xs text-center focus:outline-none focus:ring-1 focus:ring-[#00ffc8]"
                   title="Opacity %"
                 />
               )}
