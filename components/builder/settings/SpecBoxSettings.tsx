@@ -175,14 +175,14 @@ export const SpecBoxSettings = () => {
       {showStatus && (
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Pass Color</label>
+            <label className="block text-sm text-gray-400 mb-1">Pass Color</label>
             <ColorPicker
               value={passColor}
               onChange={(value) => setProp((props: any) => (props.passColor = value))}
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Fail Color</label>
+            <label className="block text-sm text-gray-400 mb-1">Fail Color</label>
             <ColorPicker
               value={failColor}
               onChange={(value) => setProp((props: any) => (props.failColor = value))}

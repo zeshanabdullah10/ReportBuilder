@@ -239,28 +239,28 @@ export function TestSummaryBoxSettings() {
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Pass Color</label>
+            <label className="block text-sm text-gray-400 mb-1">Pass Color</label>
             <ColorPicker
               value={passColor}
               onChange={(value) => setProp((props: any) => props.passColor = value)}
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Fail Color</label>
+            <label className="block text-sm text-gray-400 mb-1">Fail Color</label>
             <ColorPicker
               value={failColor}
               onChange={(value) => setProp((props: any) => props.failColor = value)}
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Skip Color</label>
+            <label className="block text-sm text-gray-400 mb-1">Skip Color</label>
             <ColorPicker
               value={skipColor}
               onChange={(value) => setProp((props: any) => props.skipColor = value)}
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Border Color</label>
+            <label className="block text-sm text-gray-400 mb-1">Border Color</label>
             <ColorPicker
               value={borderColor}
               onChange={(value) => setProp((props: any) => props.borderColor = value)}
@@ -269,7 +269,7 @@ export function TestSummaryBoxSettings() {
         </div>
 
         <div className="mt-3">
-          <label className="block text-xs text-gray-400 mb-1">Background Color</label>
+          <label className="block text-sm text-gray-400 mb-1">Background Color</label>
           <ColorPicker
             value={backgroundColor}
             onChange={(value) => setProp((props: any) => props.backgroundColor = value)}

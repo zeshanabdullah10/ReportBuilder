@@ -17,6 +17,8 @@ interface ResizableBoxProps {
   connectRef?: (ref: HTMLDivElement | null) => void
   zIndex?: number
   resizable?: boolean
+  fullWidth?: boolean // Uses CSS width: 100%, locks x=0, only vertical drag/resize
+  fullHeight?: boolean // Uses CSS height: 100%, locks y=0, only horizontal drag/resize
 }
 
 type ResizeHandle = 'nw' | 'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w'
@@ -55,6 +57,8 @@ export function ResizableBox({
   connectRef,
   zIndex = 1,
   resizable = true,
+  fullWidth = false,
+  fullHeight = false,
 }: ResizableBoxProps) {
   const boxRef = useRef<HTMLDivElement>(null)
   const { snapEnabled, gridSize, setActiveDrag } = useBuilderStore()
@@ -99,6 +103,15 @@ export function ResizableBox({
 
   const handleResizeStart = useCallback(
     (e: React.MouseEvent, handle: ResizeHandle) => {
+      // When fullWidth is true, only allow vertical resize handles
+      if (fullWidth && !['n', 's'].includes(handle)) {
+        return
+      }
+      // When fullHeight is true, only allow horizontal resize handles
+      if (fullHeight && !['e', 'w'].includes(handle)) {
+        return
+      }
+
       e.preventDefault()
       e.stopPropagation()
 
@@ -123,7 +136,7 @@ export function ResizableBox({
         height: currentPos.height as number,
       })
     },
-    [currentPos, nodeId, setActiveDrag]
+    [currentPos, nodeId, setActiveDrag, fullWidth, fullHeight]
   )
 
   const handleDragStart = useCallback(
@@ -284,8 +297,10 @@ export function ResizableBox({
         setDragState((prev) => ({ ...prev, hasMoved: true }))
       }
 
-      const newX = snapToGrid(dragState.startLeft + deltaX)
-      const newY = snapToGrid(dragState.startTop + deltaY)
+      // When fullWidth is true, only allow vertical movement
+      // When fullHeight is true, only allow horizontal movement
+      const newX = fullWidth ? 0 : snapToGrid(dragState.startLeft + deltaX)
+      const newY = fullHeight ? 0 : snapToGrid(dragState.startTop + deltaY)
 
       setCurrentPos((prev) => ({
         ...prev,
@@ -323,7 +338,7 @@ export function ResizableBox({
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [dragState, currentPos, onPositionChange, snapToGrid, nodeId, setActiveDrag])
+  }, [dragState, currentPos, onPositionChange, snapToGrid, nodeId, setActiveDrag, fullWidth, fullHeight])
 
   // Handle positions
   const handlePositions: Record<ResizeHandle, React.CSSProperties> = {
@@ -339,6 +354,13 @@ export function ResizableBox({
 
   const isActive = resizeState.isResizing || dragState.isDragging
 
+  // Filter resize handles when fullWidth or fullHeight is true
+  const allowedHandles: ResizeHandle[] = fullWidth
+    ? ['n', 's']
+    : fullHeight
+    ? ['e', 'w']
+    : (Object.keys(handlePositions) as ResizeHandle[])
+
   return (
     <div
       ref={(ref) => {
@@ -348,10 +370,10 @@ export function ResizableBox({
       className="relative"
       style={{
         position: 'absolute',
-        left: `${currentPos.x}px`,
-        top: `${currentPos.y}px`,
-        width: `${currentPos.width}px`,
-        height: `${currentPos.height}px`,
+        left: fullWidth ? 0 : `${currentPos.x}px`,
+        top: fullHeight ? 0 : `${currentPos.y}px`,
+        width: fullWidth ? '100%' : `${currentPos.width}px`,
+        height: fullHeight ? '100%' : `${currentPos.height}px`,
         userSelect: isActive ? 'none' : 'auto',
         zIndex: selected ? Math.max(zIndex, 10) : zIndex,
       }}
@@ -379,7 +401,7 @@ export function ResizableBox({
       {/* Resize handles - only visible when selected and resizable */}
       {selected && resizable && (
         <>
-          {(Object.keys(handlePositions) as ResizeHandle[]).map((handle) => (
+          {allowedHandles.map((handle) => (
             <div
               key={handle}
               className="resize-handle absolute bg-[#00ffc8] border border-[#0a0f14] z-20"

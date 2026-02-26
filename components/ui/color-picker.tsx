@@ -30,6 +30,11 @@ export interface ColorPickerProps {
   disabled?: boolean
 }
 
+// Helper to compare two colors semantically
+function colorsEqual(c1: ParsedColor, c2: ParsedColor): boolean {
+  return c1.r === c2.r && c1.g === c2.g && c1.b === c2.b && c1.a === c2.a
+}
+
 export function ColorPicker({
   value,
   onChange,
@@ -42,15 +47,28 @@ export function ColorPicker({
   const [isOpen, setIsOpen] = React.useState(false)
   const [internalColor, setInternalColor] = React.useState<ParsedColor>(() => parseColor(value))
 
-  // Update internal state when value prop changes
+  // Track the last external value we synced from to prevent feedback loops
+  const lastExternalValueRef = React.useRef<string>(value)
+
+  // Update internal state when value prop changes from external source
   React.useEffect(() => {
-    setInternalColor(parseColor(value))
+    // Only sync if the external value is different from what we last synced
+    if (value !== lastExternalValueRef.current) {
+      const parsed = parseColor(value)
+      setInternalColor(parsed)
+      lastExternalValueRef.current = value
+    }
   }, [value])
 
-  const handleColorChange = (color: ParsedColor) => {
+  const handleColorChange = React.useCallback((color: ParsedColor) => {
+    const rgba = toRgba(color)
+
+    // Update our record of what we're setting externally
+    lastExternalValueRef.current = rgba
+
     setInternalColor(color)
-    onChange(toRgba(color))
-  }
+    onChange(rgba)
+  }, [onChange])
 
   const handleHexChange = (hex: string) => {
     const parsed = parseColor(hex)
@@ -130,7 +148,7 @@ export function ColorPicker({
             <div className="color-picker-compact w-full">
               <RgbaColorPicker
                 color={internalColor}
-                onChange={(color) => handleColorChange(color)}
+                onChange={handleColorChange}
               />
             </div>
 
@@ -224,14 +242,22 @@ export function ColorPickerInline({
 }: Omit<ColorPickerProps, 'label' | 'showPresets'>) {
   const [internalColor, setInternalColor] = React.useState<ParsedColor>(() => parseColor(value))
 
+  // Track the last external value to prevent feedback loops
+  const lastExternalValueRef = React.useRef<string>(value)
+
   React.useEffect(() => {
-    setInternalColor(parseColor(value))
+    if (value !== lastExternalValueRef.current) {
+      setInternalColor(parseColor(value))
+      lastExternalValueRef.current = value
+    }
   }, [value])
 
-  const handleColorChange = (color: ParsedColor) => {
+  const handleColorChange = React.useCallback((color: ParsedColor) => {
+    const rgba = toRgba(color)
+    lastExternalValueRef.current = rgba
     setInternalColor(color)
-    onChange(toRgba(color))
-  }
+    onChange(rgba)
+  }, [onChange])
 
   return (
     <div className={cn('color-picker-inline', className)}>

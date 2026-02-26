@@ -72,6 +72,8 @@ export const Divider = ({
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
       zIndex={zIndex}
+      fullWidth={isHorizontal}
+      fullHeight={!isHorizontal}
     >
       <div
         style={{

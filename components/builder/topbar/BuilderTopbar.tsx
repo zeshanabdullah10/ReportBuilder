@@ -192,7 +192,7 @@ export function BuilderTopbar() {
         JSON.stringify({
           ROOT: {
             type: { resolvedName: 'Page' },
-            props: { background: 'transparent', padding: 20 },
+            props: { background: 'white', padding: 40, pageSize: 'A4' },
             nodes: [],
             isCanvas: true,
           },

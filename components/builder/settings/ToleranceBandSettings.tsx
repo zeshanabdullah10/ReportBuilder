@@ -138,21 +138,21 @@ export const ToleranceBandSettings = () => {
         </label>
         <div className="grid grid-cols-3 gap-3">
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Tolerance</label>
+            <label className="block text-sm text-gray-400 mb-1">Tolerance</label>
             <ColorPicker
               value={bandColor}
               onChange={(value) => setProp((props: any) => (props.bandColor = value))}
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Center</label>
+            <label className="block text-sm text-gray-400 mb-1">Center</label>
             <ColorPicker
               value={centerColor}
               onChange={(value) => setProp((props: any) => (props.centerColor = value))}
             />
           </div>
           <div>
-            <label className="block text-xs text-gray-400 mb-1">Measured</label>
+            <label className="block text-sm text-gray-400 mb-1">Measured</label>
             <ColorPicker
               value={measuredColor}
               onChange={(value) => setProp((props: any) => (props.measuredColor = value))}

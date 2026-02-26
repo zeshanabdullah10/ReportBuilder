@@ -51,24 +51,23 @@ interface BuilderCanvasProps {
     name: string
     canvas_state: any
     sample_data: any
-    pages?: ReportPage[] // Optional multi-page support
+    settings?: any // Json from database - can contain { pages: ReportPage[] }
   }
 }
 
 // Component to render the current page content
-function PageContent({ hasSavedState, canvasState }: { 
+function PageContent({ hasSavedState, canvasState }: {
   hasSavedState: boolean
-  canvasState: any 
+  canvasState: any
 }) {
   if (hasSavedState && canvasState) {
     return <Frame data={JSON.stringify(canvasState)} />
   }
-  
+
+  // Empty page - the Page component will show "Drag components here" placeholder
   return (
     <Frame>
       <Element is={Page} canvas background="white" padding={40} pageSize="A4">
-        <Text text="Welcome to the Template Builder" fontSize={28} fontWeight="bold" color="#333333" />
-        <Text text="Drag components from the left panel to start building your report template." fontSize={16} color="#666666" />
       </Element>
     </Frame>
   )
@@ -190,10 +189,12 @@ export function BuilderCanvas({ template }: BuilderCanvasProps) {
     setSampleData(template.sample_data)
 
     // Initialize pages from template
-    if (template.pages && template.pages.length > 0) {
+    // Pages are stored in settings.pages in the database
+    const savedPages = template.settings?.pages
+    if (savedPages && savedPages.length > 0) {
       // Multi-page template
-      setPages(template.pages)
-      setActivePage(template.pages[0].id)
+      setPages(savedPages)
+      setActivePage(savedPages[0].id)
     } else if (template.canvas_state && Object.keys(template.canvas_state).length > 0) {
       // Legacy single-page template - convert to multi-page format
       const initialPage: ReportPage = {
@@ -227,7 +228,7 @@ export function BuilderCanvas({ template }: BuilderCanvasProps) {
     }
 
     setLoaded(true)
-  }, [template.id, template.name, template.sample_data, template.canvas_state, template.pages, setTemplateId, setTemplateName, setSampleData, setPages, setActivePage])
+  }, [template.id, template.name, template.sample_data, template.canvas_state, template.settings, setTemplateId, setTemplateName, setSampleData, setPages, setActivePage])
 
   // Track changes
   const handleNodesChange = () => {

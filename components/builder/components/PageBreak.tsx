@@ -54,6 +54,7 @@ export const PageBreak = ({
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
       zIndex={zIndex}
+      fullWidth={true}
     >
       <div
         style={{

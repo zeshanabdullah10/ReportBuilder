@@ -54,12 +54,13 @@ export const Spacer = ({
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
       zIndex={zIndex}
+      fullWidth={true}
     >
       <div
         style={{ height: '100%', width: '100%' }}
-        className="border border-dashed border-gray-300 hover:border-[#00ffc8] flex items-center justify-center group"
+        className="border-2 border-dashed border-gray-400 bg-gray-50 hover:border-[#00ffc8] flex items-center justify-center no-print"
       >
-        <span className="text-gray-400 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+        <span className="text-gray-500 text-xs font-medium px-2 py-0.5 bg-white rounded shadow-sm">
           Spacer ({height}px)
         </span>
       </div>

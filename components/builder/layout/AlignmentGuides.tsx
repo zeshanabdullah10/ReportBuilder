@@ -17,8 +17,8 @@ export function AlignmentGuides() {
   const { activeDrag, isPreviewMode } = useBuilderStore()
   const { query } = useEditor()
 
-  const guides = useMemo(() => {
-    if (!activeDrag || isPreviewMode) return []
+  const { guides } = useMemo(() => {
+    if (!activeDrag || isPreviewMode) return { guides: [] }
 
     const guides: Guide[] = []
     const state = query.getState()
@@ -38,7 +38,7 @@ export function AlignmentGuides() {
     const contentWidth = pageWidth - (padding * 2)
     const contentHeight = pageHeight - (padding * 2)
 
-    // Page reference points
+    // Page reference points (relative to content area, not page container)
     const pageGuides = {
       left: 0,
       right: contentWidth,
@@ -64,8 +64,6 @@ export function AlignmentGuides() {
     const dragBottom = activeDrag.currentY + activeDrag.height
     const dragCenterX = activeDrag.currentX + activeDrag.width / 2
     const dragCenterY = activeDrag.currentY + activeDrag.height / 2
-    const dragWidth = activeDrag.width
-    const dragHeight = activeDrag.height
 
     // === PAGE ALIGNMENT GUIDES ===
 
@@ -194,13 +192,21 @@ export function AlignmentGuides() {
         )
     )
 
-    return uniqueGuides
+    return { guides: uniqueGuides }
   }, [activeDrag, isPreviewMode, query])
 
   if (!activeDrag || guides.length === 0 || isPreviewMode) return null
 
   return (
-    <div className="absolute pointer-events-none z-30" style={{ top: 0, left: 0, right: 0, bottom: 0 }}>
+    <div
+      className="absolute pointer-events-none z-30"
+      style={{
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0
+      }}
+    >
       {guides.map((guide, index) =>
         guide.type === 'vertical' ? (
           <div

@@ -84,7 +84,7 @@ export function BarcodeSettings() {
           max="5"
           value={barWidth}
           onChange={(e) => setProp((props: any) => props.barWidth = parseInt(e.target.value))}
-          className="w-full"
+          className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-[#050810] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#00ffc8] [&::-webkit-slider-thumb]:cursor-pointer"
         />
       </div>
 
@@ -97,7 +97,7 @@ export function BarcodeSettings() {
           max="150"
           value={barHeight}
           onChange={(e) => setProp((props: any) => props.barHeight = parseInt(e.target.value))}
-          className="w-full"
+          className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-[#050810] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#00ffc8] [&::-webkit-slider-thumb]:cursor-pointer"
         />
       </div>
 
@@ -122,7 +122,7 @@ export function BarcodeSettings() {
             max="24"
             value={fontSize}
             onChange={(e) => setProp((props: any) => props.fontSize = parseInt(e.target.value))}
-            className="w-full"
+            className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-[#050810] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#00ffc8] [&::-webkit-slider-thumb]:cursor-pointer"
           />
         </div>
       )}
