@@ -2,6 +2,7 @@
 
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
+import { ColorPicker } from '@/components/ui/color-picker'
 import { PositionSettings } from './PositionSettings'
 
 export function ContainerSettings() {
@@ -24,10 +25,9 @@ export function ContainerSettings() {
     <div className="space-y-4">
       <div>
         <label className="block text-sm text-gray-400 mb-1">Background</label>
-        <Input
-          type="color"
-          value={background === 'transparent' ? '#ffffff' : background}
-          onChange={(e) => setProp((props: any) => (props.background = e.target.value))}
+        <ColorPicker
+          value={background}
+          onChange={(value) => setProp((props: any) => (props.background = value))}
         />
       </div>
 
@@ -63,10 +63,9 @@ export function ContainerSettings() {
 
         <div>
           <label className="block text-sm text-gray-400 mb-1">Border Color</label>
-          <Input
-            type="color"
+          <ColorPicker
             value={borderColor}
-            onChange={(e) => setProp((props: any) => (props.borderColor = e.target.value))}
+            onChange={(value) => setProp((props: any) => (props.borderColor = value))}
           />
         </div>
       </div>

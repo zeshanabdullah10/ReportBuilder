@@ -387,3 +387,64 @@
     transparent
   );
 }
+
+/* ====== React Colorful - Oscilloscope Theme ====== */
+
+.color-picker-wrapper .react-colorful,
+.color-picker-inline .react-colorful {
+  width: 100% !important;
+  height: 150px !important;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.color-picker-wrapper .react-colorful__saturation {
+  border-radius: 8px 8px 0 0;
+  border-bottom: 1px solid rgba(0, 255, 200, 0.1);
+}
+
+.color-picker-wrapper .react-colorful__hue,
+.color-picker-wrapper .react-colorful__alpha {
+  height: 16px !important;
+  border-radius: 0;
+}
+
+.color-picker-wrapper .react-colorful__alpha {
+  border-radius: 0 0 8px 8px;
+}
+
+.color-picker-wrapper .react-colorful__pointer,
+.color-picker-inline .react-colorful__pointer {
+  width: 20px !important;
+  height: 20px !important;
+  border: 2px solid #fff !important;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.color-picker-wrapper .react-colorful__pointer-fill,
+.color-picker-inline .react-colorful__pointer-fill {
+  display: none;
+}
+
+/* Alpha slider styling */
+.alpha-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #00ffc8;
+  cursor: pointer;
+  box-shadow: 0 0 4px rgba(0, 255, 200, 0.5);
+}
+
+.alpha-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid #00ffc8;
+  cursor: pointer;
+  box-shadow: 0 0 4px rgba(0, 255, 200, 0.5);
+}

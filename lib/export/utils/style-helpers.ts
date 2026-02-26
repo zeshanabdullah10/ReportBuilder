@@ -5,6 +5,8 @@
  * and print-specific styles.
  */
 
+import { normalizeColor as normalizeColorUtil, parseColor, toRgba } from '@/lib/utils/color'
+
 /**
  * Position properties for components
  */
@@ -283,4 +285,42 @@ export function combineStyles(...styleStrings: (string | undefined)[]): string {
   return Array.from(styleMap.entries())
     .map(([prop, value]) => `${prop}: ${value}`)
     .join('; ')
+}
+
+/**
+ * Normalize a color value for consistent output in PDF/HTML exports
+ *
+ * Converts any valid color format (hex, rgb, rgba, named) to a normalized
+ * rgba string for consistent rendering. Handles transparency correctly.
+ *
+ * @param color - Color in any format (hex, rgb, rgba, transparent)
+ * @returns Normalized rgba color string
+ */
+export function normalizeColor(color: string | undefined | null): string {
+  return normalizeColorUtil(color)
+}
+
+/**
+ * Check if a color has transparency (alpha < 1)
+ *
+ * @param color - Color in any format
+ * @returns True if the color has transparency
+ */
+export function hasTransparency(color: string | undefined | null): boolean {
+  if (!color) return false
+  const parsed = parseColor(color)
+  return parsed.a < 1
+}
+
+/**
+ * Convert any color to rgba with a specific alpha value
+ *
+ * @param color - Color in any format
+ * @param alpha - Alpha value between 0 and 1
+ * @returns rgba color string
+ */
+export function withAlpha(color: string, alpha: number): string {
+  const parsed = parseColor(color)
+  parsed.a = Math.max(0, Math.min(1, alpha))
+  return toRgba(parsed)
 }

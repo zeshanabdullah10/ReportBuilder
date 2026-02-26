@@ -2,6 +2,7 @@
 
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
+import { ColorPicker } from '@/components/ui/color-picker'
 import { PositionSettings } from './PositionSettings'
 import { VisibilityConditionSettings } from './VisibilityConditionSettings'
 import { AlignLeft, AlignCenter, AlignRight, AlignJustify } from 'lucide-react'
@@ -103,10 +104,9 @@ export function TextSettings() {
 
         <div>
           <label className="block text-sm text-gray-400 mb-1">Color</label>
-          <Input
-            type="color"
+          <ColorPicker
             value={color}
-            onChange={(e) => setProp((props: any) => (props.color = e.target.value))}
+            onChange={(value) => setProp((props: any) => (props.color = value))}
           />
         </div>
       </div>

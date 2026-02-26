@@ -1,6 +1,8 @@
 'use client'
 
 import { useNode } from '@craftjs/core'
+import { Input } from '@/components/ui/input'
+import { ColorPicker } from '@/components/ui/color-picker'
 import { PositionSettings } from './PositionSettings'
 
 export function MeasurementTableSettings() {
@@ -30,13 +32,12 @@ export function MeasurementTableSettings() {
   return (
     <div className="space-y-4">
       {/* Data Binding */}
-      <div className="space-y-1">
-        <label className="text-xs text-gray-400">Data Binding</label>
-        <input
+      <div>
+        <label className="block text-sm text-gray-400 mb-1">Data Binding</label>
+        <Input
           type="text"
           value={dataBinding}
           onChange={(e) => setProp((props: any) => props.dataBinding = e.target.value)}
-          className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white font-mono"
           placeholder="{{data.measurements}}"
         />
         <p className="text-xs text-gray-500 mt-1">
@@ -45,43 +46,47 @@ export function MeasurementTableSettings() {
       </div>
 
       {/* Display Options */}
-      <div className="border-b border-gray-700 pb-3">
-        <h4 className="text-xs font-semibold text-cyan-400 mb-2">Display Options</h4>
-        
-        <div className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={showHeader}
-            onChange={(e) => setProp((props: any) => props.showHeader = e.target.checked)}
-            className="rounded"
-          />
-          <label className="text-xs text-gray-400">Show Header</label>
-        </div>
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
+          Display Options
+        </label>
 
-        <div className="flex items-center gap-2 mt-2">
-          <input
-            type="checkbox"
-            checked={showRowNumbers}
-            onChange={(e) => setProp((props: any) => props.showRowNumbers = e.target.checked)}
-            className="rounded"
-          />
-          <label className="text-xs text-gray-400">Show Row Numbers</label>
-        </div>
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showHeader}
+              onChange={(e) => setProp((props: any) => props.showHeader = e.target.checked)}
+              className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
+            />
+            <span className="text-sm text-gray-400">Show Header</span>
+          </label>
 
-        <div className="flex items-center gap-2 mt-2">
-          <input
-            type="checkbox"
-            checked={stripeRows}
-            onChange={(e) => setProp((props: any) => props.stripeRows = e.target.checked)}
-            className="rounded"
-          />
-          <label className="text-xs text-gray-400">Stripe Rows</label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showRowNumbers}
+              onChange={(e) => setProp((props: any) => props.showRowNumbers = e.target.checked)}
+              className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
+            />
+            <span className="text-sm text-gray-400">Show Row Numbers</span>
+          </label>
+
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={stripeRows}
+              onChange={(e) => setProp((props: any) => props.stripeRows = e.target.checked)}
+              className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
+            />
+            <span className="text-sm text-gray-400">Stripe Rows</span>
+          </label>
         </div>
       </div>
 
       {/* Font Size */}
-      <div className="space-y-1">
-        <label className="text-xs text-gray-400">Font Size: {fontSize}px</label>
+      <div>
+        <label className="block text-sm text-gray-400 mb-1">Font Size: {fontSize}px</label>
         <input
           type="range"
           min="10"
@@ -93,52 +98,49 @@ export function MeasurementTableSettings() {
       </div>
 
       {/* Colors */}
-      <div className="border-b border-gray-700 pb-3">
-        <h4 className="text-xs font-semibold text-cyan-400 mb-2">Colors</h4>
-        
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Pass Color</label>
-            <input
-              type="color"
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
+          Colors
+        </label>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Pass Color</label>
+            <ColorPicker
               value={passColor}
-              onChange={(e) => setProp((props: any) => props.passColor = e.target.value)}
-              className="w-full h-8 rounded cursor-pointer"
+              onChange={(value) => setProp((props: any) => props.passColor = value)}
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Fail Color</label>
-            <input
-              type="color"
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Fail Color</label>
+            <ColorPicker
               value={failColor}
-              onChange={(e) => setProp((props: any) => props.failColor = e.target.value)}
-              className="w-full h-8 rounded cursor-pointer"
+              onChange={(value) => setProp((props: any) => props.failColor = value)}
             />
           </div>
         </div>
 
-        <div className="space-y-1 mt-2">
-          <label className="text-xs text-gray-400">Header Background</label>
-          <input
-            type="color"
-            value={headerBackgroundColor}
-            onChange={(e) => setProp((props: any) => props.headerBackgroundColor = e.target.value)}
-            className="w-full h-8 rounded cursor-pointer"
-          />
-        </div>
-
-        <div className="space-y-1 mt-2">
-          <label className="text-xs text-gray-400">Border Color</label>
-          <input
-            type="color"
-            value={borderColor}
-            onChange={(e) => setProp((props: any) => props.borderColor = e.target.value)}
-            className="w-full h-8 rounded cursor-pointer"
-          />
+        <div className="grid grid-cols-2 gap-3 mt-3">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Header Background</label>
+            <ColorPicker
+              value={headerBackgroundColor}
+              onChange={(value) => setProp((props: any) => props.headerBackgroundColor = value)}
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Border Color</label>
+            <ColorPicker
+              value={borderColor}
+              onChange={(value) => setProp((props: any) => props.borderColor = value)}
+            />
+          </div>
         </div>
       </div>
 
-      <PositionSettings />
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <PositionSettings />
+      </div>
     </div>
   )
 }

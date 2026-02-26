@@ -1,6 +1,8 @@
 'use client'
 
 import { useNode } from '@craftjs/core'
+import { Input } from '@/components/ui/input'
+import { ColorPicker } from '@/components/ui/color-picker'
 import { PositionSettings } from './PositionSettings'
 
 export function BarcodeSettings() {
@@ -34,36 +36,34 @@ export function BarcodeSettings() {
   return (
     <div className="space-y-4">
       {/* Value */}
-      <div className="space-y-1">
-        <label className="text-xs text-gray-400">Value (or use binding)</label>
-        <input
+      <div>
+        <label className="block text-sm text-gray-400 mb-1">Value (or use binding)</label>
+        <Input
           type="text"
           value={value}
           onChange={(e) => setProp((props: any) => props.value = e.target.value)}
-          className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
           placeholder="1234567890"
         />
       </div>
 
       {/* Binding */}
-      <div className="space-y-1">
-        <label className="text-xs text-gray-400">Data Binding</label>
-        <input
+      <div>
+        <label className="block text-sm text-gray-400 mb-1">Data Binding</label>
+        <Input
           type="text"
           value={binding}
           onChange={(e) => setProp((props: any) => props.binding = e.target.value)}
-          className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white font-mono"
           placeholder="{{data.serialNumber}}"
         />
       </div>
 
       {/* Format */}
-      <div className="space-y-1">
-        <label className="text-xs text-gray-400">Barcode Format</label>
+      <div>
+        <label className="block text-sm text-gray-400 mb-1">Barcode Format</label>
         <select
           value={format}
           onChange={(e) => setProp((props: any) => props.format = e.target.value)}
-          className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+          className="w-full bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded-lg p-2 text-white text-sm"
         >
           <option value="CODE128">CODE128 (Alphanumeric)</option>
           <option value="CODE39">CODE39</option>
@@ -75,8 +75,8 @@ export function BarcodeSettings() {
       </div>
 
       {/* Bar Width */}
-      <div className="space-y-1">
-        <label className="text-xs text-gray-400">Bar Width: {barWidth}px</label>
+      <div>
+        <label className="block text-sm text-gray-400 mb-1">Bar Width: {barWidth}px</label>
         <input
           type="range"
           min="1"
@@ -88,8 +88,8 @@ export function BarcodeSettings() {
       </div>
 
       {/* Bar Height */}
-      <div className="space-y-1">
-        <label className="text-xs text-gray-400">Bar Height: {barHeight}px</label>
+      <div>
+        <label className="block text-sm text-gray-400 mb-1">Bar Height: {barHeight}px</label>
         <input
           type="range"
           min="30"
@@ -101,20 +101,20 @@ export function BarcodeSettings() {
       </div>
 
       {/* Display Value */}
-      <div className="flex items-center gap-2">
+      <label className="flex items-center gap-2 cursor-pointer">
         <input
           type="checkbox"
           checked={displayValue}
           onChange={(e) => setProp((props: any) => props.displayValue = e.target.checked)}
-          className="rounded"
+          className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
         />
-        <label className="text-xs text-gray-400">Display Value Below Barcode</label>
-      </div>
+        <span className="text-sm text-gray-400">Display Value Below Barcode</span>
+      </label>
 
       {/* Font Size */}
       {displayValue && (
-        <div className="space-y-1">
-          <label className="text-xs text-gray-400">Font Size: {fontSize}px</label>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Font Size: {fontSize}px</label>
           <input
             type="range"
             min="10"
@@ -128,12 +128,12 @@ export function BarcodeSettings() {
 
       {/* Text Align */}
       {displayValue && (
-        <div className="space-y-1">
-          <label className="text-xs text-gray-400">Text Alignment</label>
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Text Alignment</label>
           <select
             value={textAlign}
             onChange={(e) => setProp((props: any) => props.textAlign = e.target.value)}
-            className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+            className="w-full bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded-lg p-2 text-white text-sm"
           >
             <option value="left">Left</option>
             <option value="center">Center</option>
@@ -143,40 +143,37 @@ export function BarcodeSettings() {
       )}
 
       {/* Colors */}
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1">
-          <label className="text-xs text-gray-400">Line Color</label>
-          <input
-            type="color"
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Line Color</label>
+          <ColorPicker
             value={lineColor}
-            onChange={(e) => setProp((props: any) => props.lineColor = e.target.value)}
-            className="w-full h-8 rounded cursor-pointer"
+            onChange={(value) => setProp((props: any) => props.lineColor = value)}
           />
         </div>
-        <div className="space-y-1">
-          <label className="text-xs text-gray-400">Background</label>
-          <input
-            type="color"
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Background</label>
+          <ColorPicker
             value={background}
-            onChange={(e) => setProp((props: any) => props.background = e.target.value)}
-            className="w-full h-8 rounded cursor-pointer"
+            onChange={(value) => setProp((props: any) => props.background = value)}
           />
         </div>
       </div>
 
       {/* Label */}
-      <div className="space-y-1">
-        <label className="text-xs text-gray-400">Label (optional)</label>
-        <input
+      <div>
+        <label className="block text-sm text-gray-400 mb-1">Label (optional)</label>
+        <Input
           type="text"
           value={label}
           onChange={(e) => setProp((props: any) => props.label = e.target.value)}
-          className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
           placeholder="Part Number"
         />
       </div>
 
-      <PositionSettings />
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <PositionSettings />
+      </div>
     </div>
   )
 }

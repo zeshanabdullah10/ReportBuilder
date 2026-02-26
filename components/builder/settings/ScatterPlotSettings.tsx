@@ -1,6 +1,8 @@
 'use client'
 
 import { useNode } from '@craftjs/core'
+import { Input } from '@/components/ui/input'
+import { ColorPicker } from '@/components/ui/color-picker'
 import { PositionSettings } from './PositionSettings'
 
 export function ScatterPlotSettings() {
@@ -38,13 +40,12 @@ export function ScatterPlotSettings() {
   return (
     <div className="space-y-4">
       {/* Data Binding */}
-      <div className="space-y-1">
-        <label className="text-xs text-gray-400">Data Binding (Array of {`{x, y}`})</label>
-        <input
+      <div>
+        <label className="block text-sm text-gray-400 mb-1">Data Binding (Array of {`{x, y}`})</label>
+        <Input
           type="text"
           value={dataBinding}
           onChange={(e) => setProp((props: any) => props.dataBinding = e.target.value)}
-          className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white font-mono"
           placeholder="{{data.points}}"
         />
         <p className="text-xs text-gray-500 mt-1">
@@ -53,84 +54,81 @@ export function ScatterPlotSettings() {
       </div>
 
       {/* Title */}
-      <div className="space-y-1">
-        <label className="text-xs text-gray-400">Title</label>
-        <input
+      <div>
+        <label className="block text-sm text-gray-400 mb-1">Title</label>
+        <Input
           type="text"
           value={title}
           onChange={(e) => setProp((props: any) => props.title = e.target.value)}
-          className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
         />
       </div>
 
       {/* Axis Labels */}
-      <div className="border-b border-gray-700 pb-3">
-        <h4 className="text-xs font-semibold text-cyan-400 mb-2">Axis Labels</h4>
-        
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">X-Axis</label>
-            <input
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
+          Axis Labels
+        </label>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">X-Axis</label>
+            <Input
               type="text"
               value={xAxisLabel}
               onChange={(e) => setProp((props: any) => props.xAxisLabel = e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Y-Axis</label>
-            <input
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Y-Axis</label>
+            <Input
               type="text"
               value={yAxisLabel}
               onChange={(e) => setProp((props: any) => props.yAxisLabel = e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
             />
           </div>
         </div>
       </div>
 
       {/* Axis Range */}
-      <div className="border-b border-gray-700 pb-3">
-        <h4 className="text-xs font-semibold text-cyan-400 mb-2">Axis Range (optional)</h4>
-        
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">X Min</label>
-            <input
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
+          Axis Range (optional)
+        </label>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">X Min</label>
+            <Input
               type="number"
               value={xAxisMin ?? ''}
               onChange={(e) => setProp((props: any) => props.xAxisMin = e.target.value ? parseFloat(e.target.value) : undefined)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
               placeholder="Auto"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">X Max</label>
-            <input
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">X Max</label>
+            <Input
               type="number"
               value={xAxisMax ?? ''}
               onChange={(e) => setProp((props: any) => props.xAxisMax = e.target.value ? parseFloat(e.target.value) : undefined)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
               placeholder="Auto"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Y Min</label>
-            <input
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Y Min</label>
+            <Input
               type="number"
               value={yAxisMin ?? ''}
               onChange={(e) => setProp((props: any) => props.yAxisMin = e.target.value ? parseFloat(e.target.value) : undefined)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
               placeholder="Auto"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Y Max</label>
-            <input
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Y Max</label>
+            <Input
               type="number"
               value={yAxisMax ?? ''}
               onChange={(e) => setProp((props: any) => props.yAxisMax = e.target.value ? parseFloat(e.target.value) : undefined)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
               placeholder="Auto"
             />
           </div>
@@ -138,11 +136,13 @@ export function ScatterPlotSettings() {
       </div>
 
       {/* Point Settings */}
-      <div className="border-b border-gray-700 pb-3">
-        <h4 className="text-xs font-semibold text-cyan-400 mb-2">Point Settings</h4>
-        
-        <div className="space-y-1">
-          <label className="text-xs text-gray-400">Point Size: {pointRadius}px</label>
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
+          Point Settings
+        </label>
+
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Point Size: {pointRadius}px</label>
           <input
             type="range"
             min="2"
@@ -153,54 +153,52 @@ export function ScatterPlotSettings() {
           />
         </div>
 
-        <div className="flex items-center gap-2 mt-2">
+        <label className="flex items-center gap-2 cursor-pointer mt-3">
           <input
             type="checkbox"
             checked={showGridLines}
             onChange={(e) => setProp((props: any) => props.showGridLines = e.target.checked)}
-            className="rounded"
+            className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
           />
-          <label className="text-xs text-gray-400">Show Grid Lines</label>
-        </div>
+          <span className="text-sm text-gray-400">Show Grid Lines</span>
+        </label>
       </div>
 
       {/* Colors */}
-      <div className="border-b border-gray-700 pb-3">
-        <h4 className="text-xs font-semibold text-cyan-400 mb-2">Colors</h4>
-        
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Point Color</label>
-            <input
-              type="color"
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
+          Colors
+        </label>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Point Color</label>
+            <ColorPicker
               value={pointColor}
-              onChange={(e) => setProp((props: any) => props.pointColor = e.target.value)}
-              className="w-full h-8 rounded cursor-pointer"
+              onChange={(value) => setProp((props: any) => props.pointColor = value)}
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Grid Color</label>
-            <input
-              type="color"
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Grid Color</label>
+            <ColorPicker
               value={gridColor}
-              onChange={(e) => setProp((props: any) => props.gridColor = e.target.value)}
-              className="w-full h-8 rounded cursor-pointer"
+              onChange={(value) => setProp((props: any) => props.gridColor = value)}
             />
           </div>
         </div>
 
-        <div className="space-y-1 mt-2">
-          <label className="text-xs text-gray-400">Background Color</label>
-          <input
-            type="color"
+        <div className="mt-3">
+          <label className="block text-sm text-gray-400 mb-1">Background Color</label>
+          <ColorPicker
             value={backgroundColor}
-            onChange={(e) => setProp((props: any) => props.backgroundColor = e.target.value)}
-            className="w-full h-8 rounded cursor-pointer"
+            onChange={(value) => setProp((props: any) => props.backgroundColor = value)}
           />
         </div>
       </div>
 
-      <PositionSettings />
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <PositionSettings />
+      </div>
     </div>
   )
 }

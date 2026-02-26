@@ -1,6 +1,8 @@
 'use client'
 
 import { useNode } from '@craftjs/core'
+import { Input } from '@/components/ui/input'
+import { ColorPicker } from '@/components/ui/color-picker'
 import { PositionSettings } from './PositionSettings'
 
 export function HistogramSettings() {
@@ -30,13 +32,12 @@ export function HistogramSettings() {
   return (
     <div className="space-y-4">
       {/* Data Binding */}
-      <div className="space-y-1">
-        <label className="text-xs text-gray-400">Data Binding (Array of Numbers)</label>
-        <input
+      <div>
+        <label className="block text-sm text-gray-400 mb-1">Data Binding (Array of Numbers)</label>
+        <Input
           type="text"
           value={dataBinding}
           onChange={(e) => setProp((props: any) => props.dataBinding = e.target.value)}
-          className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white font-mono"
           placeholder="{{data.measurements}}"
         />
         <p className="text-xs text-gray-500 mt-1">
@@ -45,8 +46,8 @@ export function HistogramSettings() {
       </div>
 
       {/* Bins */}
-      <div className="space-y-1">
-        <label className="text-xs text-gray-400">Number of Bins: {bins}</label>
+      <div>
+        <label className="block text-sm text-gray-400 mb-1">Number of Bins: {bins}</label>
         <input
           type="range"
           min="5"
@@ -58,90 +59,87 @@ export function HistogramSettings() {
       </div>
 
       {/* Labels */}
-      <div className="border-b border-gray-700 pb-3">
-        <h4 className="text-xs font-semibold text-cyan-400 mb-2">Labels</h4>
-        
-        <div className="space-y-2">
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Title</label>
-            <input
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
+          Labels
+        </label>
+
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Title</label>
+            <Input
               type="text"
               value={title}
               onChange={(e) => setProp((props: any) => props.title = e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">X-Axis Label</label>
-            <input
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">X-Axis Label</label>
+            <Input
               type="text"
               value={xAxisLabel}
               onChange={(e) => setProp((props: any) => props.xAxisLabel = e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
             />
           </div>
 
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Y-Axis Label</label>
-            <input
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Y-Axis Label</label>
+            <Input
               type="text"
               value={yAxisLabel}
               onChange={(e) => setProp((props: any) => props.yAxisLabel = e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
             />
           </div>
         </div>
       </div>
 
       {/* Display Options */}
-      <div className="flex items-center gap-2">
+      <label className="flex items-center gap-2 cursor-pointer">
         <input
           type="checkbox"
           checked={showStatistics}
           onChange={(e) => setProp((props: any) => props.showStatistics = e.target.checked)}
-          className="rounded"
+          className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
         />
-        <label className="text-xs text-gray-400">Show Statistics (Mean, Std Dev)</label>
-      </div>
+        <span className="text-sm text-gray-400">Show Statistics (Mean, Std Dev)</span>
+      </label>
 
       {/* Colors */}
-      <div className="border-b border-gray-700 pb-3">
-        <h4 className="text-xs font-semibold text-cyan-400 mb-2">Colors</h4>
-        
-        <div className="grid grid-cols-2 gap-2">
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Bar Color</label>
-            <input
-              type="color"
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
+          Colors
+        </label>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Bar Color</label>
+            <ColorPicker
               value={barColor}
-              onChange={(e) => setProp((props: any) => props.barColor = e.target.value)}
-              className="w-full h-8 rounded cursor-pointer"
+              onChange={(value) => setProp((props: any) => props.barColor = value)}
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Border Color</label>
-            <input
-              type="color"
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Border Color</label>
+            <ColorPicker
               value={borderColor}
-              onChange={(e) => setProp((props: any) => props.borderColor = e.target.value)}
-              className="w-full h-8 rounded cursor-pointer"
+              onChange={(value) => setProp((props: any) => props.borderColor = value)}
             />
           </div>
         </div>
 
-        <div className="space-y-1 mt-2">
-          <label className="text-xs text-gray-400">Background Color</label>
-          <input
-            type="color"
+        <div className="mt-3">
+          <label className="block text-sm text-gray-400 mb-1">Background Color</label>
+          <ColorPicker
             value={backgroundColor}
-            onChange={(e) => setProp((props: any) => props.backgroundColor = e.target.value)}
-            className="w-full h-8 rounded cursor-pointer"
+            onChange={(value) => setProp((props: any) => props.backgroundColor = value)}
           />
         </div>
       </div>
 
-      <PositionSettings />
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <PositionSettings />
+      </div>
     </div>
   )
 }

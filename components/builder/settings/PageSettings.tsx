@@ -2,6 +2,7 @@
 
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
+import { ColorPicker } from '@/components/ui/color-picker'
 import { PAGE_SIZE_PRESETS, PageSizePreset } from '@/lib/stores/builder-store'
 
 export function PageSettings() {
@@ -75,21 +76,10 @@ export function PageSettings() {
 
       <div>
         <label className="block text-sm text-gray-400 mb-1">Background Color</label>
-        <div className="flex gap-2">
-          <Input
-            type="color"
-            value={background}
-            onChange={(e) => setProp((props: any) => (props.background = e.target.value))}
-            className="w-12 h-10 p-1"
-          />
-          <Input
-            type="text"
-            value={background}
-            onChange={(e) => setProp((props: any) => (props.background = e.target.value))}
-            placeholder="#ffffff"
-            className="flex-1"
-          />
-        </div>
+        <ColorPicker
+          value={background}
+          onChange={(value) => setProp((props: any) => (props.background = value))}
+        />
       </div>
 
       <div>
