@@ -58,9 +58,9 @@ export const Spacer = ({
     >
       <div
         style={{ height: '100%', width: '100%' }}
-        className="border-2 border-dashed border-gray-400 bg-gray-50 hover:border-[#00ffc8] flex items-center justify-center no-print"
+        className="border-2 border-dashed border-gray-400 bg-gray-50 hover:border-[#00ffc8] flex items-center justify-center print:border-none print:bg-transparent"
       >
-        <span className="text-gray-500 text-xs font-medium px-2 py-0.5 bg-white rounded shadow-sm">
+        <span className="text-gray-500 text-xs font-medium px-2 py-0.5 bg-white rounded shadow-sm print:hidden">
           Spacer ({height}px)
         </span>
       </div>
