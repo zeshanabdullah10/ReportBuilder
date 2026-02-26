@@ -3,7 +3,7 @@
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
 import { ColorPicker } from '@/components/ui/color-picker'
-import { DataBindingInput } from '@/components/builder/data-binding'
+import { DataBindingInput, FieldMapper } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 
 const FONT_FAMILIES = [
@@ -34,6 +34,7 @@ export function BulletListSettings() {
     color,
     lineHeight,
     binding,
+    textField,
   } = useNode((node) => ({
     items: node.data.props.items,
     listStyle: node.data.props.listStyle,
@@ -42,6 +43,7 @@ export function BulletListSettings() {
     color: node.data.props.color,
     lineHeight: node.data.props.lineHeight,
     binding: node.data.props.binding,
+    textField: node.data.props.textField,
   }))
 
   return (
@@ -121,14 +123,26 @@ export function BulletListSettings() {
         <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
           Data Binding
         </label>
-        <div>
-          <label className="block text-sm text-gray-400 mb-1">Binding Path</label>
-          <DataBindingInput
-            value={binding}
-            onChange={(value) => setProp((props: any) => (props.binding = value))}
-            placeholder="{{data.items}}"
-            expectedType="array"
-            hint="Bind to an array of strings or objects"
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Binding Path</label>
+            <DataBindingInput
+              value={binding}
+              onChange={(value) => setProp((props: any) => (props.binding = value))}
+              placeholder="{{data.items}}"
+              expectedType="array"
+              hint="Bind to an array of strings or objects"
+            />
+          </div>
+
+          {/* Field mapping for bound array data */}
+          <FieldMapper
+            bindingPath={binding}
+            value={textField || ''}
+            onChange={(field) => setProp((props: any) => (props.textField = field))}
+            label="Text Field"
+            hint="Field to use for list item text"
+            autoLabel="Auto (label/name/text)"
           />
         </div>
       </div>

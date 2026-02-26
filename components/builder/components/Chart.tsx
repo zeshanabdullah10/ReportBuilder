@@ -3,7 +3,7 @@
 import { useNode } from '@craftjs/core'
 import { ChartSettings } from '../settings/ChartSettings'
 import { useBuilderStore } from '@/lib/stores/builder-store'
-import { hasBindings, resolveBindingOrValue } from '@/lib/utils/binding'
+import { hasBindings, resolveBindingOrValue, autoDetectLabelField, autoDetectValueField } from '@/lib/utils/binding'
 import { ResizableBox } from '../layout/ResizableBox'
 import {
   Chart as ChartJS,
@@ -43,6 +43,9 @@ interface ChartProps {
   labels?: string
   labelsBinding?: string
   binding?: string
+  // Field mapping for array data
+  labelField?: string
+  valueField?: string
   // Color options
   primaryColor?: string
   backgroundColor?: string
@@ -72,6 +75,8 @@ export const Chart = ({
   labels = '',
   labelsBinding = '',
   binding = '',
+  labelField = '',
+  valueField = '',
   primaryColor = '#00ffc8',
   backgroundColor = 'rgba(0, 255, 200, 0.5)',
   borderColor = '#00ffc8',
@@ -106,9 +111,17 @@ export const Chart = ({
 
       if (Array.isArray(resolved)) {
         if (resolved.length > 0 && typeof resolved[0] === 'object') {
+          // Get available fields from the first object
+          const fields = Object.keys(resolved[0] as Record<string, unknown>)
+          const sampleObj = resolved[0] as Record<string, unknown>
+
+          // Determine which fields to use
+          const effectiveLabelField = labelField || autoDetectLabelField(fields, sampleObj)
+          const effectiveValueField = valueField || autoDetectValueField(fields, sampleObj)
+
           return {
-            labels: resolved.map((item: any) => item.label ?? item.name ?? ''),
-            values: resolved.map((item: any) => item.value ?? item.y ?? 0),
+            labels: resolved.map((item: any) => String(item[effectiveLabelField] ?? '')),
+            values: resolved.map((item: any) => Number(item[effectiveValueField] ?? 0)),
           }
         }
         return {
@@ -324,6 +337,8 @@ Chart.craft = {
     labels: '',
     labelsBinding: '',
     binding: '',
+    labelField: '',
+    valueField: '',
     primaryColor: '#0066cc',
     backgroundColor: 'rgba(0, 102, 204, 0.5)',
     borderColor: '#0066cc',

@@ -34,15 +34,21 @@ export const RUNTIME_TEMPLATE = `
 
   /**
    * Resolve a data binding path to its value
-   * @param {string} path - Binding path (e.g., "data.meta.title" or "meta.title")
+   * @param {string} path - Binding path (e.g., "data.meta.title" or "meta.title" or "{{data.meta.title}}")
    * @param {object} data - The data object to resolve from
    * @returns {*} The resolved value or undefined
    */
   function resolveBinding(path, data) {
     if (!path || !data) return undefined;
 
+    // Strip {{ }} brackets if present
+    var cleanPath = path;
+    if (cleanPath.startsWith('{{') && cleanPath.endsWith('}}')) {
+      cleanPath = cleanPath.slice(2, -2).trim();
+    }
+
     // Normalize path by removing 'data.' prefix if present
-    var normalizedPath = path;
+    var normalizedPath = cleanPath;
     if (normalizedPath.startsWith('data.')) {
       normalizedPath = normalizedPath.slice(5);
     }
@@ -192,17 +198,44 @@ export const RUNTIME_TEMPLATE = `
     if (!props.binding) return;
 
     var tableData = resolveBinding(props.binding, data);
+
     if (!tableData || !Array.isArray(tableData)) {
       console.warn('[Runtime] Table binding did not resolve to an array:', props.binding);
       return;
     }
 
     // Get column configuration
-    var columns = props.columns || [];
-    var autoGenerateColumns = columns.length === 0;
+    var rawColumns = props.columns || [];
 
-    // Auto-generate columns from first row if needed
-    if (autoGenerateColumns && tableData.length > 0) {
+    // Normalize columns to {key, label} format
+    // Handle both string arrays ['Col1', 'Col2'] and object arrays [{key, label}]
+    var columns = rawColumns.map(function(col, index) {
+      if (typeof col === 'string') {
+        return { key: col, label: col };
+      }
+      return {
+        key: col.key || col.header || col.name || String(index),
+        label: col.label || col.header || col.name || col.key || String(index)
+      };
+    });
+
+    // Check if the column keys actually exist in the data
+    // If not, auto-generate columns from the first row
+    if (columns.length > 0 && tableData.length > 0) {
+      var firstRow = tableData[0];
+      var dataKeys = typeof firstRow === 'object' && firstRow !== null ? Object.keys(firstRow) : [];
+      var hasMatchingKey = columns.some(function(col) {
+        return dataKeys.indexOf(col.key) !== -1;
+      });
+      if (!hasMatchingKey) {
+        columns = dataKeys.map(function(key) {
+          return { key: key, label: key };
+        });
+      }
+    }
+
+    // If no columns, auto-generate from first row
+    if (columns.length === 0 && tableData.length > 0) {
       var firstRow = tableData[0];
       if (typeof firstRow === 'object' && firstRow !== null) {
         columns = Object.keys(firstRow).map(function(key) {
@@ -211,28 +244,41 @@ export const RUNTIME_TEMPLATE = `
       }
     }
 
-    // Build table HTML
-    var html = '<thead><tr>';
+    // Get styling props
+    var headerColor = props.headerColor || '#1a1a2e';
+    var rowColor = props.rowColor || '#ffffff';
+    var borderColor = props.borderColor || '#e0e0e0';
+
+    // Build table HTML with proper styling
+    var html = '<thead><tr style="background: ' + escapeHtml(headerColor) + ';">';
     for (var i = 0; i < columns.length; i++) {
-      html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: left; background: #f5f5f5;">' +
+      html += '<th style="border: 1px solid ' + escapeHtml(borderColor) + '; padding: 8px; text-align: left; color: #fff;">' +
               escapeHtml(columns[i].label || columns[i].key) + '</th>';
     }
     html += '</tr></thead><tbody>';
 
     for (var rowIdx = 0; rowIdx < tableData.length; rowIdx++) {
       var row = tableData[rowIdx];
-      html += '<tr>';
+      var rowBg = rowIdx % 2 === 0 ? escapeHtml(rowColor) : '#f5f5f5';
+      html += '<tr style="background: ' + rowBg + ';">';
       for (var colIdx = 0; colIdx < columns.length; colIdx++) {
         var cellValue = row[columns[colIdx].key];
         if (cellValue == null) cellValue = '';
         if (typeof cellValue === 'object') cellValue = JSON.stringify(cellValue);
-        html += '<td style="padding: 8px; border: 1px solid #ddd;">' + escapeHtml(String(cellValue)) + '</td>';
+        html += '<td style="border: 1px solid ' + escapeHtml(borderColor) + '; padding: 8px; color: #333;">' + escapeHtml(String(cellValue)) + '</td>';
       }
       html += '</tr>';
     }
     html += '</tbody>';
 
-    el.innerHTML = html;
+    // Find the table element inside the container
+    var tableEl = el.querySelector('table');
+    if (tableEl) {
+      tableEl.innerHTML = html;
+    } else {
+      // If no table found, create one
+      el.innerHTML = '<table style="width: 100%; border-collapse: collapse; font-size: 14px;">' + html + '</table>';
+    }
   }
 
   /**
@@ -432,10 +478,24 @@ export const RUNTIME_TEMPLATE = `
       title = interpolateText(title, data);
     }
 
-    // Build labels array
-    var labels = props.labels || [];
-    if (typeof labels === 'string') {
-      labels = labels.split(',').map(function(l) { return l.trim(); });
+    // Build labels array - check labelsBinding first
+    var labels = [];
+    if (props.labelsBinding && hasBinding(props.labelsBinding)) {
+      var resolvedLabels = resolveBinding(props.labelsBinding, data);
+      if (Array.isArray(resolvedLabels)) {
+        labels = resolvedLabels.map(function(item) {
+          if (typeof item === 'string') return item;
+          return item && item.label ? item.label : String(item);
+        });
+      }
+    }
+    // Fall back to static labels
+    if (labels.length === 0 && props.labels) {
+      if (typeof props.labels === 'string') {
+        labels = props.labels.split(',').map(function(l) { return l.trim(); });
+      } else if (Array.isArray(props.labels)) {
+        labels = props.labels;
+      }
     }
 
     // Build datasets
@@ -499,7 +559,7 @@ export const RUNTIME_TEMPLATE = `
           if (Array.isArray(resolved)) {
             primaryData = resolved;
             // Check if data has labels
-            if (resolved[0] && resolved[0].label !== undefined && labels.length === 0) {
+            if (resolved[0] && typeof resolved[0] === 'object' && resolved[0].label !== undefined && labels.length === 0) {
               labels = resolved.map(function(item) { return item.label; });
               primaryData = resolved.map(function(item) { return item.value !== undefined ? item.value : item; });
             }
@@ -582,7 +642,7 @@ export const RUNTIME_TEMPLATE = `
         },
         options: options
       });
-      console.log('[Runtime] Rendered chart:', comp.id);
+    console.log('[Runtime] Rendered chart:', comp.id);
     } catch (e) {
       console.error('[Runtime] Error rendering chart:', comp.id, e);
     }
@@ -635,8 +695,6 @@ export const RUNTIME_TEMPLATE = `
       console.warn('[Runtime] No data available for binding');
       return;
     }
-
-    console.log('[Runtime] Applying bindings to', COMPONENTS.length, 'components');
 
     // First, apply visibility conditions
     applyVisibilityConditions(data);

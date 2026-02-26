@@ -3,7 +3,7 @@
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
 import { ColorPicker } from '@/components/ui/color-picker'
-import { DataBindingInput } from '@/components/builder/data-binding'
+import { DataBindingInput, LabelValueFieldMapper } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 import { Plus, Trash2 } from 'lucide-react'
 
@@ -28,6 +28,8 @@ export function ChartSettings() {
     labels,
     labelsBinding,
     binding,
+    labelField,
+    valueField,
     primaryColor,
     backgroundColor,
     borderColor,
@@ -41,6 +43,8 @@ export function ChartSettings() {
     labels: node.data.props.labels,
     labelsBinding: node.data.props.labelsBinding,
     binding: node.data.props.binding,
+    labelField: node.data.props.labelField,
+    valueField: node.data.props.valueField,
     primaryColor: node.data.props.primaryColor,
     backgroundColor: node.data.props.backgroundColor,
     borderColor: node.data.props.borderColor,
@@ -374,6 +378,15 @@ export function ChartSettings() {
                 hint="Array of label strings for X-axis"
               />
             </div>
+
+            {/* Field Mapping for bound array data */}
+            <LabelValueFieldMapper
+              bindingPath={binding}
+              labelField={labelField || ''}
+              valueField={valueField || ''}
+              onLabelFieldChange={(field) => setProp((props: any) => (props.labelField = field))}
+              onValueFieldChange={(field) => setProp((props: any) => (props.valueField = field))}
+            />
           </div>
         </div>
       )}

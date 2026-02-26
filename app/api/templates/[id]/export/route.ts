@@ -86,8 +86,11 @@ export async function POST(
 
   // 5. Compile template
   try {
-    const sampleData = template.sample_data as Record<string, unknown> | null
-    
+    // Only include sample data if the option is enabled
+    const sampleData = options.includeSampleData
+      ? (template.sample_data as Record<string, unknown> | null)
+      : null
+
     // Check if template has multiple pages stored in settings
     const templateSettings = template.settings as Record<string, unknown> | null
     const templatePages = templateSettings?.pages as PageState[] | null

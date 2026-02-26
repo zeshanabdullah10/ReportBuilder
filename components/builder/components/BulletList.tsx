@@ -3,7 +3,7 @@
 import { useNode } from '@craftjs/core'
 import { BulletListSettings } from '../settings/BulletListSettings'
 import { useBuilderStore } from '@/lib/stores/builder-store'
-import { hasBindings, resolveBindingOrValue } from '@/lib/utils/binding'
+import { hasBindings, resolveBindingOrValue, autoDetectLabelField } from '@/lib/utils/binding'
 import { ResizableBox } from '../layout/ResizableBox'
 
 interface BulletListProps {
@@ -14,6 +14,7 @@ interface BulletListProps {
   color?: string
   lineHeight?: number
   binding?: string
+  textField?: string
   x?: number
   y?: number
   width?: number
@@ -30,6 +31,7 @@ export const BulletList = ({
   color = '#ffffff',
   lineHeight = 1.6,
   binding = '',
+  textField = '',
   x = 0,
   y = 0,
   width = 200,
@@ -68,7 +70,13 @@ export const BulletList = ({
         return resolved.map((item: any) => {
           if (typeof item === 'string') return item
           if (typeof item === 'object' && item !== null) {
-            return item.label || item.name || item.text || String(item)
+            // Use textField if specified, otherwise auto-detect
+            if (textField && item[textField] !== undefined) {
+              return String(item[textField])
+            }
+            const fields = Object.keys(item)
+            const detectedField = autoDetectLabelField(fields, item)
+            return String(item[detectedField] ?? item)
           }
           return String(item)
         })
@@ -157,6 +165,7 @@ BulletList.craft = {
     color: '#333333',
     lineHeight: 1.6,
     binding: '',
+    textField: '',
     x: 0,
     y: 0,
     width: 200,

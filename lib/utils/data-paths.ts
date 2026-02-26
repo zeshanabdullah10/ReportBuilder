@@ -173,12 +173,52 @@ export function extractDataPaths(
 }
 
 /**
+ * Result of validating a binding path
+ */
+export interface ValidationResult {
+  valid: boolean
+  error?: string
+  resolvedType?: DataType
+  typeMismatch?: boolean  // True when type doesn't match expectedType
+  suggestion?: string     // Suggested compatible path if type mismatch
+}
+
+/**
+ * Checks if a data type is compatible with an expected type
+ * Arrays are compatible with any type for their items
+ */
+function isTypeCompatible(actual: DataType, expected: DataType): boolean {
+  if (actual === expected) return true
+
+  // Arrays are flexible - they can contain any type
+  if (expected === 'array') {
+    return actual === 'array'
+  }
+
+  // Numbers can accept numeric strings
+  if (expected === 'number' && actual === 'string') {
+    return true
+  }
+
+  // Strings can accept numbers
+  if (expected === 'string' && actual === 'number') {
+    return true
+  }
+
+  return false
+}
+
+/**
  * Validates a binding path against sample data
+ * @param path - The binding path to validate
+ * @param data - The sample data to validate against
+ * @param expectedType - Optional expected type for type checking
  */
 export function validateBindingPath(
   path: string,
-  data: Record<string, unknown> | null
-): { valid: boolean; error?: string; resolvedType?: DataType } {
+  data: Record<string, unknown> | null,
+  expectedType?: DataType
+): ValidationResult {
   if (!path) {
     return { valid: false, error: 'Path is empty' }
   }
@@ -230,7 +270,42 @@ export function validateBindingPath(
     return { valid: false, error: `Path not found: ${path}` }
   }
 
-  return { valid: true, resolvedType: getDataType(current) }
+  const resolvedType = getDataType(current)
+
+  // Check type compatibility if expectedType is provided
+  if (expectedType && !isTypeCompatible(resolvedType, expectedType)) {
+    // Try to find a suggestion
+    const suggestion = findCompatiblePath(data, expectedType, normalizedPath)
+
+    return {
+      valid: true, // Path exists, but type doesn't match
+      resolvedType,
+      typeMismatch: true,
+      error: `Type mismatch: expected ${expectedType}, got ${resolvedType}`,
+      suggestion,
+    }
+  }
+
+  return { valid: true, resolvedType }
+}
+
+/**
+ * Finds a compatible path in the data for the expected type
+ */
+function findCompatiblePath(
+  data: Record<string, unknown>,
+  expectedType: DataType,
+  excludePath: string
+): string | undefined {
+  const paths = extractDataPaths(data)
+  const flatPaths = flattenPaths(paths)
+
+  // Find first path that matches the expected type
+  const compatible = flatPaths.find(
+    (p) => p.type === expectedType && p.path !== excludePath && !p.path.includes('[...]')
+  )
+
+  return compatible?.path
 }
 
 /**

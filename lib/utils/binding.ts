@@ -5,6 +5,159 @@
  * with support for nested paths and graceful handling of missing data.
  */
 
+import { DataType, getDataType, validateBindingPath } from './data-paths'
+
+/**
+ * Status of a data binding
+ */
+export interface BindingStatus {
+  isValid: boolean
+  isUsingFallback: boolean
+  error?: string
+  expectedType?: DataType
+  actualType?: DataType
+  hasBinding: boolean
+}
+
+/**
+ * Gets the status of a binding for runtime feedback
+ * @param binding - The binding string (e.g., "{{data.field}}")
+ * @param sampleData - The sample data to check against
+ * @param expectedType - Optional expected type for type checking
+ * @returns BindingStatus with validity and type information
+ */
+export function getBindingStatus(
+  binding: string,
+  sampleData: Record<string, unknown> | null,
+  expectedType?: DataType
+): BindingStatus {
+  // No binding present
+  if (!binding || !hasBindings(binding)) {
+    return {
+      isValid: true,
+      isUsingFallback: false,
+      hasBinding: false,
+    }
+  }
+
+  // No sample data - can't validate but has binding
+  if (!sampleData) {
+    return {
+      isValid: false,
+      isUsingFallback: true,
+      error: 'No sample data loaded',
+      hasBinding: true,
+    }
+  }
+
+  // Validate the binding
+  const validation = validateBindingPath(binding, sampleData, expectedType)
+
+  if (!validation.valid) {
+    return {
+      isValid: false,
+      isUsingFallback: true,
+      error: validation.error,
+      expectedType,
+      hasBinding: true,
+    }
+  }
+
+  if (validation.typeMismatch) {
+    return {
+      isValid: false,
+      isUsingFallback: true,
+      error: validation.error,
+      expectedType,
+      actualType: validation.resolvedType,
+      hasBinding: true,
+    }
+  }
+
+  return {
+    isValid: true,
+    isUsingFallback: false,
+    expectedType,
+    actualType: validation.resolvedType,
+    hasBinding: true,
+  }
+}
+
+/**
+ * Extracts field names from an array of objects for field mapping
+ * @param data - Array of objects to extract fields from
+ * @returns Array of unique field names found in the objects
+ */
+export function extractArrayFields(data: unknown[]): string[] {
+  if (!Array.isArray(data) || data.length === 0) return []
+
+  const fieldSet = new Set<string>()
+
+  for (const item of data) {
+    if (item && typeof item === 'object' && !Array.isArray(item)) {
+      Object.keys(item as Record<string, unknown>).forEach((key) => fieldSet.add(key))
+    }
+  }
+
+  return Array.from(fieldSet).sort()
+}
+
+/**
+ * Auto-detects the best label field from an array of objects
+ * @param fields - Available field names
+ * @param sampleObject - Sample object to check field types
+ * @returns Best field name to use for labels
+ */
+export function autoDetectLabelField(fields: string[], sampleObject?: Record<string, unknown>): string {
+  // Priority order for label fields
+  const labelCandidates = ['label', 'name', 'title', 'key', 'id', 'text']
+
+  for (const candidate of labelCandidates) {
+    if (fields.includes(candidate)) return candidate
+  }
+
+  // If we have a sample object, find the first string field
+  if (sampleObject) {
+    for (const field of fields) {
+      const value = sampleObject[field]
+      if (typeof value === 'string') return field
+    }
+  }
+
+  // Fall back to first field
+  return fields[0] || ''
+}
+
+/**
+ * Auto-detects the best value field from an array of objects
+ * @param fields - Available field names
+ * @param sampleObject - Sample object to check field types
+ * @returns Best field name to use for values
+ */
+export function autoDetectValueField(fields: string[], sampleObject?: Record<string, unknown>): string {
+  // Priority order for value fields
+  const valueCandidates = ['value', 'count', 'amount', 'total', 'y', 'score', 'number']
+
+  for (const candidate of valueCandidates) {
+    if (fields.includes(candidate)) return candidate
+  }
+
+  // If we have a sample object, find the first numeric field
+  if (sampleObject) {
+    for (const field of fields) {
+      const value = sampleObject[field]
+      if (typeof value === 'number') return field
+    }
+  }
+
+  // Fall back to first field that's not likely a label
+  const nonLabelFields = fields.filter(
+    (f) => !['label', 'name', 'title', 'key', 'id', 'text'].includes(f)
+  )
+
+  return nonLabelFields[0] || fields[0] || ''
+}
+
 /**
  * Resolves a dot-notation path within a data object
  * @param path - Dot-notation path like "results.tests" or "data.value"
