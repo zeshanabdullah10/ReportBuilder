@@ -67,6 +67,30 @@ const toolboxItems = [
         component: <Element is={Container} canvas />,
         description: 'Group components together',
       },
+      {
+        name: 'Logo',
+        icon: Building2,
+        component: <Logo />,
+        description: 'Company logo with fallback',
+      },
+      {
+        name: 'Watermark',
+        icon: Droplet,
+        component: <Watermark />,
+        description: 'Repeated text overlay',
+      },
+      {
+        name: 'Signature Line',
+        icon: PenLine,
+        component: <SignatureLine />,
+        description: 'Approval signature areas',
+      },
+      {
+        name: 'Revision Block',
+        icon: GitCommit,
+        component: <RevisionBlock />,
+        description: 'Document revision history',
+      },
     ],
   },
   // Data Visualization
@@ -98,10 +122,16 @@ const toolboxItems = [
         description: 'Completion percentage',
       },
       {
-        name: 'Indicator',
-        icon: CheckCircle,
-        component: <Indicator />,
-        description: 'Pass/Fail status badge',
+        name: 'Histogram',
+        icon: BarChart3,
+        component: <Histogram />,
+        description: 'Statistical distribution',
+      },
+      {
+        name: 'Scatter Plot',
+        icon: ScatterChart,
+        component: <ScatterPlot />,
+        description: 'Correlation analysis',
       },
     ],
   },
@@ -145,12 +175,6 @@ const toolboxItems = [
         component: <DateTime />,
         description: 'Formatted timestamp',
       },
-    ],
-  },
-  // Test Reports
-  {
-    category: 'Test Reports',
-    items: [
       {
         name: 'QR Code',
         icon: QrCode,
@@ -163,12 +187,12 @@ const toolboxItems = [
         component: <Barcode />,
         description: 'CODE128, EAN, UPC barcodes',
       },
-      {
-        name: 'Signature Line',
-        icon: PenLine,
-        component: <SignatureLine />,
-        description: 'Approval signature areas',
-      },
+    ],
+  },
+  // Test Reports
+  {
+    category: 'Test Reports',
+    items: [
       {
         name: 'Test Summary',
         icon: ClipboardCheck,
@@ -180,30 +204,6 @@ const toolboxItems = [
         icon: TestTube,
         component: <MeasurementTable />,
         description: 'Measurements with tolerances',
-      },
-      {
-        name: 'Histogram',
-        icon: BarChart3,
-        component: <Histogram />,
-        description: 'Statistical distribution',
-      },
-      {
-        name: 'Scatter Plot',
-        icon: ScatterChart,
-        component: <ScatterPlot />,
-        description: 'Correlation analysis',
-      },
-      {
-        name: 'Logo',
-        icon: Building2,
-        component: <Logo />,
-        description: 'Company logo with fallback',
-      },
-      {
-        name: 'Watermark',
-        icon: Droplet,
-        component: <Watermark />,
-        description: 'Repeated text overlay',
       },
       {
         name: 'Spec Box',
@@ -224,10 +224,10 @@ const toolboxItems = [
         description: 'Pass/fail donut chart',
       },
       {
-        name: 'Revision Block',
-        icon: GitCommit,
-        component: <RevisionBlock />,
-        description: 'Document revision history',
+        name: 'Indicator',
+        icon: CheckCircle,
+        component: <Indicator />,
+        description: 'Pass/Fail status badge',
       },
     ],
   },

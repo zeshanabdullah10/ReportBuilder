@@ -33,7 +33,7 @@ export function DataTreeNode({
   filterType,
   level = 0,
 }: DataTreeNodeProps) {
-  const [isExpanded, setIsExpanded] = useState(level < 2)
+  const [isExpanded, setIsExpanded] = useState(level < 1)
 
   const hasChildren = node.children && node.children.length > 0
   const isContainer = node.type === 'object' || node.type === 'array'
