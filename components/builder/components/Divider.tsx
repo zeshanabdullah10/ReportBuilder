@@ -5,6 +5,9 @@ import { DividerSettings } from '../settings/DividerSettings'
 import { ResizableBox } from '../layout/ResizableBox'
 import { useBuilderStore, PAGE_SIZE_PRESETS } from '@/lib/stores/builder-store'
 
+// Default content width for A4 with 40px padding
+const DEFAULT_CONTENT_WIDTH = 794 - (40 * 2) // 714px
+
 interface DividerProps {
   orientation?: 'horizontal' | 'vertical'
   style?: 'solid' | 'dashed' | 'dotted' | 'double'
@@ -22,7 +25,7 @@ interface DividerProps {
 export const Divider = ({
   orientation = 'horizontal',
   style = 'solid',
-  color = 'rgba(255, 255, 255, 0.3)',
+  color = 'rgba(0, 0, 0, 0.3)',
   thickness = 1,
   spanFullWidth = true,
   x = 0,
@@ -47,13 +50,20 @@ export const Divider = ({
   if (!visible) return null
 
   // Get page dimensions for spanFullWidth
-  const activePage = pages.find(p => p.id === activePageId)
-  const pageSettings = activePage?.settings
-  const pageSize = pageSettings?.pageSize || 'A4'
-  const preset = PAGE_SIZE_PRESETS[pageSize as keyof typeof PAGE_SIZE_PRESETS]
-  const pageWidth = pageSize === 'Custom' ? (pageSettings?.customWidth || 794) : preset.width
-  const padding = pageSettings?.padding || 40
-  const contentWidth = pageWidth - (padding * 2)
+  let contentWidth = DEFAULT_CONTENT_WIDTH
+  try {
+    const activePage = pages.find(p => p.id === activePageId)
+    if (activePage?.settings) {
+      const pageSettings = activePage.settings
+      const pageSize = pageSettings.pageSize || 'A4'
+      const preset = PAGE_SIZE_PRESETS[pageSize as keyof typeof PAGE_SIZE_PRESETS]
+      const pageWidth = pageSize === 'Custom' ? (pageSettings.customWidth || 794) : preset.width
+      const padding = pageSettings.padding || 40
+      contentWidth = pageWidth - (padding * 2)
+    }
+  } catch (e) {
+    // Use default if there's any error
+  }
 
   // Calculate actual dimensions based on spanFullWidth
   const actualX = spanFullWidth ? 0 : x
@@ -143,7 +153,7 @@ Divider.craft = {
     spanFullWidth: true,
     x: 0,
     y: 0,
-    width: 200,
+    width: 714,
     height: 20,
     zIndex: 1,
     visible: true,
