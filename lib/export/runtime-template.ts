@@ -147,12 +147,23 @@ export const RUNTIME_TEMPLATE = `
       return SAMPLE_DATA;
     }
 
+    // Determine data path: URL query param > CONFIG > default
+    var dataPath = './report_data.json';
+    var urlParams = new URLSearchParams(window.location.search);
+    var queryData = urlParams.get('data');
+
+    if (queryData) {
+      dataPath = queryData;
+    } else if (CONFIG.dataPath) {
+      dataPath = CONFIG.dataPath;
+    }
+
     // Try to fetch from external file
     try {
-      var response = await fetch(CONFIG.dataPath || './report_data.json');
+      var response = await fetch(dataPath);
       if (response.ok) {
         var data = await response.json();
-        console.log('[Runtime] Loaded data from', CONFIG.dataPath || './report_data.json');
+        console.log('[Runtime] Loaded data from', dataPath);
         return data;
       } else {
         console.warn('[Runtime] Could not load data file:', response.status, response.statusText);
