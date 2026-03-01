@@ -801,15 +801,15 @@ export const RUNTIME_TEMPLATE = `
       }
 
       // 3. Render charts (requires Chart.js to be loaded)
-      // Wait for Chart.js to be ready if loaded asynchronously
-      await new Promise(function(resolve) { setTimeout(resolve, 200); });
+      // Small wait for Chart.js to be ready if loaded asynchronously
+      await new Promise(function(resolve) { setTimeout(resolve, 50); });
 
       if (data) {
         renderCharts(data);
       }
 
-      // 4. Wait for charts to fully render (no animations, but need layout pass)
-      await new Promise(function(resolve) { setTimeout(resolve, 300); });
+      // 4. Small delay for final layout pass (charts have no animations)
+      await new Promise(function(resolve) { setTimeout(resolve, 50); });
 
       // 5. Signal that rendering is complete (for PDF generation)
       window.RENDERING_COMPLETE = true;
