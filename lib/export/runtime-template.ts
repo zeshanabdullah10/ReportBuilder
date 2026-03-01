@@ -492,6 +492,10 @@ export const RUNTIME_TEMPLATE = `
     var chartType = props.chartType || 'bar';
     var title = props.title || '';
 
+    console.log('[Runtime] Rendering chart:', comp.id, 'type:', chartType);
+    console.log('[Runtime] Chart props:', JSON.stringify(props));
+    console.log('[Runtime] Data available:', !!data);
+
     // Interpolate title if it has bindings
     if (hasBinding(title)) {
       title = interpolateText(title, data);
@@ -500,7 +504,9 @@ export const RUNTIME_TEMPLATE = `
     // Build labels array - check labelsBinding first
     var labels = [];
     if (props.labelsBinding && hasBinding(props.labelsBinding)) {
+      console.log('[Runtime] Resolving labelsBinding:', props.labelsBinding);
       var resolvedLabels = resolveBinding(props.labelsBinding, data);
+      console.log('[Runtime] Resolved labels:', resolvedLabels);
       if (Array.isArray(resolvedLabels)) {
         labels = resolvedLabels.map(function(item) {
           if (typeof item === 'string') return item;
@@ -573,7 +579,9 @@ export const RUNTIME_TEMPLATE = `
 
       // Try to resolve from binding first
       if (props.binding) {
+        console.log('[Runtime] Resolving chart binding:', props.binding);
         var resolved = resolveBinding(props.binding, data);
+        console.log('[Runtime] Resolved chart data:', resolved);
         if (resolved) {
           if (Array.isArray(resolved)) {
             primaryData = resolved;
@@ -582,8 +590,14 @@ export const RUNTIME_TEMPLATE = `
               labels = resolved.map(function(item) { return item.label; });
               primaryData = resolved.map(function(item) { return item.value !== undefined ? item.value : item; });
             }
-          } else if (resolved.data && Array.isArray(resolved.data)) {
-            primaryData = resolved.data;
+          } else if (typeof resolved === 'object') {
+            // Object with data/values property
+            if (resolved.data && Array.isArray(resolved.data)) {
+              primaryData = resolved.data;
+            } else if (resolved.values && Array.isArray(resolved.values)) {
+              primaryData = resolved.values;
+            }
+            // Get labels from object
             if (resolved.labels && Array.isArray(resolved.labels)) {
               labels = resolved.labels;
             }
