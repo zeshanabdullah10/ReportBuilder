@@ -17,12 +17,67 @@ This tool is part of the LabVIEW Report Builder ecosystem. It:
 Download the latest release for your platform from the releases page.
 
 ### Build from Source
+
+#### Prerequisites
+
+1. **Rust**: Install from [rustup.rs](https://rustup.rs/)
+   ```bash
+   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   ```
+
+2. **Visual Studio Build Tools** (Windows only): Required for compiling native dependencies
+   - Download from [Visual Studio Downloads](https://visualstudio.microsoft.com/downloads/)
+   - Select "Desktop development with C++" workload
+   - Or install "C++ build tools" from the Build Tools installer
+
+#### Building on Windows
+
+The CLI uses the `headless_chrome` crate which requires native dependencies. You must build from a Visual Studio development environment.
+
+**Method 1: Using VsDevCmd (Recommended for automation)**
+```cmd
+cmd /c ""C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" && cd /d "PATH\TO\report-cli" && cargo build --release"
+```
+
+Replace `PATH\TO\report-cli` with your actual path, e.g.:
+```cmd
+cmd /c ""C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" && cd /d "c:\Users\zeesh\OneDrive\Desktop\LabVIEW Report Builder\report-cli" && cargo build --release"
+```
+
+**Method 2: Using Developer Command Prompt**
+1. Open "Developer Command Prompt for VS 2022" from Start Menu
+2. Navigate to the report-cli directory:
+   ```cmd
+   cd "c:\Users\zeesh\OneDrive\Desktop\LabVIEW Report Builder\report-cli"
+   cargo build --release
+   ```
+
+**Method 3: Using x64 Native Tools Command Prompt**
+1. Open "x64 Native Tools Command Prompt for VS 2022" from Start Menu
+2. Navigate to the report-cli directory
+3. Run `cargo build --release`
+
+#### Building on macOS/Linux
+
 ```bash
 cd report-cli
 cargo build --release
 ```
 
-The binary will be at `target/release/report-cli.exe` (Windows) or `target/release/report-cli` (macOS/Linux).
+#### Build Output
+
+The compiled binary will be at:
+- Windows: `target/release/report-cli.exe`
+- macOS/Linux: `target/release/report-cli`
+
+#### Release Build Optimization
+
+Release builds are optimized for size and speed:
+```bash
+cargo build --release
+```
+
+The binary will be stripped and optimized. Typical size is ~5-10MB.
 
 ## Usage
 

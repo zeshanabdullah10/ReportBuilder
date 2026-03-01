@@ -136,12 +136,48 @@ The `report-cli` tool enables fully offline PDF generation from HTML templates a
 
 ### Installation
 
-Pre-built binaries are available in the `report-cli/target/release/` directory, or build from source:
+Pre-built binaries are available in the `report-cli/target/release/` directory, or build from source.
+
+### Developer Build Instructions
+
+#### Prerequisites
+
+1. **Rust**: Install from [rustup.rs](https://rustup.rs/)
+2. **Visual Studio Build Tools** (Windows only): Required for compiling native dependencies
+   - Install from [Visual Studio Downloads](https://visualstudio.microsoft.com/downloads/)
+   - Select "C++ build tools" workload
+
+#### Building on Windows
+
+The CLI requires native dependencies that need the Visual Studio development environment. Use one of these methods:
+
+**Method 1: Using VsDevCmd (Recommended)**
+```cmd
+cmd /c ""C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" && cd /d "PATH\TO\report-cli" && cargo build --release"
+```
+
+**Method 2: Using Developer Command Prompt**
+1. Open "Developer Command Prompt for VS 2022" from Start Menu
+2. Navigate to the report-cli directory
+3. Run `cargo build --release`
+
+**Method 3: Using x64 Native Tools Command Prompt**
+1. Open "x64 Native Tools Command Prompt for VS 2022" from Start Menu
+2. Navigate to the report-cli directory
+3. Run `cargo build --release`
+
+#### Building on macOS/Linux
 
 ```bash
 cd report-cli
 cargo build --release
 ```
+
+#### Build Output
+
+The compiled binary will be at:
+- Windows: `report-cli/target/release/report-cli.exe`
+- macOS/Linux: `report-cli/target/release/report-cli`
 
 ### Usage
 
