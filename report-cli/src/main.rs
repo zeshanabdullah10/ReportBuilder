@@ -171,11 +171,44 @@ fn generate_pdf(temp_html_path: &PathBuf, args: &Args) -> Result<()> {
     tab.wait_for_element("body")
         .with_context(|| "Failed to wait for page load")?;
 
-    // Additional wait for JavaScript to complete
+    // Wait for JavaScript rendering to complete
+    // The runtime sets window.RENDERING_COMPLETE = true when done
     if args.verbose {
-        println!("[report-cli] Waiting {}ms for JavaScript to render...", args.wait);
+        println!("[report-cli] Waiting for JavaScript rendering to complete...");
     }
-    std::thread::sleep(Duration::from_millis(args.wait));
+
+    let rendering_check_start = std::time::Instant::now();
+    let max_wait_ms = args.wait;
+    let check_interval_ms = 100u64;
+
+    loop {
+        // Check if rendering is complete
+        let result = tab.evaluate("window.RENDERING_COMPLETE === true", false);
+        
+        if let Ok(remote_object) = result {
+            // Check if the result is true
+            if let Some(value) = remote_object.value {
+                if value.as_bool().unwrap_or(false) {
+                    if args.verbose {
+                        println!("[report-cli] Rendering complete signal received");
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Check timeout
+        let elapsed = rendering_check_start.elapsed().as_millis() as u64;
+        if elapsed >= max_wait_ms {
+            if args.verbose {
+                println!("[report-cli] Wait timeout ({}ms), proceeding with PDF generation", max_wait_ms);
+            }
+            break;
+        }
+
+        // Wait before next check
+        std::thread::sleep(Duration::from_millis(check_interval_ms));
+    }
 
     // Calculate page dimensions (in inches)
     let (paper_width, paper_height) = match args.format.to_uppercase().as_str() {

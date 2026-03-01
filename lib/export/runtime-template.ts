@@ -610,9 +610,11 @@ export const RUNTIME_TEMPLATE = `
     }
 
     // Build chart options
+    // Disable animations for PDF generation (charts must render immediately)
     var options = {
       responsive: true,
       maintainAspectRatio: false,
+      animation: false,  // Disable animations for PDF export
       interaction: {
         mode: 'index',
         intersect: false
@@ -799,14 +801,21 @@ export const RUNTIME_TEMPLATE = `
       }
 
       // 3. Render charts (requires Chart.js to be loaded)
-      // Wait a tick for Chart.js to be ready if loaded asynchronously
-      await new Promise(function(resolve) { setTimeout(resolve, 100); });
+      // Wait for Chart.js to be ready if loaded asynchronously
+      await new Promise(function(resolve) { setTimeout(resolve, 200); });
 
       if (data) {
         renderCharts(data);
       }
 
-      // 4. Auto-print after short delay for rendering
+      // 4. Wait for charts to fully render (no animations, but need layout pass)
+      await new Promise(function(resolve) { setTimeout(resolve, 300); });
+
+      // 5. Signal that rendering is complete (for PDF generation)
+      window.RENDERING_COMPLETE = true;
+      console.log('[Runtime] Rendering complete signal sent');
+
+      // 6. Auto-print after short delay for rendering
       if (CONFIG.autoPrint) {
         setTimeout(function() {
           console.log('[Runtime] Triggering auto-print...');
