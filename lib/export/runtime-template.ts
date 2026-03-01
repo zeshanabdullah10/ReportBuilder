@@ -529,15 +529,31 @@ export const RUNTIME_TEMPLATE = `
 
     if (datasetsConfig.length > 0) {
       // Multi-dataset mode
+      console.log('[Runtime] Multi-dataset mode, datasets:', datasetsConfig.length);
       for (var i = 0; i < datasetsConfig.length; i++) {
         var ds = datasetsConfig[i];
         var datasetData = ds.data || [];
 
         // Resolve binding if present
         if (ds.binding) {
+          console.log('[Runtime] Dataset', i, 'binding:', ds.binding);
           var resolvedData = resolveBinding(ds.binding, data);
+          console.log('[Runtime] Dataset', i, 'resolved:', resolvedData);
           if (resolvedData && Array.isArray(resolvedData)) {
             datasetData = resolvedData;
+          } else if (resolvedData && typeof resolvedData === 'object') {
+            // Handle { labels: [], values: [] } format
+            if (resolvedData.values && Array.isArray(resolvedData.values)) {
+              datasetData = resolvedData.values;
+              if (resolvedData.labels && Array.isArray(resolvedData.labels) && labels.length === 0) {
+                labels = resolvedData.labels;
+              }
+            } else if (resolvedData.data && Array.isArray(resolvedData.data)) {
+              datasetData = resolvedData.data;
+              if (resolvedData.labels && Array.isArray(resolvedData.labels) && labels.length === 0) {
+                labels = resolvedData.labels;
+              }
+            }
           }
         } else if (ds.dataPoints && typeof ds.dataPoints === 'string') {
           // Parse static data points
