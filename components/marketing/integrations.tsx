@@ -12,7 +12,7 @@ const languages = [
     code: `import json
 import subprocess
 
-# Your test data
+# Your test data - just pure JSON!
 data = {
     "test_name": "Temperature Stress Test",
     "result": "PASS",
@@ -22,15 +22,16 @@ data = {
 }
 
 # Write data to JSON file
-with open('data.json', 'w') as f:
+with open('test_results.json', 'w') as f:
     json.dump(data, f, indent=2)
 
-# Generate PDF using headless Chrome
+# Generate PDF using report-cli
+# That's it! The CLI handles everything
 subprocess.run([
-    'chrome', '--headless', '--disable-gpu',
-    '--print-to-pdf=report.pdf',
-    '--inject-script=inject-data.js',
-    'template.html'
+    'report-cli',
+    '--template', 'Report.html',
+    '--data', 'test_results.json',
+    '--output', 'report.pdf'
 ])`,
   },
   {
@@ -43,7 +44,7 @@ using System.IO;
 using System.Text.Json;
 using System.Diagnostics;
 
-// Your test data
+// Your test data - just pure JSON!
 var data = new {
     test_name = "Voltage Test",
     result = "PASS",
@@ -56,18 +57,14 @@ var data = new {
 string json = JsonSerializer.Serialize(data, new JsonSerializerOptions {
     WriteIndented = true
 });
-File.WriteAllText("data.json", json);
+File.WriteAllText("test_results.json", json);
 
-// Generate PDF using headless Chrome
-var process = new Process {
-    StartInfo = new ProcessStartInfo {
-        FileName = "chrome",
-        Arguments = "--headless --disable-gpu --print-to-pdf=report.pdf template.html",
-        RedirectStandardOutput = true
-    }
-};
-process.Start();
-process.WaitForExit();`,
+// Generate PDF using report-cli
+// That's it! The CLI handles everything
+Process.Start("report-cli",
+    "--template Report.html --data test_results.json --output report.pdf");
+    
+Console.WriteLine("Report generated: report.pdf");`,
   },
   {
     id: 'labview',
@@ -86,11 +83,12 @@ process.WaitForExit();`,
 
 // 2. Convert cluster to JSON string
 // Use "Flatten To JSON" or "Stringify" VI
-JSON String ──────> Write To Text File ──────> data.json
+JSON String ──────> Write To Text File ──────> test_results.json
 
 // 3. Generate PDF with System Exec VI
+// report-cli handles everything!
 System Exec VI:
-  Command Line: chrome --headless --disable-gpu --print-to-pdf=report.pdf template.html
+  Command Line: report-cli --template Report.html --data test_results.json --output report.pdf
   Wait Until Done? : TRUE
   
 // Output: report.pdf`,
@@ -100,7 +98,7 @@ System Exec VI:
     name: 'MATLAB',
     icon: FileCode,
     color: '#E16737',
-    code: `% Your test data
+    code: `% Your test data - just pure JSON!
 data = struct(...
     'test_name', 'Signal Integrity Test', ...
     'result', 'PASS', ...
@@ -111,12 +109,13 @@ data = struct(...
 
 % Write data to JSON file
 jsonStr = jsonencode(data, 'PrettyPrint', true);
-fid = fopen('data.json', 'w');
+fid = fopen('test_results.json', 'w');
 fprintf(fid, '%s', jsonStr);
 fclose(fid);
 
-% Generate PDF using headless Chrome
-system('chrome --headless --disable-gpu --print-to-pdf=report.pdf template.html');
+% Generate PDF using report-cli
+% That's it! The CLI handles everything
+system('report-cli --template Report.html --data test_results.json --output report.pdf');
 
 disp('Report generated: report.pdf');`,
   },
@@ -265,7 +264,7 @@ export function Integrations() {
         {/* Bottom note */}
         <div className="text-center mt-12">
           <p className="text-gray-500 text-sm" style={{ fontFamily: "'JetBrains Mono', monospace" }}>
-            The same template works with all languages • Just swap the JSON data source
+            Write pure JSON • report-cli handles the rest • Works completely offline
           </p>
         </div>
 

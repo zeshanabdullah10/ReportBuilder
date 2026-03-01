@@ -116,7 +116,71 @@ labview-report-builder/
 ├── sample-data/           # Sample JSON data for testing
 ├── plans/                 # Project planning documents
 └── _bmad/                 # BMAD workflow configuration
+├── report-cli/            # Rust CLI for offline PDF generation
+│   ├── src/               # CLI source code
+│   ├── Cargo.toml         # Rust dependencies
+│   └── README.md          # CLI documentation
+└── Report.html            # Standalone HTML report template
 ```
+
+## Offline PDF Generation (report-cli)
+
+The `report-cli` tool enables fully offline PDF generation from HTML templates and JSON data. This is ideal for test stations that need to generate reports without internet connectivity.
+
+### Features
+
+- **Fully Offline**: No server or internet connection required
+- **Pure JSON Input**: External systems only need to write JSON data
+- **Headless Browser**: Uses Chrome/Edge for accurate PDF rendering
+- **Cross-Platform**: Works on Windows, macOS, and Linux
+
+### Installation
+
+Pre-built binaries are available in the `report-cli/target/release/` directory, or build from source:
+
+```bash
+cd report-cli
+cargo build --release
+```
+
+### Usage
+
+```bash
+report-cli.exe --template Report.html --data test_results.json --output Report.pdf
+```
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-t, --template` | HTML template file | (required) |
+| `-d, --data` | JSON data file | (required) |
+| `-o, --output` | Output PDF file | (required) |
+| `-w, --wait` | JavaScript render wait time (ms) | 2000 |
+| `-f, --format` | Page format (A4, Letter, Legal) | A4 |
+| `-m, --margin` | Page margin in mm | 20 |
+| `--no-header-footer` | Exclude page headers/footers | false |
+| `-v, --verbose` | Verbose output | false |
+
+### Integration Examples
+
+**Python:**
+```python
+import json
+import subprocess
+
+data = {"testName": "Production Test", "overallStatus": "PASS"}
+with open("results.json", "w") as f:
+    json.dump(data, f)
+
+subprocess.run(["report-cli.exe", "-t", "Report.html", "-d", "results.json", "-o", "Report.pdf"])
+```
+
+**LabVIEW:**
+1. Use "Write to Text File" VI to create JSON file
+2. Use "System Exec.vi" to call `report-cli.exe`
+
+See [report-cli/README.md](report-cli/README.md) for detailed documentation.
 
 ## LabVIEW Integration
 

@@ -1,0 +1,112 @@
+{
+  "meta": {
+    "generatedBy": "Test Station 01",
+    "projectName": "Project Alpha - Rev 2.1",
+    "reportTitle": "PCB Assembly Test Report",
+    "reportVersion": "1.0"
+  },
+  "notes": "All measurements taken at ambient temperature (23°C). Unit under test was powered for 30 minutes before measurements.",
+  "status": {
+    "overall": "pass",
+    "currentTest": "warning",
+    "voltageTest": "pass",
+    "frequencyTest": "pass",
+    "functionalTest": "pass",
+    "temperatureTest": "pass"
+  },
+  "summary": {
+    "failed": 5,
+    "passed": 142,
+    "skipped": 3,
+    "passRate": 94.67,
+    "totalTests": 150,
+    "testDuration": "00:12:45",
+    "overallStatus": "pass"
+  },
+  "approval": {
+    "status": "pending",
+    "testedBy": "John Smith",
+    "approvedBy": "",
+    "testedDate": "2026-03-01",
+    "approvedDate": ""
+  },
+  "progress": {
+    "completion": 100,
+    "totalSteps": 10,
+    "currentStep": "Final Validation",
+    "completedSteps": 10
+  },
+  "testInfo": {
+    "operator": "John Smith",
+    "testDate": "2026-03-01T10:30:00",
+    "testName": "PCB Functional Test",
+    "stationId": "TEST-STN-01",
+    "workOrder": "WO-2026-0301-001",
+    "serialNumber": "SN-PCB-001234"
+  },
+  "chartData": {
+    "labels": ["Test 1", "Test 2", "Test 3", "Test 4", "Test 5", "Test 6", "Test 7", "Test 8"],
+    "values": [95, 87, 92, 78, 91, 88, 94, 85]
+  },
+  "gaugeData": {
+    "mainVoltage": {
+      "max": 5.5,
+      "min": 4.5,
+      "unit": "V",
+      "value": 5.02
+    },
+    "temperature": {
+      "max": 100,
+      "min": 0,
+      "unit": "°C",
+      "value": 44.2
+    }
+  },
+  "measurements": [
+    {
+      "id": 1,
+      "name": "Voltage Ch1",
+      "unit": "V",
+      "status": "pass",
+      "nominal": 5.0,
+      "measured": 5.02,
+      "tolerance": "±5%"
+    },
+    {
+      "id": 2,
+      "name": "Voltage Ch2",
+      "unit": "V",
+      "status": "pass",
+      "nominal": 3.3,
+      "measured": 3.31,
+      "tolerance": "±5%"
+    },
+    {
+      "id": 3,
+      "name": "Current Draw",
+      "unit": "A",
+      "status": "warning",
+      "nominal": 0.25,
+      "measured": 0.28,
+      "tolerance": "±10%"
+    },
+    {
+      "id": 4,
+      "name": "Frequency",
+      "unit": "Hz",
+      "status": "pass",
+      "nominal": 60.0,
+      "measured": 60.1,
+      "tolerance": "±1%"
+    },
+    {
+      "id": 5,
+      "name": "Temperature",
+      "unit": "°C",
+      "status": "pass",
+      "nominal": 45.0,
+      "measured": 44.2,
+      "tolerance": "±5%"
+    }
+  ]
+}
