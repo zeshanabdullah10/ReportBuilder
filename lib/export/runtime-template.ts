@@ -594,9 +594,12 @@ export const RUNTIME_TEMPLATE = `
       var primaryData = [];
 
       // Try to resolve from binding first
-      if (props.binding) {
-        console.log('[Runtime] Resolving chart binding:', props.binding);
-        var resolved = resolveBinding(props.binding, data);
+      // Check both props.binding (direct) and props.bindings.primaryBinding (from renderer)
+      var bindingPath = props.binding || (props.bindings && props.bindings.primaryBinding);
+      console.log('[Runtime] Chart props:', JSON.stringify({ binding: props.binding, bindings: props.bindings }));
+      if (bindingPath) {
+        console.log('[Runtime] Resolving chart binding:', bindingPath);
+        var resolved = resolveBinding(bindingPath, data);
         console.log('[Runtime] Resolved chart data:', resolved);
         if (resolved) {
           if (Array.isArray(resolved)) {
@@ -678,9 +681,35 @@ export const RUNTIME_TEMPLATE = `
       };
     }
 
+    // Ensure labels match data length - auto-generate if needed
+    var maxDataLength = 0;
+    for (var i = 0; i < datasets.length; i++) {
+      if (datasets[i].data && datasets[i].data.length > maxDataLength) {
+        maxDataLength = datasets[i].data.length;
+      }
+    }
+    if (labels.length < maxDataLength) {
+      console.log('[Runtime] Labels length (' + labels.length + ') < data length (' + maxDataLength + '), auto-generating');
+      while (labels.length < maxDataLength) {
+        labels.push('Item ' + (labels.length + 1));
+      }
+    }
+
+    console.log('[Runtime] Final labels:', labels);
+    console.log('[Runtime] Final datasets:', JSON.stringify(datasets.map(function(ds) { return { label: ds.label, dataLength: ds.data ? ds.data.length : 0 }; })));
+
     // Destroy existing chart instance if present
     if (chartInstances[comp.id]) {
       chartInstances[comp.id].destroy();
+    }
+
+    // Hide the placeholder element if present
+    var container = document.getElementById(comp.id);
+    if (container) {
+      var placeholder = container.querySelector('.chart-placeholder');
+      if (placeholder) {
+        placeholder.style.display = 'none';
+      }
     }
 
     // Create chart
@@ -830,22 +859,16 @@ export const RUNTIME_TEMPLATE = `
         applyBindings(data);
       }
 
-      // 3. Render charts (requires Chart.js to be loaded)
-      // Small wait for Chart.js to be ready if loaded asynchronously
-      await new Promise(function(resolve) { setTimeout(resolve, 50); });
-
+      // 3. Render charts (Chart.js is loaded synchronously via script tag)
       if (data) {
         renderCharts(data);
       }
 
-      // 4. Small delay for final layout pass (charts have no animations)
-      await new Promise(function(resolve) { setTimeout(resolve, 50); });
-
-      // 5. Signal that rendering is complete (for PDF generation)
+      // 4. Signal that rendering is complete (for PDF generation)
       window.RENDERING_COMPLETE = true;
       console.log('[Runtime] Rendering complete signal sent');
 
-      // 6. Auto-print after short delay for rendering
+      // 5. Auto-print after short delay for rendering
       if (CONFIG.autoPrint) {
         setTimeout(function() {
           console.log('[Runtime] Triggering auto-print...');
@@ -854,7 +877,7 @@ export const RUNTIME_TEMPLATE = `
           } catch (e) {
             console.warn('[Runtime] Auto-print failed:', e);
           }
-        }, CONFIG.printDelay || 500);
+        }, CONFIG.printDelay || 100);
       }
 
       console.log('[Runtime] Template initialization complete');
