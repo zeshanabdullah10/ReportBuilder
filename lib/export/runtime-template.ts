@@ -137,16 +137,24 @@ export const RUNTIME_TEMPLATE = `
   // ============================================
 
   /**
-   * Load report data from embedded sample or external file
+   * Load report data from CLI-injected data, embedded sample, or external file
    * @returns {Promise<object|null>} The loaded data or null
    */
   async function loadData() {
-    // Use embedded sample data if available
+    // PRIORITY 1: Use CLI-injected data (for offline PDF generation)
+    // The report-cli tool replaces this placeholder with actual JSON data
+    if (window.REPORT_DATA) {
+      console.log('[Runtime] Using CLI-injected data');
+      return window.REPORT_DATA;
+    }
+
+    // PRIORITY 2: Use embedded sample data if available
     if (SAMPLE_DATA) {
       console.log('[Runtime] Using embedded sample data');
       return SAMPLE_DATA;
     }
 
+    // PRIORITY 3: Try to fetch from external file (requires web server)
     // Determine data path: URL query param > CONFIG > default
     var dataPath = './report_data.json';
     var urlParams = new URLSearchParams(window.location.search);

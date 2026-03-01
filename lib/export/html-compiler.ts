@@ -216,6 +216,10 @@ function generateConfigScript(
   const validConfigs = componentConfigs.filter(Boolean)
 
   return `
+    // CLI-injected data placeholder (for offline PDF generation with report-cli)
+    // The report-cli tool replaces this with actual JSON data
+    window.REPORT_DATA = null; // {{REPORT_DATA_PLACEHOLDER}}
+
     // Template configuration
     window.TEMPLATE_CONFIG = {
       pageSize: '${options.pageSize}',
