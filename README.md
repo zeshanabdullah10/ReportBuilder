@@ -116,7 +116,107 @@ labview-report-builder/
 ├── sample-data/           # Sample JSON data for testing
 ├── plans/                 # Project planning documents
 └── _bmad/                 # BMAD workflow configuration
+├── report-cli/            # Rust CLI for offline PDF generation
+│   ├── src/               # CLI source code
+│   ├── Cargo.toml         # Rust dependencies
+│   └── README.md          # CLI documentation
+└── Report.html            # Standalone HTML report template
 ```
+
+## Offline PDF Generation (report-cli)
+
+The `report-cli` tool enables fully offline PDF generation from HTML templates and JSON data. This is ideal for test stations that need to generate reports without internet connectivity.
+
+### Features
+
+- **Fully Offline**: No server or internet connection required
+- **Pure JSON Input**: External systems only need to write JSON data
+- **Headless Browser**: Uses Chrome/Edge for accurate PDF rendering
+- **Cross-Platform**: Works on Windows, macOS, and Linux
+
+### Installation
+
+Pre-built binaries are available in the `report-cli/target/release/` directory, or build from source.
+
+### Developer Build Instructions
+
+#### Prerequisites
+
+1. **Rust**: Install from [rustup.rs](https://rustup.rs/)
+2. **Visual Studio Build Tools** (Windows only): Required for compiling native dependencies
+   - Install from [Visual Studio Downloads](https://visualstudio.microsoft.com/downloads/)
+   - Select "C++ build tools" workload
+
+#### Building on Windows
+
+The CLI requires native dependencies that need the Visual Studio development environment. Use one of these methods:
+
+**Method 1: Using VsDevCmd (Recommended)**
+```cmd
+cmd /c ""C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" && cd /d "PATH\TO\report-cli" && cargo build --release"
+```
+
+**Method 2: Using Developer Command Prompt**
+1. Open "Developer Command Prompt for VS 2022" from Start Menu
+2. Navigate to the report-cli directory
+3. Run `cargo build --release`
+
+**Method 3: Using x64 Native Tools Command Prompt**
+1. Open "x64 Native Tools Command Prompt for VS 2022" from Start Menu
+2. Navigate to the report-cli directory
+3. Run `cargo build --release`
+
+#### Building on macOS/Linux
+
+```bash
+cd report-cli
+cargo build --release
+```
+
+#### Build Output
+
+The compiled binary will be at:
+- Windows: `report-cli/target/release/report-cli.exe`
+- macOS/Linux: `report-cli/target/release/report-cli`
+
+### Usage
+
+```bash
+report-cli.exe --template Report.html --data test_results.json --output Report.pdf
+```
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `-t, --template` | HTML template file | (required) |
+| `-d, --data` | JSON data file | (required) |
+| `-o, --output` | Output PDF file | (required) |
+| `-w, --wait` | JavaScript render wait time (ms) | 2000 |
+| `-f, --format` | Page format (A4, Letter, Legal) | A4 |
+| `-m, --margin` | Page margin in mm | 20 |
+| `--no-header-footer` | Exclude page headers/footers | false |
+| `-v, --verbose` | Verbose output | false |
+
+### Integration Examples
+
+**Python:**
+```python
+import json
+import subprocess
+
+data = {"testName": "Production Test", "overallStatus": "PASS"}
+with open("results.json", "w") as f:
+    json.dump(data, f)
+
+subprocess.run(["report-cli.exe", "-t", "Report.html", "-d", "results.json", "-o", "Report.pdf"])
+```
+
+**LabVIEW:**
+1. Use "Write to Text File" VI to create JSON file
+2. Use "System Exec.vi" to call `report-cli.exe`
+
+See [report-cli/README.md](report-cli/README.md) for detailed documentation.
 
 ## LabVIEW Integration
 

@@ -2,6 +2,7 @@
 
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
+import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 import { VisibilityConditionSettings } from './VisibilityConditionSettings'
 import type { IndicatorStatus } from '../components/Indicator'
@@ -92,14 +93,13 @@ export function IndicatorSettings() {
         </label>
         <div>
           <label className="block text-sm text-gray-400 mb-1">Binding Path</label>
-          <Input
+          <DataBindingInput
             value={binding}
-            onChange={(e) => setProp((props: any) => (props.binding = e.target.value))}
+            onChange={(value) => setProp((props: any) => (props.binding = value))}
             placeholder="{{data.testResult}}"
+            expectedType="boolean"
+            hint="Bind to a boolean or string value"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Bind to a boolean or string value. Use "pass", "fail", "warning", or true/false.
-          </p>
         </div>
       </div>
 

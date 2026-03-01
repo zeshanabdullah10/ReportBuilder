@@ -2,6 +2,8 @@
 
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
+import { ColorPicker } from '@/components/ui/color-picker'
+import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 
 export function TableSettings() {
@@ -24,11 +26,10 @@ export function TableSettings() {
     <div className="space-y-4">
       <div>
         <label className="block text-sm text-gray-400 mb-1">Columns (comma-separated)</label>
-        <input
+        <Input
           type="text"
           value={columns.join(', ')}
           onChange={(e) => setProp((props: any) => (props.columns = e.target.value.split(',').map((s: string) => s.trim())))}
-          className="w-full bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded-lg p-2 text-white text-sm"
         />
       </div>
 
@@ -44,18 +45,16 @@ export function TableSettings() {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-sm text-gray-400 mb-1">Header Color</label>
-          <Input
-            type="color"
+          <ColorPicker
             value={headerColor}
-            onChange={(e) => setProp((props: any) => (props.headerColor = e.target.value))}
+            onChange={(value) => setProp((props: any) => (props.headerColor = value))}
           />
         </div>
         <div>
           <label className="block text-sm text-gray-400 mb-1">Row Color</label>
-          <Input
-            type="color"
+          <ColorPicker
             value={rowColor}
-            onChange={(e) => setProp((props: any) => (props.rowColor = e.target.value))}
+            onChange={(value) => setProp((props: any) => (props.rowColor = value))}
           />
         </div>
       </div>
@@ -66,15 +65,13 @@ export function TableSettings() {
         </label>
         <div>
           <label className="block text-sm text-gray-400 mb-1">Binding Path</label>
-          <Input
+          <DataBindingInput
             value={binding}
-            onChange={(e) => setProp((props: any) => (props.binding = e.target.value))}
+            onChange={(value) => setProp((props: any) => (props.binding = value))}
             placeholder="{{data.tableData}}"
+            expectedType="array"
+            hint="Bind to an array of objects (each key becomes a column)"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Bind to an array of objects. Each object key becomes a column.
-            Use <code className="text-[#00ffc8]">{'{{data.items}}'}</code> syntax.
-          </p>
         </div>
       </div>
 

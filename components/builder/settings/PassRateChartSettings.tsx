@@ -1,6 +1,9 @@
 'use client'
 
 import { useNode } from '@craftjs/core'
+import { Input } from '@/components/ui/input'
+import { ColorPicker } from '@/components/ui/color-picker'
+import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 
 export const PassRateChartSettings = () => {
@@ -37,72 +40,68 @@ export const PassRateChartSettings = () => {
     <div className="space-y-4">
       {/* Title */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Title
-        </label>
-        <input
+        <label className="block text-sm text-gray-400 mb-1">Title</label>
+        <Input
           type="text"
           value={title}
           onChange={(e) => setProp((props: any) => (props.title = e.target.value))}
           placeholder="Pass Rate"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
         />
       </div>
 
       {/* Pass Count */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
           Pass Count
         </label>
-        <input
+        <Input
           type="number"
           value={passCount}
           onChange={(e) => setProp((props: any) => (props.passCount = parseInt(e.target.value) || 0))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
         />
-        <input
-          type="text"
-          value={passCountBinding}
-          onChange={(e) => setProp((props: any) => (props.passCountBinding = e.target.value))}
-          placeholder="{{summary.passCount}}"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm mt-1"
-        />
+        <div className="mt-2">
+          <DataBindingInput
+            value={passCountBinding}
+            onChange={(value) => setProp((props: any) => (props.passCountBinding = value))}
+            placeholder="{{summary.passCount}}"
+            expectedType="number"
+          />
+        </div>
       </div>
 
       {/* Fail Count */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
           Fail Count
         </label>
-        <input
+        <Input
           type="number"
           value={failCount}
           onChange={(e) => setProp((props: any) => (props.failCount = parseInt(e.target.value) || 0))}
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
         />
-        <input
-          type="text"
-          value={failCountBinding}
-          onChange={(e) => setProp((props: any) => (props.failCountBinding = e.target.value))}
-          placeholder="{{summary.failCount}}"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm mt-1"
-        />
+        <div className="mt-2">
+          <DataBindingInput
+            value={failCountBinding}
+            onChange={(value) => setProp((props: any) => (props.failCountBinding = value))}
+            placeholder="{{summary.failCount}}"
+            expectedType="number"
+          />
+        </div>
       </div>
 
       {/* Chart Type */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Chart Type
-        </label>
+        <label className="block text-sm text-gray-400 mb-1">Chart Type</label>
         <div className="flex gap-2">
           {['donut', 'pie', 'bar'].map((t) => (
             <button
               key={t}
+              type="button"
               onClick={() => setProp((props: any) => (props.chartType = t))}
-              className={`flex-1 px-3 py-2 text-sm rounded-md border ${
+              className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
                 chartType === t
-                  ? 'bg-blue-500 text-white border-blue-500'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  ? 'bg-[rgba(0,255,200,0.2)] text-[#00ffc8] border-[#00ffc8]'
+                  : 'bg-[#050810] text-gray-400 border-[rgba(0,255,200,0.2)] hover:border-[rgba(0,255,200,0.4)]'
               }`}
             >
               {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -112,93 +111,79 @@ export const PassRateChartSettings = () => {
       </div>
 
       {/* Colors */}
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Pass Color
-          </label>
-          <div className="flex gap-1">
-            <input
-              type="color"
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
+          Colors
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Pass Color</label>
+            <ColorPicker
               value={passColor}
-              onChange={(e) => setProp((props: any) => (props.passColor = e.target.value))}
-              className="w-10 h-10 rounded border border-gray-300"
-            />
-            <input
-              type="text"
-              value={passColor}
-              onChange={(e) => setProp((props: any) => (props.passColor = e.target.value))}
-              className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+              onChange={(value) => setProp((props: any) => (props.passColor = value))}
             />
           </div>
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Fail Color
-          </label>
-          <div className="flex gap-1">
-            <input
-              type="color"
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Fail Color</label>
+            <ColorPicker
               value={failColor}
-              onChange={(e) => setProp((props: any) => (props.failColor = e.target.value))}
-              className="w-10 h-10 rounded border border-gray-300"
-            />
-            <input
-              type="text"
-              value={failColor}
-              onChange={(e) => setProp((props: any) => (props.failColor = e.target.value))}
-              className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
+              onChange={(value) => setProp((props: any) => (props.failColor = value))}
             />
           </div>
         </div>
       </div>
 
       {/* Display Options */}
-      <div className="space-y-2">
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={showPercentage}
-            onChange={(e) => setProp((props: any) => (props.showPercentage = e.target.checked))}
-            className="rounded border-gray-300"
-          />
-          <span className="text-sm font-medium text-gray-700">Show Percentage</span>
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
+          Display Options
         </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={showLegend}
-            onChange={(e) => setProp((props: any) => (props.showLegend = e.target.checked))}
-            className="rounded border-gray-300"
-          />
-          <span className="text-sm font-medium text-gray-700">Show Legend</span>
-        </label>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={showCounts}
-            onChange={(e) => setProp((props: any) => (props.showCounts = e.target.checked))}
-            className="rounded border-gray-300"
-          />
-          <span className="text-sm font-medium text-gray-700">Show Counts</span>
-        </label>
+        <div className="space-y-2">
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showPercentage}
+              onChange={(e) => setProp((props: any) => (props.showPercentage = e.target.checked))}
+              className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
+            />
+            <span className="text-sm text-gray-400">Show Percentage</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showLegend}
+              onChange={(e) => setProp((props: any) => (props.showLegend = e.target.checked))}
+              className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
+            />
+            <span className="text-sm text-gray-400">Show Legend</span>
+          </label>
+          <label className="flex items-center gap-2 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={showCounts}
+              onChange={(e) => setProp((props: any) => (props.showCounts = e.target.checked))}
+              className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
+            />
+            <span className="text-sm text-gray-400">Show Counts</span>
+          </label>
+        </div>
       </div>
 
       {/* Visibility */}
-      <div>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={visible}
-            onChange={(e) => setProp((props: any) => (props.visible = e.target.checked))}
-            className="rounded border-gray-300"
-          />
-          <span className="text-sm font-medium text-gray-700">Visible</span>
-        </label>
-      </div>
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={visible}
+          onChange={(e) => setProp((props: any) => (props.visible = e.target.checked))}
+          className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
+        />
+        <span className="text-sm text-gray-400">Visible</span>
+      </label>
 
       {/* Position Settings */}
-      <PositionSettings />
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <PositionSettings />
+      </div>
     </div>
   )
 }

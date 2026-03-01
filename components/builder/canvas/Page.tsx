@@ -78,12 +78,12 @@ export const Page = ({
 
         {/* Page guides - center lines and thirds (only in edit mode) */}
         {!isPreviewMode && (
-          <div className="absolute inset-0 pointer-events-none" style={{ padding: `${padding}px` }}>
+          <div className="absolute inset-0 pointer-events-none">
             {/* Vertical center line */}
             <div
               className="absolute top-0 bottom-0 w-px"
               style={{
-                left: padding + centerX,
+                left: centerX,
                 background: 'linear-gradient(to bottom, rgba(0,255,200,0.15), rgba(0,255,200,0.3), rgba(0,255,200,0.15))',
               }}
             />
@@ -91,27 +91,27 @@ export const Page = ({
             <div
               className="absolute left-0 right-0 h-px"
               style={{
-                top: padding + centerY,
+                top: centerY,
                 background: 'linear-gradient(to right, rgba(0,255,200,0.15), rgba(0,255,200,0.3), rgba(0,255,200,0.15))',
               }}
             />
             {/* Vertical third lines */}
             <div
               className="absolute top-0 bottom-0 w-px bg-[rgba(0,255,200,0.08)]"
-              style={{ left: padding + contentWidth / 3 }}
+              style={{ left: contentWidth / 3 }}
             />
             <div
               className="absolute top-0 bottom-0 w-px bg-[rgba(0,255,200,0.08)]"
-              style={{ left: padding + (contentWidth * 2) / 3 }}
+              style={{ left: (contentWidth * 2) / 3 }}
             />
             {/* Horizontal third lines */}
             <div
               className="absolute left-0 right-0 h-px bg-[rgba(0,255,200,0.08)]"
-              style={{ top: padding + contentHeight / 3 }}
+              style={{ top: contentHeight / 3 }}
             />
             <div
               className="absolute left-0 right-0 h-px bg-[rgba(0,255,200,0.08)]"
-              style={{ top: padding + (contentHeight * 2) / 3 }}
+              style={{ top: (contentHeight * 2) / 3 }}
             />
           </div>
         )}
@@ -120,9 +120,9 @@ export const Page = ({
         <AlignmentGuides />
 
         {!children && (
-          <div className="flex items-center justify-center h-full min-h-[500px] text-gray-400 border-2 border-dashed border-gray-600 rounded-lg m-4">
+          <div className="flex items-center justify-center h-full min-h-[500px] text-gray-500 border-2 border-dashed border-gray-300 rounded-lg m-4">
             <p className="text-center p-8">
-              <span className="block text-3xl mb-3 text-[#00ffc8]/50">+</span>
+              <span className="block text-3xl mb-3 text-gray-400">+</span>
               Drag components here to build your template
             </p>
           </div>

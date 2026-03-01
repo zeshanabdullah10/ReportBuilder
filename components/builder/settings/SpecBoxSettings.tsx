@@ -1,6 +1,9 @@
 'use client'
 
 import { useNode } from '@craftjs/core'
+import { Input } from '@/components/ui/input'
+import { ColorPicker } from '@/components/ui/color-picker'
+import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 
 export const SpecBoxSettings = () => {
@@ -43,123 +46,112 @@ export const SpecBoxSettings = () => {
     <div className="space-y-4">
       {/* Title */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Title
-        </label>
-        <input
+        <label className="block text-sm text-gray-400 mb-1">Title</label>
+        <Input
           type="text"
           value={title}
           onChange={(e) => setProp((props: any) => (props.title = e.target.value))}
           placeholder="Specification"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
         />
-        <input
-          type="text"
-          value={titleBinding}
-          onChange={(e) => setProp((props: any) => (props.titleBinding = e.target.value))}
-          placeholder="{{spec.name}}"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm mt-1"
-        />
+        <div className="mt-2">
+          <DataBindingInput
+            value={titleBinding}
+            onChange={(value) => setProp((props: any) => (props.titleBinding = value))}
+            placeholder="{{spec.name}}"
+            expectedType="string"
+          />
+        </div>
       </div>
 
       {/* Nominal Value */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Nominal Value
-        </label>
-        <input
+        <label className="block text-sm text-gray-400 mb-1">Nominal Value</label>
+        <Input
           type="text"
           value={nominal}
           onChange={(e) => setProp((props: any) => (props.nominal = e.target.value))}
           placeholder="0.00"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
         />
-        <input
-          type="text"
-          value={nominalBinding}
-          onChange={(e) => setProp((props: any) => (props.nominalBinding = e.target.value))}
-          placeholder="{{spec.nominal}}"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm mt-1"
-        />
+        <div className="mt-2">
+          <DataBindingInput
+            value={nominalBinding}
+            onChange={(value) => setProp((props: any) => (props.nominalBinding = value))}
+            placeholder="{{spec.nominal}}"
+            expectedType="number"
+          />
+        </div>
       </div>
 
       {/* Tolerance */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Tolerance
-        </label>
-        <input
+        <label className="block text-sm text-gray-400 mb-1">Tolerance</label>
+        <Input
           type="text"
           value={tolerance}
           onChange={(e) => setProp((props: any) => (props.tolerance = e.target.value))}
           placeholder="±0.01"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
         />
-        <input
-          type="text"
-          value={toleranceBinding}
-          onChange={(e) => setProp((props: any) => (props.toleranceBinding = e.target.value))}
-          placeholder="{{spec.tolerance}}"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm mt-1"
-        />
+        <div className="mt-2">
+          <DataBindingInput
+            value={toleranceBinding}
+            onChange={(value) => setProp((props: any) => (props.toleranceBinding = value))}
+            placeholder="{{spec.tolerance}}"
+            expectedType="string"
+          />
+        </div>
       </div>
 
       {/* Unit */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Unit
-        </label>
-        <input
+        <label className="block text-sm text-gray-400 mb-1">Unit</label>
+        <Input
           type="text"
           value={unit}
           onChange={(e) => setProp((props: any) => (props.unit = e.target.value))}
           placeholder="mm"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
         />
-        <input
-          type="text"
-          value={unitBinding}
-          onChange={(e) => setProp((props: any) => (props.unitBinding = e.target.value))}
-          placeholder="{{spec.unit}}"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm mt-1"
-        />
+        <div className="mt-2">
+          <DataBindingInput
+            value={unitBinding}
+            onChange={(value) => setProp((props: any) => (props.unitBinding = value))}
+            placeholder="{{spec.unit}}"
+            expectedType="string"
+          />
+        </div>
       </div>
 
       {/* Measured Value */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Measured Value
-        </label>
-        <input
+        <label className="block text-sm text-gray-400 mb-1">Measured Value</label>
+        <Input
           type="text"
           value={measured}
           onChange={(e) => setProp((props: any) => (props.measured = e.target.value))}
           placeholder="0.005"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm"
         />
-        <input
-          type="text"
-          value={measuredBinding}
-          onChange={(e) => setProp((props: any) => (props.measuredBinding = e.target.value))}
-          placeholder="{{measurement.value}}"
-          className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm mt-1"
-        />
+        <div className="mt-2">
+          <DataBindingInput
+            value={measuredBinding}
+            onChange={(value) => setProp((props: any) => (props.measuredBinding = value))}
+            placeholder="{{measurement.value}}"
+            expectedType="number"
+          />
+        </div>
       </div>
 
       {/* Layout */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Layout
-        </label>
+        <label className="block text-sm text-gray-400 mb-1">Layout</label>
         <div className="flex gap-2">
           {['horizontal', 'vertical', 'compact'].map((l) => (
             <button
               key={l}
+              type="button"
               onClick={() => setProp((props: any) => (props.layout = l))}
-              className={`flex-1 px-3 py-2 text-sm rounded-md border ${
+              className={`flex-1 px-3 py-2 text-sm rounded-lg border transition-colors ${
                 layout === l
-                  ? 'bg-blue-500 text-white border-blue-500'
-                  : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'
+                  ? 'bg-[rgba(0,255,200,0.2)] text-[#00ffc8] border-[#00ffc8]'
+                  : 'bg-[#050810] text-gray-400 border-[rgba(0,255,200,0.2)] hover:border-[rgba(0,255,200,0.4)]'
               }`}
             >
               {l.charAt(0).toUpperCase() + l.slice(1)}
@@ -169,77 +161,51 @@ export const SpecBoxSettings = () => {
       </div>
 
       {/* Show Status */}
-      <div>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={showStatus}
-            onChange={(e) => setProp((props: any) => (props.showStatus = e.target.checked))}
-            className="rounded border-gray-300"
-          />
-          <span className="text-sm font-medium text-gray-700">Show Pass/Fail Status</span>
-        </label>
-      </div>
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={showStatus}
+          onChange={(e) => setProp((props: any) => (props.showStatus = e.target.checked))}
+          className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
+        />
+        <span className="text-sm text-gray-400">Show Pass/Fail Status</span>
+      </label>
 
       {/* Status Colors */}
       {showStatus && (
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Pass Color
-            </label>
-            <div className="flex gap-1">
-              <input
-                type="color"
-                value={passColor}
-                onChange={(e) => setProp((props: any) => (props.passColor = e.target.value))}
-                className="w-10 h-10 rounded border border-gray-300"
-              />
-              <input
-                type="text"
-                value={passColor}
-                onChange={(e) => setProp((props: any) => (props.passColor = e.target.value))}
-                className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-              />
-            </div>
+            <label className="block text-sm text-gray-400 mb-1">Pass Color</label>
+            <ColorPicker
+              value={passColor}
+              onChange={(value) => setProp((props: any) => (props.passColor = value))}
+            />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Fail Color
-            </label>
-            <div className="flex gap-1">
-              <input
-                type="color"
-                value={failColor}
-                onChange={(e) => setProp((props: any) => (props.failColor = e.target.value))}
-                className="w-10 h-10 rounded border border-gray-300"
-              />
-              <input
-                type="text"
-                value={failColor}
-                onChange={(e) => setProp((props: any) => (props.failColor = e.target.value))}
-                className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm"
-              />
-            </div>
+            <label className="block text-sm text-gray-400 mb-1">Fail Color</label>
+            <ColorPicker
+              value={failColor}
+              onChange={(value) => setProp((props: any) => (props.failColor = value))}
+            />
           </div>
         </div>
       )}
 
       {/* Visibility */}
-      <div>
-        <label className="flex items-center gap-2">
-          <input
-            type="checkbox"
-            checked={visible}
-            onChange={(e) => setProp((props: any) => (props.visible = e.target.checked))}
-            className="rounded border-gray-300"
-          />
-          <span className="text-sm font-medium text-gray-700">Visible</span>
-        </label>
-      </div>
+      <label className="flex items-center gap-2 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={visible}
+          onChange={(e) => setProp((props: any) => (props.visible = e.target.checked))}
+          className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
+        />
+        <span className="text-sm text-gray-400">Visible</span>
+      </label>
 
       {/* Position Settings */}
-      <PositionSettings />
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <PositionSettings />
+      </div>
     </div>
   )
 }

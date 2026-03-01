@@ -15,7 +15,7 @@ interface PageBreakProps {
 export const PageBreak = ({
   x = 0,
   y = 0,
-  width = 400,
+  width = 714,
   height = 40,
   zIndex = 1,
   visible = true,
@@ -54,6 +54,7 @@ export const PageBreak = ({
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
       zIndex={zIndex}
+      fullWidth={true}
     >
       <div
         style={{
@@ -84,7 +85,7 @@ PageBreak.craft = {
   props: {
     x: 0,
     y: 0,
-    width: 400,
+    width: 714,
     height: 40,
     zIndex: 1,
     visible: true,

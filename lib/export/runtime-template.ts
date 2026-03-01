@@ -34,15 +34,21 @@ export const RUNTIME_TEMPLATE = `
 
   /**
    * Resolve a data binding path to its value
-   * @param {string} path - Binding path (e.g., "data.meta.title" or "meta.title")
+   * @param {string} path - Binding path (e.g., "data.meta.title" or "meta.title" or "{{data.meta.title}}")
    * @param {object} data - The data object to resolve from
    * @returns {*} The resolved value or undefined
    */
   function resolveBinding(path, data) {
     if (!path || !data) return undefined;
 
+    // Strip {{ }} brackets if present
+    var cleanPath = path;
+    if (cleanPath.startsWith('{{') && cleanPath.endsWith('}}')) {
+      cleanPath = cleanPath.slice(2, -2).trim();
+    }
+
     // Normalize path by removing 'data.' prefix if present
-    var normalizedPath = path;
+    var normalizedPath = cleanPath;
     if (normalizedPath.startsWith('data.')) {
       normalizedPath = normalizedPath.slice(5);
     }
@@ -131,22 +137,41 @@ export const RUNTIME_TEMPLATE = `
   // ============================================
 
   /**
-   * Load report data from embedded sample or external file
+   * Load report data from CLI-injected data, embedded sample, or external file
    * @returns {Promise<object|null>} The loaded data or null
    */
   async function loadData() {
-    // Use embedded sample data if available
+    // PRIORITY 1: Use CLI-injected data (for offline PDF generation)
+    // The report-cli tool replaces this placeholder with actual JSON data
+    if (window.REPORT_DATA) {
+      console.log('[Runtime] Using CLI-injected data');
+      return window.REPORT_DATA;
+    }
+
+    // PRIORITY 2: Use embedded sample data if available
     if (SAMPLE_DATA) {
       console.log('[Runtime] Using embedded sample data');
       return SAMPLE_DATA;
     }
 
+    // PRIORITY 3: Try to fetch from external file (requires web server)
+    // Determine data path: URL query param > CONFIG > default
+    var dataPath = './report_data.json';
+    var urlParams = new URLSearchParams(window.location.search);
+    var queryData = urlParams.get('data');
+
+    if (queryData) {
+      dataPath = queryData;
+    } else if (CONFIG.dataPath) {
+      dataPath = CONFIG.dataPath;
+    }
+
     // Try to fetch from external file
     try {
-      var response = await fetch(CONFIG.dataPath || './report_data.json');
+      var response = await fetch(dataPath);
       if (response.ok) {
         var data = await response.json();
-        console.log('[Runtime] Loaded data from', CONFIG.dataPath || './report_data.json');
+        console.log('[Runtime] Loaded data from', dataPath);
         return data;
       } else {
         console.warn('[Runtime] Could not load data file:', response.status, response.statusText);
@@ -192,17 +217,44 @@ export const RUNTIME_TEMPLATE = `
     if (!props.binding) return;
 
     var tableData = resolveBinding(props.binding, data);
+
     if (!tableData || !Array.isArray(tableData)) {
       console.warn('[Runtime] Table binding did not resolve to an array:', props.binding);
       return;
     }
 
     // Get column configuration
-    var columns = props.columns || [];
-    var autoGenerateColumns = columns.length === 0;
+    var rawColumns = props.columns || [];
 
-    // Auto-generate columns from first row if needed
-    if (autoGenerateColumns && tableData.length > 0) {
+    // Normalize columns to {key, label} format
+    // Handle both string arrays ['Col1', 'Col2'] and object arrays [{key, label}]
+    var columns = rawColumns.map(function(col, index) {
+      if (typeof col === 'string') {
+        return { key: col, label: col };
+      }
+      return {
+        key: col.key || col.header || col.name || String(index),
+        label: col.label || col.header || col.name || col.key || String(index)
+      };
+    });
+
+    // Check if the column keys actually exist in the data
+    // If not, auto-generate columns from the first row
+    if (columns.length > 0 && tableData.length > 0) {
+      var firstRow = tableData[0];
+      var dataKeys = typeof firstRow === 'object' && firstRow !== null ? Object.keys(firstRow) : [];
+      var hasMatchingKey = columns.some(function(col) {
+        return dataKeys.indexOf(col.key) !== -1;
+      });
+      if (!hasMatchingKey) {
+        columns = dataKeys.map(function(key) {
+          return { key: key, label: key };
+        });
+      }
+    }
+
+    // If no columns, auto-generate from first row
+    if (columns.length === 0 && tableData.length > 0) {
       var firstRow = tableData[0];
       if (typeof firstRow === 'object' && firstRow !== null) {
         columns = Object.keys(firstRow).map(function(key) {
@@ -211,28 +263,41 @@ export const RUNTIME_TEMPLATE = `
       }
     }
 
-    // Build table HTML
-    var html = '<thead><tr>';
+    // Get styling props
+    var headerColor = props.headerColor || '#1a1a2e';
+    var rowColor = props.rowColor || '#ffffff';
+    var borderColor = props.borderColor || '#e0e0e0';
+
+    // Build table HTML with proper styling
+    var html = '<thead><tr style="background: ' + escapeHtml(headerColor) + ';">';
     for (var i = 0; i < columns.length; i++) {
-      html += '<th style="padding: 8px; border: 1px solid #ddd; text-align: left; background: #f5f5f5;">' +
+      html += '<th style="border: 1px solid ' + escapeHtml(borderColor) + '; padding: 8px; text-align: left; color: #fff;">' +
               escapeHtml(columns[i].label || columns[i].key) + '</th>';
     }
     html += '</tr></thead><tbody>';
 
     for (var rowIdx = 0; rowIdx < tableData.length; rowIdx++) {
       var row = tableData[rowIdx];
-      html += '<tr>';
+      var rowBg = rowIdx % 2 === 0 ? escapeHtml(rowColor) : '#f5f5f5';
+      html += '<tr style="background: ' + rowBg + ';">';
       for (var colIdx = 0; colIdx < columns.length; colIdx++) {
         var cellValue = row[columns[colIdx].key];
         if (cellValue == null) cellValue = '';
         if (typeof cellValue === 'object') cellValue = JSON.stringify(cellValue);
-        html += '<td style="padding: 8px; border: 1px solid #ddd;">' + escapeHtml(String(cellValue)) + '</td>';
+        html += '<td style="border: 1px solid ' + escapeHtml(borderColor) + '; padding: 8px; color: #333;">' + escapeHtml(String(cellValue)) + '</td>';
       }
       html += '</tr>';
     }
     html += '</tbody>';
 
-    el.innerHTML = html;
+    // Find the table element inside the container
+    var tableEl = el.querySelector('table');
+    if (tableEl) {
+      tableEl.innerHTML = html;
+    } else {
+      // If no table found, create one
+      el.innerHTML = '<table style="width: 100%; border-collapse: collapse; font-size: 14px;">' + html + '</table>';
+    }
   }
 
   /**
@@ -427,15 +492,35 @@ export const RUNTIME_TEMPLATE = `
     var chartType = props.chartType || 'bar';
     var title = props.title || '';
 
+    console.log('[Runtime] Rendering chart:', comp.id, 'type:', chartType);
+    console.log('[Runtime] Chart props:', JSON.stringify(props));
+    console.log('[Runtime] Data available:', !!data);
+
     // Interpolate title if it has bindings
     if (hasBinding(title)) {
       title = interpolateText(title, data);
     }
 
-    // Build labels array
-    var labels = props.labels || [];
-    if (typeof labels === 'string') {
-      labels = labels.split(',').map(function(l) { return l.trim(); });
+    // Build labels array - check labelsBinding first
+    var labels = [];
+    if (props.labelsBinding && hasBinding(props.labelsBinding)) {
+      console.log('[Runtime] Resolving labelsBinding:', props.labelsBinding);
+      var resolvedLabels = resolveBinding(props.labelsBinding, data);
+      console.log('[Runtime] Resolved labels:', resolvedLabels);
+      if (Array.isArray(resolvedLabels)) {
+        labels = resolvedLabels.map(function(item) {
+          if (typeof item === 'string') return item;
+          return item && item.label ? item.label : String(item);
+        });
+      }
+    }
+    // Fall back to static labels
+    if (labels.length === 0 && props.labels) {
+      if (typeof props.labels === 'string') {
+        labels = props.labels.split(',').map(function(l) { return l.trim(); });
+      } else if (Array.isArray(props.labels)) {
+        labels = props.labels;
+      }
     }
 
     // Build datasets
@@ -444,15 +529,31 @@ export const RUNTIME_TEMPLATE = `
 
     if (datasetsConfig.length > 0) {
       // Multi-dataset mode
+      console.log('[Runtime] Multi-dataset mode, datasets:', datasetsConfig.length);
       for (var i = 0; i < datasetsConfig.length; i++) {
         var ds = datasetsConfig[i];
         var datasetData = ds.data || [];
 
         // Resolve binding if present
         if (ds.binding) {
+          console.log('[Runtime] Dataset', i, 'binding:', ds.binding);
           var resolvedData = resolveBinding(ds.binding, data);
+          console.log('[Runtime] Dataset', i, 'resolved:', resolvedData);
           if (resolvedData && Array.isArray(resolvedData)) {
             datasetData = resolvedData;
+          } else if (resolvedData && typeof resolvedData === 'object') {
+            // Handle { labels: [], values: [] } format
+            if (resolvedData.values && Array.isArray(resolvedData.values)) {
+              datasetData = resolvedData.values;
+              if (resolvedData.labels && Array.isArray(resolvedData.labels) && labels.length === 0) {
+                labels = resolvedData.labels;
+              }
+            } else if (resolvedData.data && Array.isArray(resolvedData.data)) {
+              datasetData = resolvedData.data;
+              if (resolvedData.labels && Array.isArray(resolvedData.labels) && labels.length === 0) {
+                labels = resolvedData.labels;
+              }
+            }
           }
         } else if (ds.dataPoints && typeof ds.dataPoints === 'string') {
           // Parse static data points
@@ -493,18 +594,29 @@ export const RUNTIME_TEMPLATE = `
       var primaryData = [];
 
       // Try to resolve from binding first
-      if (props.binding) {
-        var resolved = resolveBinding(props.binding, data);
+      // Check both props.binding (direct) and props.bindings.primaryBinding (from renderer)
+      var bindingPath = props.binding || (props.bindings && props.bindings.primaryBinding);
+      console.log('[Runtime] Chart props:', JSON.stringify({ binding: props.binding, bindings: props.bindings }));
+      if (bindingPath) {
+        console.log('[Runtime] Resolving chart binding:', bindingPath);
+        var resolved = resolveBinding(bindingPath, data);
+        console.log('[Runtime] Resolved chart data:', resolved);
         if (resolved) {
           if (Array.isArray(resolved)) {
             primaryData = resolved;
             // Check if data has labels
-            if (resolved[0] && resolved[0].label !== undefined && labels.length === 0) {
+            if (resolved[0] && typeof resolved[0] === 'object' && resolved[0].label !== undefined && labels.length === 0) {
               labels = resolved.map(function(item) { return item.label; });
               primaryData = resolved.map(function(item) { return item.value !== undefined ? item.value : item; });
             }
-          } else if (resolved.data && Array.isArray(resolved.data)) {
-            primaryData = resolved.data;
+          } else if (typeof resolved === 'object') {
+            // Object with data/values property
+            if (resolved.data && Array.isArray(resolved.data)) {
+              primaryData = resolved.data;
+            } else if (resolved.values && Array.isArray(resolved.values)) {
+              primaryData = resolved.values;
+            }
+            // Get labels from object
             if (resolved.labels && Array.isArray(resolved.labels)) {
               labels = resolved.labels;
             }
@@ -531,9 +643,11 @@ export const RUNTIME_TEMPLATE = `
     }
 
     // Build chart options
+    // Disable animations for PDF generation (charts must render immediately)
     var options = {
       responsive: true,
       maintainAspectRatio: false,
+      animation: false,  // Disable animations for PDF export
       interaction: {
         mode: 'index',
         intersect: false
@@ -567,9 +681,35 @@ export const RUNTIME_TEMPLATE = `
       };
     }
 
+    // Ensure labels match data length - auto-generate if needed
+    var maxDataLength = 0;
+    for (var i = 0; i < datasets.length; i++) {
+      if (datasets[i].data && datasets[i].data.length > maxDataLength) {
+        maxDataLength = datasets[i].data.length;
+      }
+    }
+    if (labels.length < maxDataLength) {
+      console.log('[Runtime] Labels length (' + labels.length + ') < data length (' + maxDataLength + '), auto-generating');
+      while (labels.length < maxDataLength) {
+        labels.push('Item ' + (labels.length + 1));
+      }
+    }
+
+    console.log('[Runtime] Final labels:', labels);
+    console.log('[Runtime] Final datasets:', JSON.stringify(datasets.map(function(ds) { return { label: ds.label, dataLength: ds.data ? ds.data.length : 0 }; })));
+
     // Destroy existing chart instance if present
     if (chartInstances[comp.id]) {
       chartInstances[comp.id].destroy();
+    }
+
+    // Hide the placeholder element if present
+    var container = document.getElementById(comp.id);
+    if (container) {
+      var placeholder = container.querySelector('.chart-placeholder');
+      if (placeholder) {
+        placeholder.style.display = 'none';
+      }
     }
 
     // Create chart
@@ -582,7 +722,7 @@ export const RUNTIME_TEMPLATE = `
         },
         options: options
       });
-      console.log('[Runtime] Rendered chart:', comp.id);
+    console.log('[Runtime] Rendered chart:', comp.id);
     } catch (e) {
       console.error('[Runtime] Error rendering chart:', comp.id, e);
     }
@@ -635,8 +775,6 @@ export const RUNTIME_TEMPLATE = `
       console.warn('[Runtime] No data available for binding');
       return;
     }
-
-    console.log('[Runtime] Applying bindings to', COMPONENTS.length, 'components');
 
     // First, apply visibility conditions
     applyVisibilityConditions(data);
@@ -721,15 +859,16 @@ export const RUNTIME_TEMPLATE = `
         applyBindings(data);
       }
 
-      // 3. Render charts (requires Chart.js to be loaded)
-      // Wait a tick for Chart.js to be ready if loaded asynchronously
-      await new Promise(function(resolve) { setTimeout(resolve, 100); });
-
+      // 3. Render charts (Chart.js is loaded synchronously via script tag)
       if (data) {
         renderCharts(data);
       }
 
-      // 4. Auto-print after short delay for rendering
+      // 4. Signal that rendering is complete (for PDF generation)
+      window.RENDERING_COMPLETE = true;
+      console.log('[Runtime] Rendering complete signal sent');
+
+      // 5. Auto-print after short delay for rendering
       if (CONFIG.autoPrint) {
         setTimeout(function() {
           console.log('[Runtime] Triggering auto-print...');
@@ -738,7 +877,7 @@ export const RUNTIME_TEMPLATE = `
           } catch (e) {
             console.warn('[Runtime] Auto-print failed:', e);
           }
-        }, CONFIG.printDelay || 500);
+        }, CONFIG.printDelay || 100);
       }
 
       console.log('[Runtime] Template initialization complete');

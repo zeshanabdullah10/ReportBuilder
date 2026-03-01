@@ -1,6 +1,9 @@
 'use client'
 
 import { useNode } from '@craftjs/core'
+import { Input } from '@/components/ui/input'
+import { ColorPicker } from '@/components/ui/color-picker'
+import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 
 export function QRCodeSettings() {
@@ -30,49 +33,47 @@ export function QRCodeSettings() {
   return (
     <div className="space-y-4">
       {/* Value */}
-      <div className="space-y-1">
-        <label className="text-xs text-gray-400">Value (or use binding)</label>
-        <input
+      <div>
+        <label className="block text-sm text-gray-400 mb-1">Value (or use binding)</label>
+        <Input
           type="text"
           value={value}
           onChange={(e) => setProp((props: any) => props.value = e.target.value)}
-          className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
           placeholder="https://example.com"
         />
       </div>
 
       {/* Binding */}
-      <div className="space-y-1">
-        <label className="text-xs text-gray-400">Data Binding</label>
-        <input
-          type="text"
+      <div>
+        <label className="block text-sm text-gray-400 mb-1">Data Binding</label>
+        <DataBindingInput
           value={binding}
-          onChange={(e) => setProp((props: any) => props.binding = e.target.value)}
-          className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white font-mono"
+          onChange={(value) => setProp((props: any) => props.binding = value)}
           placeholder="{{data.url}}"
+          expectedType="string"
         />
       </div>
 
       {/* Size */}
-      <div className="space-y-1">
-        <label className="text-xs text-gray-400">Size: {size}px</label>
+      <div>
+        <label className="block text-sm text-gray-400 mb-1">Size: {size}px</label>
         <input
           type="range"
           min="50"
           max="300"
           value={size}
           onChange={(e) => setProp((props: any) => props.size = parseInt(e.target.value))}
-          className="w-full"
+          className="w-full h-1.5 rounded-full appearance-none cursor-pointer bg-[#050810] [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[#00ffc8] [&::-webkit-slider-thumb]:cursor-pointer"
         />
       </div>
 
       {/* Error Correction */}
-      <div className="space-y-1">
-        <label className="text-xs text-gray-400">Error Correction</label>
+      <div>
+        <label className="block text-sm text-gray-400 mb-1">Error Correction</label>
         <select
           value={errorCorrection}
           onChange={(e) => setProp((props: any) => props.errorCorrection = e.target.value)}
-          className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+          className="w-full bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded-lg p-2 text-white text-sm"
         >
           <option value="L">Low (7%)</option>
           <option value="M">Medium (15%)</option>
@@ -82,57 +83,52 @@ export function QRCodeSettings() {
       </div>
 
       {/* Colors */}
-      <div className="grid grid-cols-2 gap-2">
-        <div className="space-y-1">
-          <label className="text-xs text-gray-400">Foreground</label>
-          <input
-            type="color"
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Foreground</label>
+          <ColorPicker
             value={foregroundColor}
-            onChange={(e) => setProp((props: any) => props.foregroundColor = e.target.value)}
-            className="w-full h-8 rounded cursor-pointer"
+            onChange={(value) => setProp((props: any) => props.foregroundColor = value)}
           />
         </div>
-        <div className="space-y-1">
-          <label className="text-xs text-gray-400">Background</label>
-          <input
-            type="color"
+        <div>
+          <label className="block text-sm text-gray-400 mb-1">Background</label>
+          <ColorPicker
             value={backgroundColor}
-            onChange={(e) => setProp((props: any) => props.backgroundColor = e.target.value)}
-            className="w-full h-8 rounded cursor-pointer"
+            onChange={(value) => setProp((props: any) => props.backgroundColor = value)}
           />
         </div>
       </div>
 
       {/* Show Label */}
-      <div className="flex items-center gap-2">
+      <label className="flex items-center gap-2 cursor-pointer">
         <input
           type="checkbox"
           checked={showLabel}
           onChange={(e) => setProp((props: any) => props.showLabel = e.target.checked)}
-          className="rounded"
+          className="w-4 h-4 rounded border-[rgba(0,255,200,0.3)] bg-[#050810] text-[#00ffc8] focus:ring-[#00ffc8]"
         />
-        <label className="text-xs text-gray-400">Show Label</label>
-      </div>
+        <span className="text-sm text-gray-400">Show Label</span>
+      </label>
 
       {/* Label */}
       {showLabel && (
         <>
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Label Text (optional)</label>
-            <input
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Label Text (optional)</label>
+            <Input
               type="text"
               value={label}
               onChange={(e) => setProp((props: any) => props.label = e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
               placeholder="Leave empty to use value"
             />
           </div>
-          <div className="space-y-1">
-            <label className="text-xs text-gray-400">Label Position</label>
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Label Position</label>
             <select
               value={labelPosition}
               onChange={(e) => setProp((props: any) => props.labelPosition = e.target.value)}
-              className="w-full bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white"
+              className="w-full bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded-lg p-2 text-white text-sm"
             >
               <option value="top">Top</option>
               <option value="bottom">Bottom</option>
@@ -141,7 +137,9 @@ export function QRCodeSettings() {
         </>
       )}
 
-      <PositionSettings />
+      <div className="border-t border-[rgba(0,255,200,0.1)] pt-4">
+        <PositionSettings />
+      </div>
     </div>
   )
 }

@@ -13,7 +13,14 @@ interface SpacerProps {
   visible?: boolean
 }
 
-export const Spacer = ({ height = 40, x = 0, y = 0, width = 100, zIndex = 1, visible = true }: SpacerProps) => {
+export const Spacer = ({
+  height = 40,
+  x = 0,
+  y = 0,
+  width = 714,
+  zIndex = 1,
+  visible = true
+}: SpacerProps) => {
   const {
     id,
     connectors: { connect },
@@ -31,7 +38,6 @@ export const Spacer = ({ height = 40, x = 0, y = 0, width = 100, zIndex = 1, vis
       if (newPos.x !== undefined) props.x = newPos.x
       if (newPos.y !== undefined) props.y = newPos.y
       if (newPos.width !== undefined) props.width = newPos.width
-      // Note: spacer height is controlled by the internal height prop, not box height
     })
   }
 
@@ -48,12 +54,13 @@ export const Spacer = ({ height = 40, x = 0, y = 0, width = 100, zIndex = 1, vis
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
       zIndex={zIndex}
+      fullWidth={true}
     >
       <div
         style={{ height: '100%', width: '100%' }}
-        className="border border-dashed border-gray-300 hover:border-[#00ffc8] flex items-center justify-center group"
+        className="border-2 border-dashed border-gray-400 bg-gray-50 hover:border-[#00ffc8] flex items-center justify-center print:border-none print:bg-transparent"
       >
-        <span className="text-gray-400 text-xs opacity-0 group-hover:opacity-100 transition-opacity">
+        <span className="text-gray-500 text-xs font-medium px-2 py-0.5 bg-white rounded shadow-sm print:hidden">
           Spacer ({height}px)
         </span>
       </div>
@@ -67,7 +74,7 @@ Spacer.craft = {
     height: 40,
     x: 0,
     y: 0,
-    width: 100,
+    width: 714,
     zIndex: 1,
     visible: true,
   },

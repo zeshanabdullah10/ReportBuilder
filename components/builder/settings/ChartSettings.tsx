@@ -2,6 +2,8 @@
 
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
+import { ColorPicker } from '@/components/ui/color-picker'
+import { DataBindingInput, LabelValueFieldMapper } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 import { Plus, Trash2 } from 'lucide-react'
 
@@ -24,7 +26,10 @@ export function ChartSettings() {
     label,
     dataPoints,
     labels,
+    labelsBinding,
     binding,
+    labelField,
+    valueField,
     primaryColor,
     backgroundColor,
     borderColor,
@@ -36,7 +41,10 @@ export function ChartSettings() {
     label: node.data.props.label,
     dataPoints: node.data.props.dataPoints,
     labels: node.data.props.labels,
+    labelsBinding: node.data.props.labelsBinding,
     binding: node.data.props.binding,
+    labelField: node.data.props.labelField,
+    valueField: node.data.props.valueField,
     primaryColor: node.data.props.primaryColor,
     backgroundColor: node.data.props.backgroundColor,
     borderColor: node.data.props.borderColor,
@@ -113,22 +121,19 @@ export function ChartSettings() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm text-gray-400 mb-1">Border Color</label>
-              <Input
-                type="color"
+              <ColorPicker
                 value={borderColor || '#00ffc8'}
-                onChange={(e) => setProp((props: any) => (props.borderColor = e.target.value))}
+                onChange={(value) => setProp((props: any) => (props.borderColor = value))}
               />
             </div>
             <div>
               <label className="block text-sm text-gray-400 mb-1">Fill Color</label>
-              <Input
-                type="color"
+              <ColorPicker
                 value={primaryColor || '#00ffc8'}
-                onChange={(e) => {
-                  const color = e.target.value
+                onChange={(value) => {
                   setProp((props: any) => {
-                    props.primaryColor = color
-                    props.backgroundColor = hexToRgba(color, 0.5)
+                    props.primaryColor = value
+                    props.backgroundColor = hexToRgba(value, 0.5)
                   })
                 }}
               />
@@ -214,11 +219,10 @@ export function ChartSettings() {
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">Label</label>
-                    <input
+                    <Input
                       type="text"
                       value={ds.label || ''}
                       onChange={(e) => updateDataset(index, { label: e.target.value })}
-                      className="w-full bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded p-1.5 text-white text-sm"
                     />
                   </div>
                   <div>
@@ -226,7 +230,7 @@ export function ChartSettings() {
                     <select
                       value={ds.chartType || 'bar'}
                       onChange={(e) => updateDataset(index, { chartType: e.target.value as 'line' | 'bar' })}
-                      className="w-full bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded p-1.5 text-white text-sm"
+                      className="w-full bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded-lg p-2 text-white text-sm"
                     >
                       <option value="bar">Bar</option>
                       <option value="line">Line</option>
@@ -237,11 +241,9 @@ export function ChartSettings() {
                 <div className="grid grid-cols-2 gap-2">
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">Color</label>
-                    <input
-                      type="color"
+                    <ColorPicker
                       value={ds.color || getDefaultColor(index)}
-                      onChange={(e) => updateDataset(index, { color: e.target.value })}
-                      className="w-full h-8 bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded cursor-pointer"
+                      onChange={(value) => updateDataset(index, { color: value })}
                     />
                   </div>
                   {enableMultiAxis && (
@@ -250,7 +252,7 @@ export function ChartSettings() {
                       <select
                         value={ds.yAxisID || 'y'}
                         onChange={(e) => updateDataset(index, { yAxisID: e.target.value as 'y' | 'y1' })}
-                        className="w-full bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded p-1.5 text-white text-sm"
+                        className="w-full bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded-lg p-2 text-white text-sm"
                       >
                         <option value="y">Primary (Left)</option>
                         <option value="y1">Secondary (Right)</option>
@@ -261,23 +263,21 @@ export function ChartSettings() {
 
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">Data Points</label>
-                  <input
+                  <Input
                     type="text"
                     value={ds.dataPoints || ''}
                     onChange={(e) => updateDataset(index, { dataPoints: e.target.value })}
-                    className="w-full bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded p-1.5 text-white text-sm"
                     placeholder="65, 59, 80, 81, 56"
                   />
                 </div>
 
                 <div>
                   <label className="block text-xs text-gray-500 mb-1">Binding Path</label>
-                  <input
-                    type="text"
+                  <DataBindingInput
                     value={ds.binding || ''}
-                    onChange={(e) => updateDataset(index, { binding: e.target.value })}
-                    className="w-full bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded p-1.5 text-white text-sm"
+                    onChange={(value) => updateDataset(index, { binding: value })}
                     placeholder="{{data.dataset1}}"
+                    expectedType="array"
                   />
                 </div>
               </div>
@@ -305,22 +305,20 @@ export function ChartSettings() {
           <div className="space-y-3">
             <div>
               <label className="block text-sm text-gray-400 mb-1">Data Points (comma-separated)</label>
-              <input
+              <Input
                 type="text"
                 value={dataPoints}
                 onChange={(e) => setProp((props: any) => (props.dataPoints = e.target.value))}
-                className="w-full bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded-lg p-2 text-white text-sm"
                 placeholder="65, 59, 80, 81, 56"
               />
             </div>
 
             <div>
-              <label className="block text-sm text-gray-400 mb-1">Labels (comma-separated, optional)</label>
-              <input
+              <label className="block text-sm text-gray-400 mb-1">Labels (comma-separated)</label>
+              <Input
                 type="text"
                 value={labels}
                 onChange={(e) => setProp((props: any) => (props.labels = e.target.value))}
-                className="w-full bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded-lg p-2 text-white text-sm"
                 placeholder="Mon, Tue, Wed, Thu, Fri"
               />
             </div>
@@ -330,15 +328,26 @@ export function ChartSettings() {
 
       {/* Common Labels - for multi-dataset */}
       {useMultiDataset && (
-        <div>
-          <label className="block text-sm text-gray-400 mb-1">X-Axis Labels (comma-separated)</label>
-          <input
-            type="text"
-            value={labels}
-            onChange={(e) => setProp((props: any) => (props.labels = e.target.value))}
-            className="w-full bg-[#050810] border border-[rgba(0,255,200,0.2)] rounded-lg p-2 text-white text-sm"
-            placeholder="Mon, Tue, Wed, Thu, Fri"
-          />
+        <div className="space-y-3">
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">X-Axis Labels (comma-separated)</label>
+            <Input
+              type="text"
+              value={labels}
+              onChange={(e) => setProp((props: any) => (props.labels = e.target.value))}
+              placeholder="Mon, Tue, Wed, Thu, Fri"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-gray-400 mb-1">Labels Binding</label>
+            <DataBindingInput
+              value={labelsBinding || ''}
+              onChange={(value) => setProp((props: any) => (props.labelsBinding = value))}
+              placeholder="{{data.labels}}"
+              expectedType="array"
+              hint="Array of label strings"
+            />
+          </div>
         </div>
       )}
 
@@ -348,17 +357,36 @@ export function ChartSettings() {
           <label className="block text-xs text-gray-500 mb-2 uppercase tracking-wide">
             Data Binding
           </label>
-          <div>
-            <label className="block text-sm text-gray-400 mb-1">Binding Path</label>
-            <Input
-              value={binding}
-              onChange={(e) => setProp((props: any) => (props.binding = e.target.value))}
-              placeholder="{{data.chartData}}"
+          <div className="space-y-3">
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Data Binding Path</label>
+              <DataBindingInput
+                value={binding}
+                onChange={(value) => setProp((props: any) => (props.binding = value))}
+                placeholder="{{data.chartData}}"
+                expectedType="array"
+                hint="Array of numbers or {label, value} objects"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-1">Labels Binding Path</label>
+              <DataBindingInput
+                value={labelsBinding || ''}
+                onChange={(value) => setProp((props: any) => (props.labelsBinding = value))}
+                placeholder="{{data.chartLabels}}"
+                expectedType="array"
+                hint="Array of label strings for X-axis"
+              />
+            </div>
+
+            {/* Field Mapping for bound array data */}
+            <LabelValueFieldMapper
+              bindingPath={binding}
+              labelField={labelField || ''}
+              valueField={valueField || ''}
+              onLabelFieldChange={(field) => setProp((props: any) => (props.labelField = field))}
+              onValueFieldChange={(field) => setProp((props: any) => (props.valueField = field))}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Bind to an array of numbers or objects with <code className="text-[#00ffc8]">{'{label, value}'}</code> format.
-              Overrides static data points when bound.
-            </p>
           </div>
         </div>
       )}

@@ -272,8 +272,8 @@ export const renderChart: ComponentRenderer = (id, props): RendererResult => {
   // Generate position styles
   const positionStyles = generatePositionStyles({ x, y, width, height, zIndex })
 
-  // Container styles
-  const containerStyles = 'box-sizing: border-box; background: #fff; border-radius: 8px; padding: 16px'
+  // Container styles - position: relative needed for placeholder positioning
+  const containerStyles = 'position: relative; box-sizing: border-box; background: #fff; border-radius: 8px; padding: 16px'
 
   // Combine all styles
   const allStyles = combineStyles(positionStyles, containerStyles)
@@ -285,17 +285,14 @@ export const renderChart: ComponentRenderer = (id, props): RendererResult => {
   const parsedData = parseDataPoints(primaryDataPoints)
   const labels = parseLabels(labelsStr, parsedData.values.length)
 
-  // Build placeholder content (shown before Chart.js initializes)
-  const placeholderHtml = `
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #666;">
+  // Generate final HTML with canvas element
+  // Note: Canvas elements cannot have child content - placeholder is a sibling that gets covered by the chart
+  const html = `<div id="${escapeHtml(id)}" data-component="chart" style="${allStyles}">
+    <div class="chart-placeholder" style="position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #666; pointer-events: none;">
       <div style="font-size: 14px; font-weight: 500; margin-bottom: 8px;">${escapeHtml(title)}</div>
       <div style="font-size: 12px; color: #999;">Chart will render when data is loaded</div>
     </div>
-  `
-
-  // Generate final HTML with canvas element
-  const html = `<div id="${escapeHtml(id)}" data-component="chart" style="${allStyles}">
-    <canvas id="${escapeHtml(id)}-canvas" style="width: 100%; height: 100%;">${placeholderHtml}</canvas>
+    <canvas id="${escapeHtml(id)}-canvas" style="width: 100%; height: 100%;"></canvas>
   </div>`
 
   // Build component config for runtime initialization

@@ -2,6 +2,7 @@
 
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
+import { ColorPicker } from '@/components/ui/color-picker'
 import { PositionSettings } from './PositionSettings'
 
 export function DividerSettings() {
@@ -65,10 +66,9 @@ export function DividerSettings() {
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="block text-sm text-gray-400 mb-1">Color</label>
-          <Input
-            type="color"
+          <ColorPicker
             value={color}
-            onChange={(e) => setProp((props: any) => (props.color = e.target.value))}
+            onChange={(value) => setProp((props: any) => (props.color = value))}
           />
         </div>
         <div>

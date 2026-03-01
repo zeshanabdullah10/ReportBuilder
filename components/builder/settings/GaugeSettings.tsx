@@ -2,6 +2,8 @@
 
 import { useNode } from '@craftjs/core'
 import { Input } from '@/components/ui/input'
+import { ColorPicker } from '@/components/ui/color-picker'
+import { DataBindingInput } from '@/components/builder/data-binding'
 import { PositionSettings } from './PositionSettings'
 
 export function GaugeSettings() {
@@ -84,33 +86,24 @@ export function GaugeSettings() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-sm text-gray-400 mb-1">Gauge Color</label>
-              <Input
-                type="color"
+              <ColorPicker
                 value={primaryColor}
-                onChange={(e) => setProp((props: any) => (props.primaryColor = e.target.value))}
+                onChange={(value) => setProp((props: any) => (props.primaryColor = value))}
               />
             </div>
             <div>
               <label className="block text-sm text-gray-400 mb-1">Track Color</label>
-              <Input
-                type="color"
-                value={backgroundColor?.replace(/rgba?\([^)]+\)/, '#ffffff') || '#333333'}
-                onChange={(e) => {
-                  const hex = e.target.value
-                  const r = parseInt(hex.slice(1, 3), 16)
-                  const g = parseInt(hex.slice(3, 5), 16)
-                  const b = parseInt(hex.slice(5, 7), 16)
-                  setProp((props: any) => (props.backgroundColor = `rgba(${r}, ${g}, ${b}, 0.2)`))
-                }}
+              <ColorPicker
+                value={backgroundColor || 'rgba(51, 51, 51, 0.2)'}
+                onChange={(value) => setProp((props: any) => (props.backgroundColor = value))}
               />
             </div>
           </div>
           <div>
             <label className="block text-sm text-gray-400 mb-1">Text Color</label>
-            <Input
-              type="color"
+            <ColorPicker
               value={textColor}
-              onChange={(e) => setProp((props: any) => (props.textColor = e.target.value))}
+              onChange={(value) => setProp((props: any) => (props.textColor = value))}
             />
           </div>
         </div>
@@ -122,14 +115,13 @@ export function GaugeSettings() {
         </label>
         <div>
           <label className="block text-sm text-gray-400 mb-1">Binding Path</label>
-          <Input
+          <DataBindingInput
             value={binding}
-            onChange={(e) => setProp((props: any) => (props.binding = e.target.value))}
+            onChange={(value) => setProp((props: any) => (props.binding = value))}
             placeholder="{{data.temperature}}"
+            expectedType="number"
+            hint="Bind to a numeric value"
           />
-          <p className="text-xs text-gray-500 mt-1">
-            Bind to a numeric value. Overrides static value when bound.
-          </p>
         </div>
       </div>
 

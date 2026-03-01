@@ -9,7 +9,6 @@ interface DividerProps {
   style?: 'solid' | 'dashed' | 'dotted' | 'double'
   color?: string
   thickness?: number
-  length?: string // '100%' or custom
   x?: number
   y?: number
   width?: number
@@ -21,11 +20,11 @@ interface DividerProps {
 export const Divider = ({
   orientation = 'horizontal',
   style = 'solid',
-  color = 'rgba(255, 255, 255, 0.3)',
+  color = 'rgba(0, 0, 0, 0.3)',
   thickness = 1,
   x = 0,
   y = 0,
-  width = 200,
+  width = 714,
   height = 20,
   zIndex = 1,
   visible = true,
@@ -56,22 +55,8 @@ export const Divider = ({
   const lineStyle = {
     width: isHorizontal ? '100%' : `${thickness}px`,
     height: isHorizontal ? `${thickness}px` : '100%',
-    borderTop: isHorizontal ? 'none' : undefined,
-    borderRight: isHorizontal ? undefined : 'none',
-    borderBottom: isHorizontal ? 'none' : undefined,
-    borderLeft: isHorizontal ? undefined : 'none',
-    borderTopStyle: isHorizontal ? style : undefined,
-    borderRightStyle: !isHorizontal ? style : undefined,
-    borderBottomStyle: isHorizontal ? style : undefined,
-    borderLeftStyle: !isHorizontal ? style : undefined,
-    borderTopColor: isHorizontal ? color : undefined,
-    borderRightColor: !isHorizontal ? color : undefined,
-    borderBottomColor: isHorizontal ? color : undefined,
-    borderLeftColor: !isHorizontal ? color : undefined,
-    borderTopWidth: isHorizontal ? `${thickness}px` : undefined,
-    borderRightWidth: !isHorizontal ? `${thickness}px` : undefined,
-    borderBottomWidth: isHorizontal ? `${thickness}px` : undefined,
-    borderLeftWidth: !isHorizontal ? `${thickness}px` : undefined,
+    borderTop: isHorizontal ? `${thickness}px ${style} ${color}` : undefined,
+    borderLeft: !isHorizontal ? `${thickness}px ${style} ${color}` : undefined,
   }
 
   return (
@@ -87,6 +72,8 @@ export const Divider = ({
       onPositionChange={handlePositionChange}
       connectRef={(ref) => { if (ref) connect(ref) }}
       zIndex={zIndex}
+      fullWidth={isHorizontal}
+      fullHeight={!isHorizontal}
     >
       <div
         style={{
@@ -115,7 +102,7 @@ Divider.craft = {
     thickness: 1,
     x: 0,
     y: 0,
-    width: 200,
+    width: 714,
     height: 20,
     zIndex: 1,
     visible: true,
