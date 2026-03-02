@@ -103,7 +103,7 @@ export function TemplateCard({
               Edit
             </Button>
           </Link>
-          <Link href={`/api/templates/${template.id}/download`} className="flex-1">
+          <Link href={`/api/templates/${template.id}/export`} className="flex-1">
             <Button variant="outline" className="w-full gap-1.5">
               <Download className="w-3.5 h-3.5" />
               Export
