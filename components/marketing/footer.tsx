@@ -64,7 +64,7 @@ export function Footer() {
             </h3>
             <ul className="space-y-3">
               <FooterLink href="#features">Features</FooterLink>
-              <FooterLink href="/pricing">Pricing</FooterLink>
+              <FooterLink href="https://github.com/your-repo/report-builder" external>GitHub</FooterLink>
               <FooterLink href="#">Documentation</FooterLink>
               <FooterLink href="#">Changelog</FooterLink>
             </ul>
@@ -143,7 +143,22 @@ export function Footer() {
   )
 }
 
-function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
+function FooterLink({ href, children, external = false }: { href: string; children: React.ReactNode; external?: boolean }) {
+  if (external) {
+    return (
+      <li>
+        <a
+          href={href}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-sm text-gray-400 hover:text-[#00ffc8] transition-colors group inline-flex items-center gap-1"
+        >
+          <span className="opacity-0 group-hover:opacity-100 transition-opacity text-[#00ffc8]">→</span>
+          {children}
+        </a>
+      </li>
+    )
+  }
   return (
     <li>
       <Link

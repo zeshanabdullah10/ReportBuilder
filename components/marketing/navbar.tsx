@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useState } from 'react'
-import { Menu, X, Activity, Zap } from 'lucide-react'
+import { Menu, X, Activity, Zap, Github, Star } from 'lucide-react'
 
 export function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
@@ -41,11 +41,20 @@ export function Navbar() {
           {/* Desktop navigation */}
           <div className="hidden md:flex items-center gap-1">
             <NavLink href="#features">Features</NavLink>
-            <NavLink href="/pricing">Pricing</NavLink>
-            <NavLink href="/login">Sign In</NavLink>
+            {/* Star on GitHub */}
+            <a
+              href="https://github.com/zeshanabdullah10/ReportBuilder"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="relative px-4 py-2 text-sm text-gray-400 hover:text-[#00ffc8] transition-colors group flex items-center gap-1.5"
+              style={{ fontFamily: "'JetBrains Mono', monospace" }}
+            >
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              Star on GitHub
+            </a>
             <div className="ml-4 flex items-center gap-2">
               <Link
-                href="/signup"
+                href="/dashboard"
                 className="relative px-5 py-2 font-semibold text-sm text-[#0a0f14] bg-[#00ffc8] rounded overflow-hidden group"
                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
@@ -76,10 +85,20 @@ export function Navbar() {
         <div className="md:hidden border-t border-[rgba(0,255,200,0.1)] bg-[#0a0f14]">
           <div className="px-4 py-4 space-y-2">
             <MobileNavLink href="#features" onClick={() => setMobileMenuOpen(false)}>Features</MobileNavLink>
-            <MobileNavLink href="/pricing" onClick={() => setMobileMenuOpen(false)}>Pricing</MobileNavLink>
-            <MobileNavLink href="/login" onClick={() => setMobileMenuOpen(false)}>Sign In</MobileNavLink>
+            {/* Star on GitHub - Mobile */}
+            <a
+              href="https://github.com/zeshanabdullah10/ReportBuilder"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 py-3 px-4 text-gray-400 hover:text-[#00ffc8] hover:bg-[rgba(0,255,200,0.05)] rounded transition-colors"
+              style={{ fontFamily: "'JetBrains Mono', monospace" }}
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+              Star on GitHub
+            </a>
             <Link
-              href="/signup"
+              href="/dashboard"
               className="block w-full mt-4 px-5 py-3 font-semibold text-sm text-[#0a0f14] bg-[#00ffc8] rounded text-center"
               style={{ fontFamily: "'JetBrains Mono', monospace" }}
               onClick={() => setMobileMenuOpen(false)}

@@ -14,7 +14,6 @@ export interface Database {
           id: string
           full_name: string | null
           company: string | null
-          credits: number
           created_at: string
           updated_at: string
         }
@@ -22,7 +21,6 @@ export interface Database {
           id: string
           full_name?: string | null
           company?: string | null
-          credits?: number
           created_at?: string
           updated_at?: string
         }
@@ -30,46 +28,6 @@ export interface Database {
           id?: string
           full_name?: string | null
           company?: string | null
-          credits?: number
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      subscriptions: {
-        Row: {
-          id: string
-          user_id: string
-          stripe_customer_id: string | null
-          stripe_subscription_id: string | null
-          plan_type: 'free' | 'pro' | 'enterprise'
-          status: 'active' | 'canceled' | 'past_due' | 'incomplete'
-          templates_downloaded_this_month: number
-          current_period_end: string | null
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
-          plan_type?: 'free' | 'pro' | 'enterprise'
-          status?: 'active' | 'canceled' | 'past_due' | 'incomplete'
-          templates_downloaded_this_month?: number
-          current_period_end?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          stripe_customer_id?: string | null
-          stripe_subscription_id?: string | null
-          plan_type?: 'free' | 'pro' | 'enterprise'
-          status?: 'active' | 'canceled' | 'past_due' | 'incomplete'
-          templates_downloaded_this_month?: number
-          current_period_end?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -293,9 +251,6 @@ export interface Database {
         Returns: void
       }
     }
-    Enums: {
-      plan_type: 'free' | 'pro' | 'enterprise'
-      subscription_status: 'active' | 'canceled' | 'past_due' | 'incomplete'
-    }
+    Enums: {}
   }
 }

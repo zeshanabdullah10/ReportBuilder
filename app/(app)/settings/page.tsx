@@ -2,8 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { ProfileForm } from '@/components/settings/ProfileForm'
-import { CreditBalance } from '@/components/billing/credit-balance'
-import { Zap, ArrowUpCircle } from 'lucide-react'
+import { Github } from 'lucide-react'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -58,33 +57,34 @@ export default async function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Export Credits */}
+        {/* Open Source Info */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Zap className="w-5 h-5 text-[#00ffc8]" />
-              Export Credits
+              <Github className="w-5 h-5 text-[#00ffc8]" />
+              Open Source
             </CardTitle>
             <CardDescription>
-              Purchase credits for clean (unwatermarked) exports
+              This is an open-source project - all features are free to use
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between">
               <div>
-                <CreditBalance showBuyButton={false} />
+                <p className="text-sm text-gray-300">
+                  All exports are clean (no watermarks). No credits needed.
+                </p>
               </div>
               <a
-                href="/pricing"
+                href="https://github.com/your-repo/report-builder"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="px-4 py-2 rounded-md border border-[#00ffc8] text-[#00ffc8] hover:bg-[#00ffc8]/10 transition-colors text-sm font-medium flex items-center gap-2"
               >
-                <ArrowUpCircle className="w-4 h-4" />
-                Buy Credits
+                <Github className="w-4 h-4" />
+                Star on GitHub
               </a>
             </div>
-            <p className="text-xs text-gray-500">
-              Watermarked exports are always free. Credits never expire.
-            </p>
           </CardContent>
         </Card>
       </div>

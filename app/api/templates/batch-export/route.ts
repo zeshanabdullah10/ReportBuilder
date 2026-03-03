@@ -2,6 +2,8 @@
  * Batch Export API Route
  *
  * POST /api/templates/batch-export - Export multiple templates with a single data set
+ * 
+ * Open Source - All exports are clean (no watermarks).
  */
 
 import { createClient } from '@/lib/supabase/server'
@@ -16,7 +18,6 @@ interface BatchExportRequest {
     filename?: string
     pageSize?: 'A4' | 'Letter'
     margins?: { top: number; right: number; bottom: number; left: number }
-    includeWatermark?: boolean
   }
 }
 
@@ -75,45 +76,13 @@ export async function POST(request: Request) {
     }, { status: 403 })
   }
 
-  // Check credits for clean exports
-  const includeWatermark = options?.includeWatermark ?? true
-  if (!includeWatermark) {
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('credits')
-      .eq('id', user.id)
-      .single()
-
-    if (profileError || !profile) {
-      return NextResponse.json({ error: 'Failed to check credits' }, { status: 500 })
-    }
-
-    const requiredCredits = templates.length
-    if (!profile.credits || profile.credits < requiredCredits) {
-      return NextResponse.json(
-        { error: `Insufficient credits. Need ${requiredCredits} credits for ${templates.length} clean exports.` },
-        { status: 402 }
-      )
-    }
-
-    // Deduct credits
-    const { error: deductError } = await supabase
-      .from('profiles')
-      .update({ credits: profile.credits - requiredCredits })
-      .eq('id', user.id)
-
-    if (deductError) {
-      return NextResponse.json({ error: 'Failed to deduct credits' }, { status: 500 })
-    }
-  }
-
-  // Export options
+  // Export options - always clean exports for open source
   const exportOptions: ExportOptions = {
     filename: options?.filename || 'Report',
     includeSampleData: false,
     pageSize: options?.pageSize || 'A4',
     margins: options?.margins || { top: 20, right: 20, bottom: 20, left: 20 },
-    includeWatermark,
+    includeWatermark: false, // Always clean exports for open source
   }
 
   // Process each template

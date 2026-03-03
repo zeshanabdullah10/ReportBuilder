@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { FilePlus } from 'lucide-react'
+import { FilePlus, Github } from 'lucide-react'
 import { DashboardContent } from '@/components/dashboard/DashboardContent'
 
 // Helper to count components in canvas state
@@ -29,22 +29,12 @@ function countComponents(canvasState: unknown): number {
 
 export default async function DashboardPage() {
   const supabase = await createClient()
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
 
   // Fetch templates with canvas_state for component counting
   const { data: templates } = await supabase
     .from('templates')
     .select('id, name, description, created_at, updated_at, canvas_state')
     .order('updated_at', { ascending: false })
-
-  // Fetch subscription for plan info
-  const { data: subscription } = user?.id ? await supabase
-    .from('subscriptions')
-    .select('plan_type')
-    .eq('user_id', user.id)
-    .single() : { data: null }
 
   // Process templates to include component count
   const processedTemplates = templates?.map(t => ({
@@ -60,7 +50,6 @@ export default async function DashboardPage() {
   // Calculate stats
   const totalTemplates = processedTemplates.length
   const totalComponents = processedTemplates.reduce((sum, t) => sum + (t.componentCount ?? 0), 0)
-  const planType = subscription?.plan_type ?? 'free'
 
   return (
     <div className="p-8">
@@ -109,25 +98,33 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-3xl font-bold text-[#00ffc8]" style={{ textShadow: '0 0 20px rgba(0, 255, 200, 0.3)' }}>
-              0
+              ∞
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              Coming soon
+              Unlimited exports
             </p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-medium text-gray-400">
-              Current Plan
+              License
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-white capitalize">
-              {planType}
+            <div className="text-3xl font-bold text-white capitalize flex items-center gap-2">
+              Open Source
+              <a 
+                href="https://github.com/your-repo/report-builder" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-[#00ffc8] hover:text-[#39ff14]"
+              >
+                <Github className="w-6 h-6" />
+              </a>
             </div>
             <p className="text-xs text-gray-500 mt-1">
-              {planType === 'free' ? 'Upgrade for more features' : 'Active subscription'}
+              MIT License - 100% Free
             </p>
           </CardContent>
         </Card>
