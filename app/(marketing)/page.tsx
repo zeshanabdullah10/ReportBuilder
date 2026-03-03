@@ -5,7 +5,6 @@ import { Features } from '@/components/marketing/features'
 import { HowItWorks } from '@/components/marketing/how-it-works'
 import { Integrations } from '@/components/marketing/integrations'
 import { Testimonials } from '@/components/marketing/testimonials'
-import { PricingPreview } from '@/components/marketing/pricing-preview'
 import { CTA } from '@/components/marketing/cta'
 
 export default function HomePage() {
@@ -31,9 +30,6 @@ export default function HomePage() {
       
       {/* Testimonials - Customer quotes */}
       <Testimonials />
-      
-      {/* Pricing Preview - Quick pricing overview */}
-      <PricingPreview />
       
       {/* Final CTA - Conversion section */}
       <CTA />

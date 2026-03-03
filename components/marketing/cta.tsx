@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Rocket, Sparkles, CheckCircle2, FileText, Zap } from 'lucide-react'
+import { ArrowRight, Rocket, Sparkles, CheckCircle2, FileText, Zap, Github } from 'lucide-react'
 
 export function CTA() {
   return (
@@ -101,21 +101,24 @@ export function CTA() {
           </Link>
 
           {/* Secondary CTA */}
-          <Link
-            href="/pricing"
+          <a
+            href="https://github.com/your-repo/report-builder"
+            target="_blank"
+            rel="noopener noreferrer"
             className="group inline-flex items-center justify-center gap-2 px-8 py-4 font-semibold text-[#00ffc8] border border-[rgba(0,255,200,0.3)] rounded-lg hover:border-[#00ffc8] hover:bg-[rgba(0,255,200,0.05)] transition-all"
             style={{ fontFamily: "'JetBrains Mono', monospace" }}
           >
-            VIEW PRICING
-          </Link>
+            <Github className="w-5 h-5" />
+            VIEW ON GITHUB
+          </a>
         </div>
 
         {/* Trust indicators */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
-          <TrustItem icon={<FileText className="w-4 h-4" />} text="1 free template" />
+          <TrustItem icon={<FileText className="w-4 h-4" />} text="Unlimited templates" />
           <TrustItem icon={<Zap className="w-4 h-4" />} text="Works offline" />
-          <TrustItem icon={<CheckCircle2 className="w-4 h-4" />} text="No watermarks on Pro" />
-          <TrustItem icon={<CheckCircle2 className="w-4 h-4" />} text="Cancel anytime" />
+          <TrustItem icon={<CheckCircle2 className="w-4 h-4" />} text="No watermarks" />
+          <TrustItem icon={<CheckCircle2 className="w-4 h-4" />} text="100% Open Source" />
         </div>
 
         {/* Terminal-style decoration */}

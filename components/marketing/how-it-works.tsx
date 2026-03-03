@@ -35,10 +35,10 @@ const steps = [
     step: '04',
     icon: FileText,
     title: 'Generate PDF',
-    description: 'Call headless Chrome from your code to render the HTML with data and export as PDF. Automate with your test pipeline.',
-    code: 'chrome --print-to-pdf',
+    description: 'Use the Rust CLI to render HTML with your data and generate PDFs. Fast, offline, and integrates with any test pipeline.',
+    code: 'reportbuilder generate',
     color: '#ff6b6b',
-    detail: 'Automated PDF generation',
+    detail: 'Rust-powered PDF generation',
   },
 ]
 

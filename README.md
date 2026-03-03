@@ -1,6 +1,8 @@
 # LabVIEW Report Builder
 
-A modern, drag-and-drop report builder application for creating customizable test reports with LabVIEW integration. Built with Next.js, React, and Craft.js.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+A modern, open-source, drag-and-drop report builder application for creating customizable test reports with LabVIEW integration. Built with Next.js, React, and Craft.js.
 
 ## Features
 
@@ -13,12 +15,12 @@ A modern, drag-and-drop report builder application for creating customizable tes
   - Specification tables
   - Revision history
 - **LabVIEW Integration**: JSON-based data binding for seamless integration with LabVIEW test systems
-- **Export Capabilities**: Export reports to various formats
+- **Export Capabilities**: Export reports to standalone HTML files that work offline
 - **Authentication**: Secure user authentication with Supabase
-- **Billing Integration**: Stripe-powered subscription management
 - **Video Generation**: Remotion integration for video report generation
 - **Version Control**: Report versioning and history tracking
 - **Sharing & Collaboration**: Share reports with team members
+- **100% Open Source**: MIT licensed - free to use, modify, and distribute
 
 ## Tech Stack
 
@@ -27,7 +29,6 @@ A modern, drag-and-drop report builder application for creating customizable tes
 - **Drag-and-Drop**: Craft.js
 - **Charts**: Chart.js, react-chartjs-2
 - **Backend**: Supabase (Auth, Database)
-- **Payments**: Stripe
 - **Video**: Remotion
 - **Testing**: Vitest, Testing Library
 - **State Management**: Zustand
@@ -39,8 +40,7 @@ A modern, drag-and-drop report builder application for creating customizable tes
 
 - Node.js 18+ 
 - npm or yarn
-- Supabase account
-- Stripe account (for billing features)
+- Supabase account (free tier works great)
 
 ### Installation
 
@@ -64,7 +64,8 @@ Configure the following environment variables:
 ```
 NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-STRIPE_SECRET_KEY=your_stripe_secret_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
 4. Run the development server:
@@ -73,6 +74,110 @@ npm run dev
 ```
 
 5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+### Supabase Setup
+
+1. Create a new project at [supabase.com](https://supabase.com)
+2. Run the following SQL in the SQL Editor to create the required tables:
+
+```sql
+-- Profiles table
+CREATE TABLE profiles (
+  id UUID PRIMARY KEY REFERENCES auth.users(id),
+  full_name TEXT,
+  company TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Templates table
+CREATE TABLE templates (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT,
+  canvas_state JSONB NOT NULL DEFAULT '{}',
+  sample_data JSONB,
+  settings JSONB,
+  is_public BOOLEAN DEFAULT FALSE,
+  is_shared BOOLEAN DEFAULT FALSE,
+  version INTEGER DEFAULT 1,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Template versions table
+CREATE TABLE template_versions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  template_id UUID REFERENCES templates(id) NOT NULL,
+  version_number INTEGER NOT NULL,
+  canvas_state JSONB NOT NULL,
+  sample_data JSONB,
+  settings JSONB,
+  change_description TEXT,
+  created_by UUID REFERENCES profiles(id),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Template shares table
+CREATE TABLE template_shares (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  template_id UUID REFERENCES templates(id) NOT NULL,
+  share_type TEXT NOT NULL CHECK (share_type IN ('link', 'user', 'org')),
+  share_token UUID DEFAULT gen_random_uuid(),
+  shared_with_email TEXT,
+  organization_id UUID,
+  permission TEXT NOT NULL DEFAULT 'view' CHECK (permission IN ('view', 'edit')),
+  password_hash TEXT,
+  expires_at TIMESTAMPTZ,
+  created_by UUID REFERENCES profiles(id) NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  last_accessed_at TIMESTAMPTZ
+);
+
+-- Custom components table
+CREATE TABLE custom_components (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID REFERENCES profiles(id) NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT,
+  category TEXT NOT NULL DEFAULT 'custom',
+  component_type TEXT NOT NULL,
+  config JSONB NOT NULL,
+  thumbnail_url TEXT,
+  is_public BOOLEAN DEFAULT FALSE,
+  usage_count INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Template assets table
+CREATE TABLE template_assets (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  template_id UUID REFERENCES templates(id) NOT NULL,
+  file_path TEXT NOT NULL,
+  file_name TEXT NOT NULL,
+  file_size INTEGER,
+  mime_type TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Enable RLS
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE template_versions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE template_shares ENABLE ROW LEVEL SECURITY;
+ALTER TABLE custom_components ENABLE ROW LEVEL SECURITY;
+ALTER TABLE template_assets ENABLE ROW LEVEL SECURITY;
+
+-- Create basic RLS policies (customize as needed)
+CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
+CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
+CREATE POLICY "Users can view own templates" ON templates FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can create templates" ON templates FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own templates" ON templates FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can delete own templates" ON templates FOR DELETE USING (auth.uid() = user_id);
+```
 
 ## Available Scripts
 
@@ -236,7 +341,46 @@ Components use the `{{data.path}}` syntax to reference values:
 
 See [docs/labview-json-schema.md](docs/labview-json-schema.md) for the complete JSON schema specification.
 
+## Deployment
+
+### Vercel (Recommended)
+
+The easiest way to deploy this application is using [Vercel](https://vercel.com):
+
+1. Push your code to GitHub
+2. Import the project in Vercel
+3. Add your environment variables
+4. Deploy
+
+### Docker
+
+```dockerfile
+FROM node:18-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:18-alpine AS runner
+WORKDIR /app
+ENV NODE_ENV production
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+EXPOSE 3000
+CMD ["node", "server.js"]
+```
+
+### Self-Hosted
+
+1. Build the application: `npm run build`
+2. Start the server: `npm run start`
+3. The application will be available at `http://localhost:3000`
+
 ## Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -246,8 +390,16 @@ See [docs/labview-json-schema.md](docs/labview-json-schema.md) for the complete 
 
 ## License
 
-This project is private and proprietary. All rights reserved.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Support
 
-For support, please contact the development team or open an issue in the repository.
+- 📖 [Documentation](docs/)
+- 🐛 [Issue Tracker](https://github.com/yourusername/labview-report-builder/issues)
+- 💬 [Discussions](https://github.com/yourusername/labview-report-builder/discussions)
+
+## Acknowledgments
+
+- [Craft.js](https://craft.js.org/) - For the amazing drag-and-drop framework
+- [Supabase](https://supabase.com/) - For the backend infrastructure
+- [Next.js](https://nextjs.org/) - For the React framework

@@ -1,7 +1,7 @@
 'use client'
 
 import { Editor, Frame, Element, useEditor } from '@craftjs/core'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useBuilderStore, ReportPage } from '@/lib/stores/builder-store'
 import { useKeyboardShortcuts } from '@/lib/hooks/use-keyboard-shortcuts'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
@@ -74,19 +74,18 @@ function PageContent({ hasSavedState, canvasState }: {
 }
 
 // Inner component that uses keyboard shortcuts (must be inside Editor context)
-function BuilderContent({ template, hasSavedState, isPreviewMode }: { 
+function BuilderContent({ template, hasSavedState, isPreviewMode }: {
   template: BuilderCanvasProps['template']
   hasSavedState: boolean
-  isPreviewMode: boolean 
+  isPreviewMode: boolean
 }) {
   // Enable keyboard shortcuts
   useKeyboardShortcuts()
 
-  const { 
-    pages, 
-    activePageId, 
-    updatePageCanvasState,
-  } = useBuilderStore()
+  // Use specific selectors to prevent unnecessary re-renders
+  const pages = useBuilderStore((state) => state.pages)
+  const activePageId = useBuilderStore((state) => state.activePageId)
+  const updatePageCanvasState = useBuilderStore((state) => state.updatePageCanvasState)
 
   // Get the current active page
   const activePage = pages.find(p => p.id === activePageId) || pages[0]
@@ -95,14 +94,20 @@ function BuilderContent({ template, hasSavedState, isPreviewMode }: {
   // Save canvas state when switching pages
   const { query } = useEditor()
 
+  // Use ref to track if we're already saving to prevent loops
+  const savingRef = useRef(false)
+
   // Callback to save current page state before switching
   const saveCurrentPageState = useCallback(() => {
-    if (activePageId) {
+    if (activePageId && !savingRef.current) {
+      savingRef.current = true
       try {
         const currentState = query.serialize()
         updatePageCanvasState(activePageId, JSON.parse(currentState))
       } catch (error) {
         console.error('Error saving page state:', error)
+      } finally {
+        savingRef.current = false
       }
     }
   }, [activePageId, query, updatePageCanvasState])
@@ -168,22 +173,27 @@ function BuilderContent({ template, hasSavedState, isPreviewMode }: {
 }
 
 export function BuilderCanvas({ template }: BuilderCanvasProps) {
-  const {
-    setTemplateId,
-    setTemplateName,
-    setSampleData,
-    isPreviewMode,
-    setHasUnsavedChanges,
-    setPages,
-    setActivePage,
-    pages,
-    activePageId,
-  } = useBuilderStore()
+  const setTemplateId = useBuilderStore((state) => state.setTemplateId)
+  const setTemplateName = useBuilderStore((state) => state.setTemplateName)
+  const setSampleData = useBuilderStore((state) => state.setSampleData)
+  const isPreviewMode = useBuilderStore((state) => state.isPreviewMode)
+  const setHasUnsavedChanges = useBuilderStore((state) => state.setHasUnsavedChanges)
+  const setPages = useBuilderStore((state) => state.setPages)
+  const setActivePage = useBuilderStore((state) => state.setActivePage)
+  const pages = useBuilderStore((state) => state.pages)
+  const activePageId = useBuilderStore((state) => state.activePageId)
   
   const [loaded, setLoaded] = useState(false)
+  const initRef = useRef<string | null>(null)
 
-  // Initialize store with template data
+  // Initialize store with template data - only once per template ID
   useEffect(() => {
+    // Only initialize if we haven't already for this template
+    if (initRef.current === template.id) {
+      return
+    }
+    initRef.current = template.id
+
     setTemplateId(template.id)
     setTemplateName(template.name)
     setSampleData(template.sample_data)
@@ -228,12 +238,12 @@ export function BuilderCanvas({ template }: BuilderCanvasProps) {
     }
 
     setLoaded(true)
-  }, [template.id, template.name, template.sample_data, template.canvas_state, template.settings, setTemplateId, setTemplateName, setSampleData, setPages, setActivePage])
+  }, [template.id]) // Only depend on template.id to prevent loops
 
-  // Track changes
-  const handleNodesChange = () => {
+  // Track changes - memoized to prevent infinite loops
+  const handleNodesChange = useCallback(() => {
     setHasUnsavedChanges(true)
-  }
+  }, [setHasUnsavedChanges])
 
   if (!loaded) {
     return (

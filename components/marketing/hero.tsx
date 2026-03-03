@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Layers, FileCode, Cpu, ChevronDown } from 'lucide-react'
+import { ArrowRight, Layers, FileCode, Cpu, ChevronDown, Github, Star } from 'lucide-react'
 
 // Pre-generated random positions for floating data points (avoid hydration mismatch)
 const floatingPoints = [
@@ -127,27 +127,31 @@ export function Hero() {
 
             {/* CTA Buttons */}
             <div className="flex flex-col sm:flex-row gap-4 mb-12">
-              <Link
-                href="/signup"
+               <Link
+                href="/dashboard"
                 className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 font-semibold text-[#0a0f14] bg-[#00ffc8] rounded-lg overflow-hidden"
                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
               >
                 <span className="relative z-10 flex items-center gap-2">
                   <Layers className="w-5 h-5" />
-                  START BUILDING FREE
+                  GET STARTED
                 </span>
                 <div className="absolute inset-0 bg-[#39ff14] transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300" />
                 <ArrowRight className="relative z-10 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
 
-              <Link
-                href="/pricing"
-                className="group inline-flex items-center justify-center gap-2 px-8 py-4 font-semibold text-[#00ffc8] border border-[#00ffc8]/30 rounded-lg hover:border-[#00ffc8] hover:bg-[rgba(0,255,200,0.05)] transition-all"
-                style={{ fontFamily: "'JetBrains Mono', monospace" }}
-              >
-                VIEW PRICING
-              </Link>
-            </div>
+               <a
+                href="https://github.com/zeshanabdullah10/ReportBuilder"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 className="group inline-flex items-center justify-center gap-2 px-8 py-4 font-semibold text-[#00ffc8] border border-[#00ffc8]/30 rounded-lg hover:border-[#00ffc8] hover:bg-[rgba(0,255,200,0.05)] transition-all"
+                 style={{ fontFamily: "'JetBrains Mono', monospace" }}
+               >
+                <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                 <Github className="w-5 h-5" />
+                STAR ON GITHUB
+               </a>
+             </div>
 
             {/* Language/platform indicators */}
             <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
