@@ -20,6 +20,7 @@ import { renderPageNumber } from './render-pagenumber'
 import { renderGauge } from './render-gauge'
 import { renderProgressBar } from './render-progressbar'
 import { renderChart } from './render-chart'
+import { renderQRCode } from './render-qrcode'
 import { renderPage } from './render-page'
 
 /**
@@ -41,6 +42,7 @@ const renderers: Record<string, ComponentRenderer> = {
   Gauge: renderGauge,
   ProgressBar: renderProgressBar,
   Chart: renderChart,
+  QRCode: renderQRCode,
 }
 
 /**
@@ -88,6 +90,7 @@ export { renderPageNumber } from './render-pagenumber'
 export { renderGauge } from './render-gauge'
 export { renderProgressBar } from './render-progressbar'
 export { renderChart } from './render-chart'
+export { renderQRCode } from './render-qrcode'
 
 // Re-export types
 export type { RendererResult, ComponentRenderer } from './types'
