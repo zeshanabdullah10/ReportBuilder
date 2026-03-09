@@ -25,6 +25,7 @@ import { renderBarcode } from './render-barcode'
 import { renderLogo } from './render-logo'
 import { renderWatermark } from './render-watermark'
 import { renderPage } from './render-page'
+import { renderSignatureLine } from './render-signatureline'
 
 /**
  * Registry mapping component type names to their renderer functions
@@ -49,6 +50,7 @@ const renderers: Record<string, ComponentRenderer> = {
   Barcode: renderBarcode,
   Logo: renderLogo,
   Watermark: renderWatermark,
+  SignatureLine: renderSignatureLine,
 }
 
 /**
@@ -100,6 +102,7 @@ export { renderQRCode } from './render-qrcode'
 export { renderBarcode } from './render-barcode'
 export { renderLogo } from './render-logo'
 export { renderWatermark } from './render-watermark'
+export { renderSignatureLine } from './render-signatureline'
 
 // Re-export types
 export type { RendererResult, ComponentRenderer } from './types'
