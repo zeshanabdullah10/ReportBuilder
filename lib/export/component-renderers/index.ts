@@ -31,6 +31,7 @@ import { renderScatterPlot } from './render-scatterplot'
 import { renderPassRateChart } from './render-passratechart'
 import { renderMeasurementTable } from './render-measurementtable'
 import { renderTestSummaryBox } from './render-testsummarybox'
+import { renderRevisionBlock } from './render-revisionblock'
 
 /**
  * Registry mapping component type names to their renderer functions
@@ -61,6 +62,7 @@ const renderers: Record<string, ComponentRenderer> = {
   PassRateChart: renderPassRateChart,
   MeasurementTable: renderMeasurementTable,
   TestSummaryBox: renderTestSummaryBox,
+  RevisionBlock: renderRevisionBlock,
 }
 
 /**
@@ -118,6 +120,7 @@ export { renderScatterPlot } from './render-scatterplot'
 export { renderPassRateChart } from './render-passratechart'
 export { renderMeasurementTable } from './render-measurementtable'
 export { renderTestSummaryBox } from './render-testsummarybox'
+export { renderRevisionBlock } from './render-revisionblock'
 
 // Re-export types
 export type { RendererResult, ComponentRenderer } from './types'
