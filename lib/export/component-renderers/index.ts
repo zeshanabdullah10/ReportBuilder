@@ -23,6 +23,7 @@ import { renderChart } from './render-chart'
 import { renderQRCode } from './render-qrcode'
 import { renderBarcode } from './render-barcode'
 import { renderLogo } from './render-logo'
+import { renderWatermark } from './render-watermark'
 import { renderPage } from './render-page'
 
 /**
@@ -47,6 +48,7 @@ const renderers: Record<string, ComponentRenderer> = {
   QRCode: renderQRCode,
   Barcode: renderBarcode,
   Logo: renderLogo,
+  Watermark: renderWatermark,
 }
 
 /**
@@ -97,6 +99,7 @@ export { renderChart } from './render-chart'
 export { renderQRCode } from './render-qrcode'
 export { renderBarcode } from './render-barcode'
 export { renderLogo } from './render-logo'
+export { renderWatermark } from './render-watermark'
 
 // Re-export types
 export type { RendererResult, ComponentRenderer } from './types'
