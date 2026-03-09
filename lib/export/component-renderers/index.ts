@@ -28,6 +28,7 @@ import { renderWatermark } from './render-watermark'
 import { renderPage } from './render-page'
 import { renderSignatureLine } from './render-signatureline'
 import { renderScatterPlot } from './render-scatterplot'
+import { renderPassRateChart } from './render-passratechart'
 
 /**
  * Registry mapping component type names to their renderer functions
@@ -55,6 +56,7 @@ const renderers: Record<string, ComponentRenderer> = {
   Watermark: renderWatermark,
   SignatureLine: renderSignatureLine,
   ScatterPlot: renderScatterPlot,
+  PassRateChart: renderPassRateChart,
 }
 
 /**
@@ -109,6 +111,7 @@ export { renderLogo } from './render-logo'
 export { renderWatermark } from './render-watermark'
 export { renderSignatureLine } from './render-signatureline'
 export { renderScatterPlot } from './render-scatterplot'
+export { renderPassRateChart } from './render-passratechart'
 
 // Re-export types
 export type { RendererResult, ComponentRenderer } from './types'
