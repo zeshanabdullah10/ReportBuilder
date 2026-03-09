@@ -91,9 +91,10 @@ export function generatePrintStyles(
   const pageDimensions = PAGE_SIZES[pageSize]
 
   return `
+    /* Set @page margin to 0 to disable browser headers/footers */
     @page {
       size: ${pageDimensions.width}mm ${pageDimensions.height}mm;
-      margin: ${margins.top}mm ${margins.right}mm ${margins.bottom}mm ${margins.left}mm;
+      margin: 0;
     }
 
     @media print {
@@ -116,6 +117,9 @@ export function generatePrintStyles(
 
       #report {
         width: 100%;
+        /* Apply margins to content instead of @page to avoid browser headers/footers */
+        padding: ${margins.top}mm ${margins.right}mm ${margins.bottom}mm ${margins.left}mm;
+        box-sizing: border-box;
       }
     }
 
@@ -128,8 +132,10 @@ export function generatePrintStyles(
         max-width: ${pageDimensions.width}mm;
         min-height: ${pageDimensions.height}mm;
         margin: 20px auto;
+        padding: ${margins.top}mm ${margins.right}mm ${margins.bottom}mm ${margins.left}mm;
         background: #fff;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        box-sizing: border-box;
       }
     }
   `.trim()

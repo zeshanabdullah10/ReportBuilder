@@ -9,12 +9,11 @@ import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { signupSchema, type SignupInput } from '@/lib/validations/auth'
-import { Loader2, CheckCircle } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
 
 export function SignupForm() {
   const router = useRouter()
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
 
   const {
@@ -47,22 +46,9 @@ export function SignupForm() {
       return
     }
 
-    setSuccess(true)
+    // Redirect to dashboard after successful signup
+    router.push('/dashboard')
     setIsLoading(false)
-  }
-
-  if (success) {
-    return (
-      <div className="text-center space-y-4">
-        <div className="p-4 bg-[rgba(57,255,20,0.1)] border border-[rgba(57,255,20,0.2)] rounded-lg">
-          <CheckCircle className="h-8 w-8 text-[#39ff14] mx-auto mb-2" />
-          <p className="text-[#39ff14] font-medium">Check your email</p>
-          <p className="text-gray-400 text-sm mt-1">
-            We&apos;ve sent a verification link to your email address.
-          </p>
-        </div>
-      </div>
-    )
   }
 
   return (

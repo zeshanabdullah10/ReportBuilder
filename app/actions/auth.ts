@@ -34,7 +34,7 @@ export async function signupAction(prevState: { error?: string } | null, formDat
   }
 
   revalidatePath('/', 'layout')
-  redirect('/login?message=Check your email to verify your account')
+  redirect('/dashboard')
 }
 
 export async function updateProfileAction(
