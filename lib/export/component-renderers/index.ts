@@ -22,6 +22,7 @@ import { renderProgressBar } from './render-progressbar'
 import { renderChart } from './render-chart'
 import { renderQRCode } from './render-qrcode'
 import { renderBarcode } from './render-barcode'
+import { renderLogo } from './render-logo'
 import { renderPage } from './render-page'
 
 /**
@@ -45,6 +46,7 @@ const renderers: Record<string, ComponentRenderer> = {
   Chart: renderChart,
   QRCode: renderQRCode,
   Barcode: renderBarcode,
+  Logo: renderLogo,
 }
 
 /**
@@ -94,6 +96,7 @@ export { renderProgressBar } from './render-progressbar'
 export { renderChart } from './render-chart'
 export { renderQRCode } from './render-qrcode'
 export { renderBarcode } from './render-barcode'
+export { renderLogo } from './render-logo'
 
 // Re-export types
 export type { RendererResult, ComponentRenderer } from './types'
