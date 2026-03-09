@@ -33,6 +33,7 @@ import { renderMeasurementTable } from './render-measurementtable'
 import { renderTestSummaryBox } from './render-testsummarybox'
 import { renderRevisionBlock } from './render-revisionblock'
 import { renderSpecBox } from './render-specbox'
+import { renderToleranceBand } from './render-toleranceband'
 
 /**
  * Registry mapping component type names to their renderer functions
@@ -65,6 +66,7 @@ const renderers: Record<string, ComponentRenderer> = {
   TestSummaryBox: renderTestSummaryBox,
   RevisionBlock: renderRevisionBlock,
   SpecBox: renderSpecBox,
+  ToleranceBand: renderToleranceBand,
 }
 
 /**
@@ -124,6 +126,7 @@ export { renderMeasurementTable } from './render-measurementtable'
 export { renderTestSummaryBox } from './render-testsummarybox'
 export { renderRevisionBlock } from './render-revisionblock'
 export { renderSpecBox } from './render-specbox'
+export { renderToleranceBand } from './render-toleranceband'
 
 // Re-export types
 export type { RendererResult, ComponentRenderer } from './types'
