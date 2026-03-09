@@ -20,7 +20,20 @@ import { renderPageNumber } from './render-pagenumber'
 import { renderGauge } from './render-gauge'
 import { renderProgressBar } from './render-progressbar'
 import { renderChart } from './render-chart'
+import { renderHistogram } from './render-histogram'
+import { renderQRCode } from './render-qrcode'
+import { renderBarcode } from './render-barcode'
+import { renderLogo } from './render-logo'
+import { renderWatermark } from './render-watermark'
 import { renderPage } from './render-page'
+import { renderSignatureLine } from './render-signatureline'
+import { renderScatterPlot } from './render-scatterplot'
+import { renderPassRateChart } from './render-passratechart'
+import { renderMeasurementTable } from './render-measurementtable'
+import { renderTestSummaryBox } from './render-testsummarybox'
+import { renderRevisionBlock } from './render-revisionblock'
+import { renderSpecBox } from './render-specbox'
+import { renderToleranceBand } from './render-toleranceband'
 
 /**
  * Registry mapping component type names to their renderer functions
@@ -41,6 +54,19 @@ const renderers: Record<string, ComponentRenderer> = {
   Gauge: renderGauge,
   ProgressBar: renderProgressBar,
   Chart: renderChart,
+  Histogram: renderHistogram,
+  QRCode: renderQRCode,
+  Barcode: renderBarcode,
+  Logo: renderLogo,
+  Watermark: renderWatermark,
+  SignatureLine: renderSignatureLine,
+  ScatterPlot: renderScatterPlot,
+  PassRateChart: renderPassRateChart,
+  MeasurementTable: renderMeasurementTable,
+  TestSummaryBox: renderTestSummaryBox,
+  RevisionBlock: renderRevisionBlock,
+  SpecBox: renderSpecBox,
+  ToleranceBand: renderToleranceBand,
 }
 
 /**
@@ -88,6 +114,19 @@ export { renderPageNumber } from './render-pagenumber'
 export { renderGauge } from './render-gauge'
 export { renderProgressBar } from './render-progressbar'
 export { renderChart } from './render-chart'
+export { renderHistogram } from './render-histogram'
+export { renderQRCode } from './render-qrcode'
+export { renderBarcode } from './render-barcode'
+export { renderLogo } from './render-logo'
+export { renderWatermark } from './render-watermark'
+export { renderSignatureLine } from './render-signatureline'
+export { renderScatterPlot } from './render-scatterplot'
+export { renderPassRateChart } from './render-passratechart'
+export { renderMeasurementTable } from './render-measurementtable'
+export { renderTestSummaryBox } from './render-testsummarybox'
+export { renderRevisionBlock } from './render-revisionblock'
+export { renderSpecBox } from './render-specbox'
+export { renderToleranceBand } from './render-toleranceband'
 
 // Re-export types
 export type { RendererResult, ComponentRenderer } from './types'
