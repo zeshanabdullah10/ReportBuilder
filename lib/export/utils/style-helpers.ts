@@ -81,7 +81,7 @@ export function generateInlineStyles(
  * Generate @page and @media print CSS
  *
  * @param pageSize - Page size ('A4' or 'Letter')
- * @param margins - Margin values in mm
+ * @param margins - Margin values in mm (NOTE: margins are handled by Page component padding)
  * @returns CSS string with print-specific styles
  */
 export function generatePrintStyles(
@@ -89,6 +89,13 @@ export function generatePrintStyles(
   margins: { top: number; right: number; bottom: number; left: number }
 ): string {
   const pageDimensions = PAGE_SIZES[pageSize]
+
+  // Note: We don't apply margins to #report because:
+  // 1. Page components already have their own padding for content spacing
+  // 2. Adding margins here would cause double-padding with Page padding
+  // 3. Components use absolute pixel positioning which would be offset incorrectly
+  // The @page margin: 0 ensures no browser headers/footers
+  // Page padding handles content spacing from edges
 
   return `
     /* Set @page margin to 0 to disable browser headers/footers */
@@ -117,9 +124,14 @@ export function generatePrintStyles(
 
       #report {
         width: 100%;
-        /* Apply margins to content instead of @page to avoid browser headers/footers */
-        padding: ${margins.top}mm ${margins.right}mm ${margins.bottom}mm ${margins.left}mm;
+        /* No padding here - Page components handle their own internal spacing */
+        padding: 0;
         box-sizing: border-box;
+      }
+
+      /* Each page should break correctly */
+      .report-page {
+        page-break-inside: avoid;
       }
     }
 
@@ -132,7 +144,8 @@ export function generatePrintStyles(
         max-width: ${pageDimensions.width}mm;
         min-height: ${pageDimensions.height}mm;
         margin: 20px auto;
-        padding: ${margins.top}mm ${margins.right}mm ${margins.bottom}mm ${margins.left}mm;
+        /* No padding here for screen view either - Page handles spacing */
+        padding: 0;
         background: #fff;
         box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         box-sizing: border-box;
