@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { validateCsrfForApiRoute } from '@/lib/security/csrf'
 import { NextResponse } from 'next/server'
 
 /**
@@ -47,6 +48,12 @@ export async function POST(request: Request) {
     body = await request.json()
   } catch {
     body = {}
+  }
+
+  // Validate CSRF token
+  const csrfValidation = validateCsrfForApiRoute(request, body)
+  if (!csrfValidation.valid) {
+    return NextResponse.json({ error: 'Invalid CSRF token' }, { status: 403 })
   }
 
   const { name, canvas_state, sample_data, settings } = body
