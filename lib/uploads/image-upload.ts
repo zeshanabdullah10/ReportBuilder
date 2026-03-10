@@ -35,12 +35,29 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
 }
 
 /**
+ * Sanitizes a filename to prevent path traversal attacks
+ * - Removes any path separators (/, \)
+ * - Removes dangerous characters
+ */
+function sanitizeFileName(fileName: string): string {
+  // Remove any path components
+  let sanitized = fileName.split(/[/\\]/).pop() || ''
+
+  // Remove null bytes and other dangerous characters
+  sanitized = sanitized.replace(/\0/g, '')
+
+  // If empty after sanitization, use a default
+  return sanitized || 'upload'
+}
+
+/**
  * Generates a unique file path for storage
  */
 function generateFilePath(templateId: string, fileName: string): string {
   const timestamp = Date.now()
   const randomId = Math.random().toString(36).substring(2, 8)
-  const extension = fileName.split('.').pop() || 'jpg'
+  const safeFileName = sanitizeFileName(fileName)
+  const extension = safeFileName.split('.').pop() || 'jpg'
   return `${templateId}/${timestamp}_${randomId}.${extension}`
 }
 

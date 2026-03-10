@@ -260,3 +260,7 @@ NEXT_PUBLIC_APP_URL=
 - Component renderers in `lib/export/component-renderers/` - one file per component
 - Settings panels in `components/builder/settings/` - named `{Component}Settings.tsx`
 - API routes follow RESTful patterns with proper error handling
+
+ ## Preview Panel
+  Panel %2 is the tmux preview shell. To show a document, run:
+  tmux send-keys -t %4 'q' C-m 'preview "path/to/file"' C-m

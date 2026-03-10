@@ -255,9 +255,9 @@ export function BuilderCanvas({ template }: BuilderCanvasProps) {
 
   // Check if we have valid saved state for the current page
   const activePage = pages.find(p => p.id === activePageId) || pages[0]
-  const hasSavedState = activePage?.canvasState &&
+  const hasSavedState = !!(activePage?.canvasState &&
     typeof activePage.canvasState === 'object' &&
-    Object.keys(activePage.canvasState).length > 0
+    Object.keys(activePage.canvasState).length > 0)
 
   return (
     <div className="flex flex-col h-screen bg-[#0a0f14]">

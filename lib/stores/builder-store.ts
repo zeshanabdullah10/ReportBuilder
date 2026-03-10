@@ -1,5 +1,6 @@
 import { create } from 'zustand'
 import { extractDataPaths, DataPathInfo } from '@/lib/utils/data-paths'
+import type { CraftCanvasState } from '@/lib/types/craft'
 
 interface ActiveDrag {
   nodeId: string
@@ -34,7 +35,7 @@ export interface PageSettings {
 export interface ReportPage {
   id: string
   name: string
-  canvasState: any // Craft.js serialized state
+  canvasState: CraftCanvasState | null
   settings: PageSettings
   order: number
 }
@@ -99,7 +100,7 @@ interface BuilderState {
   deletePage: (pageId: string) => void
   reorderPages: (fromIndex: number, toIndex: number) => void
   updatePageSettings: (pageId: string, settings: Partial<PageSettings>) => void
-  updatePageCanvasState: (pageId: string, canvasState: any) => void
+  updatePageCanvasState: (pageId: string, canvasState: CraftCanvasState | null) => void
   getActivePage: () => ReportPage | null
   getPageById: (pageId: string) => ReportPage | null
   goToPreviousPage: () => void

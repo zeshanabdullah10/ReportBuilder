@@ -14,6 +14,33 @@ import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { compileTemplate, compileMultiPageTemplate, ExportOptions, CanvasState, PageState } from '@/lib/export'
 
+/**
+ * Sanitize filename to prevent path traversal attacks
+ * - Removes path separators and special characters
+ * - Limits length to reasonable size
+ */
+function sanitizeFilename(name: string | null | undefined): string {
+  if (!name) return 'Report'
+
+  // Remove any path components (prevent path traversal)
+  let sanitized = name.split(/[/\\]/).pop() || 'Report'
+
+  // Remove or replace dangerous characters
+  // Keep only alphanumeric, underscore, hyphen, space, and dot
+  sanitized = sanitized.replace(/[^a-zA-Z0-9_\-. ]/g, '_')
+
+  // Remove leading/trailing spaces and dots
+  sanitized = sanitized.trim().replace(/^\.+|\.+$/g, '')
+
+  // Limit length
+  if (sanitized.length > 200) {
+    sanitized = sanitized.substring(0, 200)
+  }
+
+  // Ensure we have a valid filename
+  return sanitized || 'Report'
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -48,7 +75,7 @@ export async function GET(
   // 3. Parse export options from query params
   const { searchParams } = new URL(request.url)
   const includeSampleData = searchParams.get('includeSampleData') === 'true'
-  const filename = searchParams.get('filename') || template.name || 'Report'
+  const filename = sanitizeFilename(searchParams.get('filename') || template.name)
 
   const options: ExportOptions = {
     filename,
@@ -141,7 +168,7 @@ export async function POST(
   const body = await request.json()
 
   const options: ExportOptions = {
-    filename: body.filename || template.name || 'Report',
+    filename: sanitizeFilename(body.filename || template.name),
     includeSampleData: body.includeSampleData ?? false,
     pageSize: body.pageSize || 'A4',
     margins: body.margins || { top: 20, right: 20, bottom: 20, left: 20 },
