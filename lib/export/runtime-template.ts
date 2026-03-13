@@ -112,44 +112,147 @@ export const RUNTIME_TEMPLATE = `
   }
 
   /**
-   * Evaluate a visibility condition expression
+   * Evaluate a visibility condition expression (Safe Implementation)
    * @param {string} condition - Condition expression (e.g., "data.status === 'pass'")
    * @param {object} data - The data object to evaluate against
    * @returns {boolean} True if condition passes or no condition
    */
   function evaluateCondition(condition, data) {
     if (!condition) return true;
-    
+
     try {
-      // Replace data references in the condition
-      var evaluatedCondition = condition;
-      
-      // Replace {{data.path}} patterns
-      evaluatedCondition = evaluatedCondition.replace(/\\{\\{([^}]+)\\}\\}/g, function(match, path) {
-        var value = resolveBinding(path.trim(), data);
-        if (value == null) return 'null';
-        if (typeof value === 'string') return '"' + value.replace(/"/g, '\\\\"') + '"';
-        if (typeof value === 'boolean') return value ? 'true' : 'false';
-        if (typeof value === 'number') return String(value);
-        return 'null';
-      });
-      
-      // Replace data.path patterns (without braces)
-      evaluatedCondition = evaluatedCondition.replace(/data\\.([a-zA-Z_][a-zA-Z0-9_\\.]*)/g, function(match, path) {
-        var value = resolveBinding('data.' + path, data);
-        if (value == null) return 'null';
-        if (typeof value === 'string') return '"' + value.replace(/"/g, '\\\\"') + '"';
-        if (typeof value === 'boolean') return value ? 'true' : 'false';
-        if (typeof value === 'number') return String(value);
-        return 'null';
-      });
-      
-      // Safely evaluate the condition
-      var fn = new Function('return (' + evaluatedCondition + ')');
-      return fn();
+      // Safe expression evaluator that parses and evaluates simple comparison expressions
+      // without using new Function() or eval()
+      var safeEvaluate = function(expr) {
+        // Trim whitespace
+        expr = expr.trim();
+
+        // Handle NOT operator (!)
+        if (expr === '!') return false;
+        if (expr.startsWith('!')) {
+          return !safeEvaluate(expr.slice(1).trim());
+        }
+
+        // Handle parenthesized expressions
+        if (expr.startsWith('(') && expr.endsWith(')')) {
+          // Find matching closing parenthesis
+          var depth = 0;
+          var matchEnd = -1;
+          for (var i = 0; i < expr.length; i++) {
+            if (expr[i] === '(') depth++;
+            if (expr[i] === ')') depth--;
+            if (depth === 0) {
+              matchEnd = i;
+              break;
+            }
+          }
+          if (matchEnd === expr.length - 1) {
+            return safeEvaluate(expr.slice(1, -1).trim());
+          }
+        }
+
+        // Handle AND (&&) - process left to right
+        var andIdx = findOperator(expr, '&&');
+        if (andIdx !== -1) {
+          var left = expr.slice(0, andIdx).trim();
+          var right = expr.slice(andIdx + 2).trim();
+          return safeEvaluate(left) && safeEvaluate(right);
+        }
+
+        // Handle OR (||) - process left to right
+        var orIdx = findOperator(expr, '||');
+        if (orIdx !== -1) {
+          var left = expr.slice(0, orIdx).trim();
+          var right = expr.slice(orIdx + 2).trim();
+          return safeEvaluate(left) || safeEvaluate(right);
+        }
+
+        // Handle comparison operators
+        var comparisonOperators = ['===', '!==', '==', '!=', '<=', '>=', '<', '>'];
+        for (var i = 0; i < comparisonOperators.length; i++) {
+          var op = comparisonOperators[i];
+          var opIdx = findOperator(expr, op);
+          if (opIdx !== -1) {
+            var left = expr.slice(0, opIdx).trim();
+            var right = expr.slice(opIdx + op.length).trim();
+            var leftValue = evaluateOperand(left, data);
+            var rightValue = evaluateOperand(right, data);
+
+            switch (op) {
+              case '===': return leftValue === rightValue;
+              case '!==': return leftValue !== rightValue;
+              case '==': return leftValue == rightValue;
+              case '!=': return leftValue != rightValue;
+              case '<': return leftValue < rightValue;
+              case '>': return leftValue > rightValue;
+              case '<=': return leftValue <= rightValue;
+              case '>=': return leftValue >= rightValue;
+            }
+          }
+        }
+
+        // Single value - evaluate as boolean
+        var value = evaluateOperand(expr, data);
+        return !!value;
+      };
+
+      // Find operator at top level (not inside parentheses or strings)
+      var findOperator = function(str, op) {
+        var depth = 0;
+        var inString = null; // null, '"', "'"
+        for (var i = 0; i <= str.length - op.length; i++) {
+          var char = str[i];
+
+          // Track string context
+          if ((char === '"' || char === "'") && (i === 0 || str[i - 1] !== '\\\\')) {
+            inString = inString === char ? null : char;
+          }
+
+          // Only search outside strings and at top level
+          if (inString === null) {
+            if (char === '(') depth++;
+            if (char === ')') depth--;
+
+            if (depth === 0 && str.substr(i, op.length) === op) {
+              return i;
+            }
+          }
+        }
+        return -1;
+      };
+
+      // Evaluate a single operand (value, literal, or binding)
+      var evaluateOperand = function(operand, data) {
+        operand = operand.trim();
+
+        // String literals
+        if ((operand.startsWith('"') && operand.endsWith('"')) ||
+            (operand.startsWith("'") && operand.endsWith("'"))) {
+          return operand.slice(1, -1);
+        }
+
+        // Boolean literals
+        if (operand === 'true') return true;
+        if (operand === 'false') return false;
+        if (operand === 'null') return null;
+        if (operand === 'undefined') return undefined;
+
+        // Number literals
+        var num = Number(operand);
+        if (!isNaN(num) && operand !== '') return num;
+
+        // Data binding - try to resolve
+        var resolved = resolveBinding(operand, data);
+        if (resolved !== undefined) return resolved;
+
+        // Return as-is if can't resolve
+        return operand;
+      };
+
+      return safeEvaluate(condition);
     } catch (e) {
       console.warn('[Runtime] Condition evaluation failed:', condition, e.message);
-      return true; // Default to visible on error
+      return true; // Default to visible on error (fail-safe)
     }
   }
 
