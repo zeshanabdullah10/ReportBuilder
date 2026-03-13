@@ -111,4 +111,57 @@ describe('Safe Expression Evaluator', () => {
   it('should block __proto__ access', () => {
     expect(() => safeEvaluate('obj.__proto__', {})).toThrow()
   })
+
+  it('should block arguments identifier', () => {
+    expect(() => safeEvaluate('arguments[0]', {})).toThrow()
+  })
+
+  it('should block new operator', () => {
+    expect(() => safeEvaluate('new Date()', {})).toThrow()
+    expect(() => safeEvaluate('new Function()', {})).toThrow()
+  })
+
+  it('should block typeof operator', () => {
+    expect(() => safeEvaluate('typeof x', {})).toThrow()
+    expect(() => safeEvaluate('typeof "string"', {})).toThrow()
+  })
+
+  it('should block void operator', () => {
+    expect(() => safeEvaluate('void 0', {})).toThrow()
+    expect(() => safeEvaluate('void x', {})).toThrow()
+  })
+
+  it('should block delete operator', () => {
+    expect(() => safeEvaluate('delete obj.prop', {})).toThrow()
+    expect(() => safeEvaluate('delete arr[0]', {})).toThrow()
+  })
+
+  it('should handle undefined parameter', () => {
+    expect(safeEvaluate(undefined as any, {})).toBe(true)
+  })
+
+  it('should handle != operator', () => {
+    expect(safeEvaluate('1 != 2', {})).toBe(true)
+    expect(safeEvaluate('1 != 1', {})).toBe(false)
+    expect(safeEvaluate('"pass" != "fail"', {})).toBe(true)
+    expect(safeEvaluate('"pass" != "pass"', {})).toBe(false)
+  })
+
+  it('should handle !== operator', () => {
+    expect(safeEvaluate('1 !== "1"', {})).toBe(true)
+    expect(safeEvaluate('1 !== 1', {})).toBe(false)
+    expect(safeEvaluate('null !== undefined', {})).toBe(true)
+  })
+
+  it('should handle <= operator', () => {
+    expect(safeEvaluate('value <= 10', { value: 5 })).toBe(true)
+    expect(safeEvaluate('value <= 10', { value: 10 })).toBe(true)
+    expect(safeEvaluate('value <= 10', { value: 15 })).toBe(false)
+  })
+
+  it('should block prototype access even if prototype exists in context', () => {
+    // Even if context has a 'prototype' property, it should be blocked
+    expect(() => safeEvaluate('obj.prototype.method', { obj: { prototype: { method: () => {} } } })).toThrow()
+    expect(() => safeEvaluate('obj["prototype"]', { obj: { prototype: { method: () => {} } } })).toThrow()
+  })
 })

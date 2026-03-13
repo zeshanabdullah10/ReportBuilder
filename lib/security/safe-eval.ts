@@ -36,6 +36,7 @@ const BLOCKED_IDENTIFIERS = new Set([
   'this',
   'constructor',
   'prototype',
+  'arguments',
   '__proto__',
   '__defineGetter__',
   '__defineSetter__',
@@ -128,6 +129,25 @@ function tokenize(expression: string): Token[] {
       tokens.push({ type: 'punctuation', value: char })
       i++
       continue
+    }
+
+    // Blocked operators: new, typeof, void, delete
+    if (char === 'n' || char === 't' || char === 'v' || char === 'd') {
+      const wordStart = i
+      let word = char
+      i++
+      while (i < expression.length && /[a-zA-Z0-9_]/.test(expression[i])) {
+        word += expression[i]
+        i++
+      }
+
+      // Check for blocked operators
+      if (word === 'new' || word === 'typeof' || word === 'void' || word === 'delete') {
+        throw new SecurityViolationError(`Blocked operator: ${word}`)
+      }
+
+      // Reset position if it wasn't a blocked operator (could be a regular identifier)
+      i = wordStart
     }
 
     // Identifiers
