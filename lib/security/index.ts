@@ -33,7 +33,6 @@ export {
   getCsrfTokenFromRequest,
   getCsrfTokenFromBody,
   requiresCsrfValidation,
-  validateCsrfForApiRoute,
   CSRF_HEADER,
   CSRF_BODY_FIELD,
   CSRF_MAX_AGE,

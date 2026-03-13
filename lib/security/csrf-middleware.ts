@@ -49,6 +49,7 @@ export {
   CSRF_HEADER,
   CSRF_BODY_FIELD,
   CSRF_MAX_AGE,
+  validateCsrfForApiRoute,
 };
 
 /**
