@@ -29,6 +29,27 @@ export const RUNTIME_TEMPLATE = `
   var SAMPLE_DATA = window.SAMPLE_DATA || null;
 
   // ============================================
+  // Utility Functions
+  // ============================================
+
+  /**
+   * Escape HTML special characters
+   */
+  function escapeHtml(str) {
+    if (!str) return '';
+    var htmlEscapes = {
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    };
+    return String(str).replace(/[&<>"']/g, function(char) {
+      return htmlEscapes[char] || char;
+    });
+  }
+
+  // ============================================
   // Binding Resolution Utilities
   // ============================================
 
@@ -76,8 +97,8 @@ export const RUNTIME_TEMPLATE = `
     return text.replace(/\\{\\{([^}]+)\\}\\}/g, function(match, path) {
       var value = resolveBinding(path.trim(), data);
       if (value == null) return '';
-      if (typeof value === 'object') return JSON.stringify(value);
-      return String(value);
+      if (typeof value === 'object') return escapeHtml(JSON.stringify(value));
+      return escapeHtml(String(value));
     });
   }
 
@@ -144,13 +165,11 @@ export const RUNTIME_TEMPLATE = `
     // PRIORITY 1: Use CLI-injected data (for offline PDF generation)
     // The report-cli tool replaces this placeholder with actual JSON data
     if (window.REPORT_DATA) {
-      console.log('[Runtime] Using CLI-injected data');
       return window.REPORT_DATA;
     }
 
     // PRIORITY 2: Use embedded sample data if available
     if (SAMPLE_DATA) {
-      console.log('[Runtime] Using embedded sample data');
       return SAMPLE_DATA;
     }
 
@@ -171,7 +190,6 @@ export const RUNTIME_TEMPLATE = `
       var response = await fetch(dataPath);
       if (response.ok) {
         var data = await response.json();
-        console.log('[Runtime] Loaded data from', dataPath);
         return data;
       } else {
         console.warn('[Runtime] Could not load data file:', response.status, response.statusText);
@@ -492,10 +510,6 @@ export const RUNTIME_TEMPLATE = `
     var chartType = props.chartType || 'bar';
     var title = props.title || '';
 
-    console.log('[Runtime] Rendering chart:', comp.id, 'type:', chartType);
-    console.log('[Runtime] Chart props:', JSON.stringify(props));
-    console.log('[Runtime] Data available:', !!data);
-
     // Interpolate title if it has bindings
     if (hasBinding(title)) {
       title = interpolateText(title, data);
@@ -504,9 +518,7 @@ export const RUNTIME_TEMPLATE = `
     // Build labels array - check labelsBinding first
     var labels = [];
     if (props.labelsBinding && hasBinding(props.labelsBinding)) {
-      console.log('[Runtime] Resolving labelsBinding:', props.labelsBinding);
       var resolvedLabels = resolveBinding(props.labelsBinding, data);
-      console.log('[Runtime] Resolved labels:', resolvedLabels);
       if (Array.isArray(resolvedLabels)) {
         labels = resolvedLabels.map(function(item) {
           if (typeof item === 'string') return item;
@@ -529,16 +541,13 @@ export const RUNTIME_TEMPLATE = `
 
     if (datasetsConfig.length > 0) {
       // Multi-dataset mode
-      console.log('[Runtime] Multi-dataset mode, datasets:', datasetsConfig.length);
       for (var i = 0; i < datasetsConfig.length; i++) {
         var ds = datasetsConfig[i];
         var datasetData = ds.data || [];
 
         // Resolve binding if present
         if (ds.binding) {
-          console.log('[Runtime] Dataset', i, 'binding:', ds.binding);
           var resolvedData = resolveBinding(ds.binding, data);
-          console.log('[Runtime] Dataset', i, 'resolved:', resolvedData);
           if (resolvedData && Array.isArray(resolvedData)) {
             datasetData = resolvedData;
           } else if (resolvedData && typeof resolvedData === 'object') {
@@ -596,11 +605,8 @@ export const RUNTIME_TEMPLATE = `
       // Try to resolve from binding first
       // Check both props.binding (direct) and props.bindings.primaryBinding (from renderer)
       var bindingPath = props.binding || (props.bindings && props.bindings.primaryBinding);
-      console.log('[Runtime] Chart props:', JSON.stringify({ binding: props.binding, bindings: props.bindings }));
       if (bindingPath) {
-        console.log('[Runtime] Resolving chart binding:', bindingPath);
         var resolved = resolveBinding(bindingPath, data);
-        console.log('[Runtime] Resolved chart data:', resolved);
         if (resolved) {
           if (Array.isArray(resolved)) {
             primaryData = resolved;
@@ -689,14 +695,10 @@ export const RUNTIME_TEMPLATE = `
       }
     }
     if (labels.length < maxDataLength) {
-      console.log('[Runtime] Labels length (' + labels.length + ') < data length (' + maxDataLength + '), auto-generating');
       while (labels.length < maxDataLength) {
         labels.push('Item ' + (labels.length + 1));
       }
     }
-
-    console.log('[Runtime] Final labels:', labels);
-    console.log('[Runtime] Final datasets:', JSON.stringify(datasets.map(function(ds) { return { label: ds.label, dataLength: ds.data ? ds.data.length : 0 }; })));
 
     // Destroy existing chart instance if present
     if (chartInstances[comp.id]) {
@@ -722,7 +724,6 @@ export const RUNTIME_TEMPLATE = `
         },
         options: options
       });
-    console.log('[Runtime] Rendered chart:', comp.id);
     } catch (e) {
       console.error('[Runtime] Error rendering chart:', comp.id, e);
     }
@@ -820,27 +821,6 @@ export const RUNTIME_TEMPLATE = `
   }
 
   // ============================================
-  // Utility Functions
-  // ============================================
-
-  /**
-   * Escape HTML special characters
-   */
-  function escapeHtml(str) {
-    if (!str) return '';
-    var htmlEscapes = {
-      '&': '&amp;',
-      '<': '&lt;',
-      '>': '&gt;',
-      '"': '&quot;',
-      "'": '&#39;'
-    };
-    return String(str).replace(/[&<>"']/g, function(char) {
-      return htmlEscapes[char] || char;
-    });
-  }
-
-  // ============================================
   // Main Initialization
   // ============================================
 
@@ -848,8 +828,6 @@ export const RUNTIME_TEMPLATE = `
    * Main initialization function
    */
   async function init() {
-    console.log('[Runtime] Initializing template...');
-
     try {
       // 1. Load data
       var data = await loadData();
@@ -866,12 +844,10 @@ export const RUNTIME_TEMPLATE = `
 
       // 4. Signal that rendering is complete (for PDF generation)
       window.RENDERING_COMPLETE = true;
-      console.log('[Runtime] Rendering complete signal sent');
 
       // 5. Auto-print after short delay for rendering
       if (CONFIG.autoPrint) {
         setTimeout(function() {
-          console.log('[Runtime] Triggering auto-print...');
           try {
             window.print();
           } catch (e) {
@@ -879,8 +855,6 @@ export const RUNTIME_TEMPLATE = `
           }
         }, CONFIG.printDelay || 100);
       }
-
-      console.log('[Runtime] Template initialization complete');
     } catch (error) {
       console.error('[Runtime] Template initialization error:', error);
     }

@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-LabVIEW Report Builder is a SaaS application for creating visual report templates that can be exported as standalone HTML files. Users design templates via drag-drop, then LabVIEW writes JSON data and uses headless Chrome to generate PDFs offline.
+LabVIEW Report Builder is a SaaS application for creating visual report templates that can be exported as standalone HTML files or PDFs. Users design templates via drag-drop in a visual builder, then LabVIEW writes JSON data and uses headless Chrome to generate PDFs offline. The application features a complete template builder with 27 components, a full export system with 28 renderers, version control, sharing capabilities, and custom component support.
 
 ## Commands
 
@@ -13,8 +13,24 @@ npm run dev      # Start development server (localhost:3000)
 npm run build    # Build for production
 npm run start    # Start production server
 npm run lint     # Run ESLint
+npm run test     # Run tests with Vitest
+npm run test:run # Run tests once
 npx tsc --noEmit # Type check without emitting files
 ```
+
+## Technology Stack
+
+- **Framework**: Next.js 16 with App Router
+- **React**: React 19
+- **Canvas Editor**: Craft.js for drag-drop template design
+- **State Management**: Zustand for UI state
+- **Database**: Supabase (PostgreSQL)
+- **Charts**: Chart.js 4.4 with react-chartjs-2
+- **Testing**: Vitest with Testing Library
+- **Barcode/QR**: jsbarcode, qrcode libraries
+- **Export**: JSZip for batch exports
+- **Styling**: Tailwind CSS with oscilloscope theme
+- **Forms**: React Hook Form + Zod validation
 
 ## Architecture
 
@@ -43,9 +59,34 @@ Supabase clients:
 
 Located in `types/database.ts`. Key tables:
 - `profiles` - User profile data
-- `subscriptions` - Stripe subscription state (plan_type: free/pro/enterprise)
 - `templates` - Saved report templates with `canvas_state` JSON for Craft.js
 - `template_assets` - Uploaded images/files for templates
+- `template_versions` - Version history with canvas state snapshots
+- `template_shares` - Sharing configuration (link, user, org) with permissions
+- `custom_components` - User-created reusable components
+
+### API Routes
+
+Located in `app/api/`:
+
+| Route | Purpose |
+|-------|---------|
+| `/api/templates` | CRUD operations for templates |
+| `/api/templates/[id]/duplicate` | Template duplication |
+| `/api/templates/[id]/versions` | Version management |
+| `/api/templates/[id]/versions/[version]/restore` | Version restoration |
+| `/api/templates/[id]/shares` | Sharing management |
+| `/api/templates/[id]/export` | Single template export |
+| `/api/templates/batch-export` | Batch export to ZIP |
+| `/api/shared/[token]` | Public shared template access |
+| `/api/components` | Custom component CRUD |
+| `/api/components/[id]/usage` | Usage tracking |
+
+### State Management
+
+- **Craft.js** (`@craftjs/core`) - Canvas state for template builder, handles component tree, drag-drop, selection
+- **Zustand** (`lib/stores/builder-store.ts`) - UI state management (panels, modals, settings)
+- **React Hook Form + Zod** - Form handling with validation
 
 ### Styling
 
@@ -79,21 +120,121 @@ Located in `types/database.ts`. Key tables:
 - `border-glow` / `border-glow-hover` - Glowing border effects
 - `card-technical` - Technical card styling with top glow line
 
-### State Management
+## Template Builder
 
-- **Craft.js** (planned) - Canvas state for template builder
-- **Zustand** - UI state management for builder
-- **React Hook Form + Zod** - Form handling with validation
+The template builder is fully implemented at `/builder/[id]` with a 3-panel layout: Toolbox (left), Canvas (center), Properties (right).
 
-## Template Builder (In Progress)
+### Components (27 total)
 
-The template builder is designed but not yet implemented. See `docs/plans/2026-02-17-template-builder-design.md` for the full specification.
+**Basic Layout:**
+- `Page` - Page container with size/orientation settings
+- `Container` - Layout container for grouping components
+- `Spacer` - Vertical/horizontal spacing element
+- `Divider` - Horizontal/vertical divider line
+- `PageBreak` - Page break for multi-page reports
 
-Planned architecture:
-- Route: `/builder/[id]`
-- 3-panel layout: Toolbox (left), Canvas (center), Properties (right)
-- Components: Text, Image, Container, Table, Chart, Indicator, Spacer, PageBreak
-- Data binding syntax: `{{data.path}}` for JSON interpolation
+**Content:**
+- `Text` - Rich text with font/size/color settings
+- `Image` - Image with upload and URL support
+- `Table` - Data table with customizable columns
+- `BulletList` - Bulleted list component
+- `Indicator` - Status indicator with pass/fail/warning states
+- `DateTime` - Date/time display with format options
+- `PageNumber` - Page numbering for multi-page reports
+
+**Charts & Visualization:**
+- `Chart` - Generic chart (bar, line, pie, doughnut)
+- `Gauge` - Radial gauge for values
+- `ProgressBar` - Horizontal progress indicator
+- `Histogram` - Statistical histogram chart
+- `ScatterPlot` - X/Y scatter plot
+- `PassRateChart` - Pass rate visualization
+
+**Special Components:**
+- `QRCode` - QR code generator
+- `Barcode` - Barcode generator (multiple formats)
+- `Logo` - Company logo placeholder
+- `Watermark` - Background watermark overlay
+- `SignatureLine` - Signature capture line
+
+**Test & Measurement:**
+- `MeasurementTable` - Measurement data table
+- `TestSummaryBox` - Test summary display
+- `RevisionBlock` - Document revision tracking
+- `SpecBox` - Specification box
+- `ToleranceBand` - Tolerance visualization
+
+### Data Binding
+
+Components support data binding with syntax: `{{data.path}}` for JSON interpolation. The builder includes a data binding picker for mapping template fields to JSON data paths.
+
+### Key Builder Files
+
+| File | Purpose |
+|------|---------|
+| `components/builder/canvas/BuilderCanvas.tsx` | Main canvas component with Craft.js integration |
+| `components/builder/toolbox/Toolbox.tsx` | Component palette |
+| `components/builder/settings/RightSidebar.tsx` | Properties panel |
+| `components/builder/settings/SettingsPanel.tsx` | Dynamic settings renderer |
+| `lib/stores/builder-store.ts` | Zustand store for builder state |
+
+## Export System
+
+The export system generates standalone HTML files that can be viewed in any browser or converted to PDF via headless Chrome.
+
+### Export Pipeline
+
+1. **HTML Compiler** (`lib/export/html-compiler.ts`) - Converts Craft.js canvas state to HTML
+2. **Runtime Template** (`lib/export/runtime-template.ts`) - Handles data interpolation at runtime
+3. **Component Renderers** - Each component has a dedicated renderer
+
+### Export Renderers (28 total)
+
+Located in `lib/export/component-renderers/`:
+
+| Renderer | Component |
+|----------|-----------|
+| `render-page.ts` | Page |
+| `render-container.ts` | Container |
+| `render-spacer.ts` | Spacer |
+| `render-divider.ts` | Divider |
+| `render-pagebreak.ts` | PageBreak |
+| `render-text.ts` | Text |
+| `render-image.ts` | Image |
+| `render-table.ts` | Table |
+| `render-bulletlist.ts` | BulletList |
+| `render-indicator.ts` | Indicator |
+| `render-datetime.ts` | DateTime |
+| `render-pagenumber.ts` | PageNumber |
+| `render-chart.ts` | Chart |
+| `render-gauge.ts` | Gauge |
+| `render-progressbar.ts` | ProgressBar |
+| `render-histogram.ts` | Histogram |
+| `render-scatterplot.ts` | ScatterPlot |
+| `render-passratechart.ts` | PassRateChart |
+| `render-qrcode.ts` | QRCode |
+| `render-barcode.ts` | Barcode |
+| `render-logo.ts` | Logo |
+| `render-watermark.ts` | Watermark |
+| `render-signatureline.ts` | SignatureLine |
+| `render-measurementtable.ts` | MeasurementTable |
+| `render-testsummarybox.ts` | TestSummaryBox |
+| `render-revisionblock.ts` | RevisionBlock |
+| `render-specbox.ts` | SpecBox |
+| `render-toleranceband.ts` | ToleranceBand |
+
+### Renderer Pattern
+
+All renderers follow the `ComponentRenderer` type signature:
+```typescript
+type ComponentRenderer = (props: ComponentProps) => string
+```
+
+Each renderer:
+1. Receives component props and data context
+2. Generates position/style CSS via `generatePositionStyles()`
+3. Returns HTML string with embedded styles
+4. Supports data binding interpolation via `{{data.path}}`
 
 ## Environment Variables
 
@@ -116,3 +257,10 @@ NEXT_PUBLIC_APP_URL=
 - Server Components by default; add `'use client'` only when needed
 - Server Actions for mutations; return `{ error?: string }` for error handling
 - Form validation schemas in `lib/validations/`
+- Component renderers in `lib/export/component-renderers/` - one file per component
+- Settings panels in `components/builder/settings/` - named `{Component}Settings.tsx`
+- API routes follow RESTful patterns with proper error handling
+
+ ## Preview Panel
+  Panel %2 is the tmux preview shell. To show a document, run:
+  tmux send-keys -t %4 'q' C-m 'preview "path/to/file"' C-m
