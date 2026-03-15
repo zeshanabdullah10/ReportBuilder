@@ -114,9 +114,7 @@ export function generatePrintStyles(
         display: none !important;
       }
 
-      .page-break {
-        page-break-before: always;
-      }
+      /* Page break is handled by inline style in html-compiler.ts */
 
       .avoid-break {
         page-break-inside: avoid;
