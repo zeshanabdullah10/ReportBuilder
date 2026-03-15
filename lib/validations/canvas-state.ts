@@ -67,22 +67,26 @@ export function sanitizeProps<T = unknown>(props: T): T {
 }
 
 /**
- * Schema for Craft.js type resolver object
+ * Schema for Craft.js type resolver object (actual Craft.js format)
+ * type: { resolvedName: "ComponentName" }
  */
 export const CraftTypeResolverSchema = z.object({
-  component: z.string(),
-  props: z.any().optional(),
-  rules: z.any().optional(),
-  related: z.any().optional(),
+  resolvedName: z.string().max(200),
 });
 
 /**
- * Base schema for a canvas node
+ * Base schema for a canvas node (matches actual Craft.js serialize() output)
+ *
+ * Key differences from Craft.js internal format:
+ * - id: Optional (node IDs are keys in the nodes object, not stored on the node itself)
+ * - type: Object with resolvedName, not the CraftTypeResolverSchema format
+ * - nodes: Array of child node IDs (for containers), not record of arrays
+ * - linkedNodes: Object (mapping port names to node IDs), not array
  */
 export const CanvasNodeSchema: z.ZodType<any> = z.lazy(() =>
   z.object({
-    id: z.string().min(1).max(500),
-    type: z.union([z.string(), CraftTypeResolverSchema]),
+    id: z.string().min(1).max(500).optional(),
+    type: z.union([z.string().max(200), CraftTypeResolverSchema]),
     props: z
       .record(z.any())
       .refine(
@@ -96,8 +100,8 @@ export const CanvasNodeSchema: z.ZodType<any> = z.lazy(() =>
         }
       )
       .optional(),
-    linkedNodes: z.array(z.string()).max(SECURITY_LIMITS.MAX_CHILDREN).optional(),
-    nodes: z.record(z.array(z.string()).max(SECURITY_LIMITS.MAX_CHILDREN)).optional(),
+    linkedNodes: z.record(z.string()).optional(),
+    nodes: z.array(z.string()).max(SECURITY_LIMITS.MAX_CHILDREN).optional(),
     displayName: z.string().max(500).optional(),
     hidden: z.boolean().optional(),
     parent: z.string().max(500).optional(),
@@ -225,6 +229,8 @@ export function validateCanvasState(input: unknown): ValidateCanvasStateResult {
     };
   }
 
+  const obj = input as Record<string, unknown>;
+
   // Check serialized size
   try {
     const serialized = JSON.stringify(input);
@@ -242,8 +248,44 @@ export function validateCanvasState(input: unknown): ValidateCanvasStateResult {
     };
   }
 
+  // Determine format: wrapped (has 'nodes' property) or direct (IS the nodes object)
+  let nodes: Record<string, unknown>;
+  let rootNodeId: string | undefined;
+
+  if ('nodes' in obj && obj.nodes && typeof obj.nodes === 'object') {
+    // Wrapped format: { nodes: {...}, rootNodeId: '...' }
+    nodes = obj.nodes as Record<string, unknown>;
+    rootNodeId = obj.rootNodeId as string | undefined;
+  } else {
+    // Direct format: { nodeId1: {...}, nodeId2: {...} }
+    // Validate that this looks like a nodes object (has node-like keys)
+    const keys = Object.keys(obj);
+    if (keys.length === 0) {
+      return {
+        success: false,
+        error: 'Canvas state is empty',
+      };
+    }
+
+    // Check if this looks like a Craft.js nodes object
+    // by checking a sample key for node-like structure
+    const sampleKey = keys[0];
+    const sampleValue = obj[sampleKey];
+    if (!sampleValue || typeof sampleValue !== 'object') {
+      return {
+        success: false,
+        error: 'Canvas state does not contain valid nodes',
+      };
+    }
+
+    nodes = obj;
+  }
+
+  // Create wrapped format for validation
+  const wrappedInput = { nodes, events: obj.events };
+
   // Parse with Zod schema
-  const parseResult = CanvasStateSchema.safeParse(input);
+  const parseResult = CanvasStateSchema.safeParse(wrappedInput);
 
   if (!parseResult.success) {
     const errors = parseResult.error.errors.map((err) => {
@@ -258,8 +300,8 @@ export function validateCanvasState(input: unknown): ValidateCanvasStateResult {
   }
 
   // Check maximum depth of the node tree
-  const nodes = parseResult.data.nodes;
-  const maxDepth = calculateMaxDepth(nodes);
+  const parsedNodes = parseResult.data.nodes;
+  const maxDepth = calculateMaxDepth(parsedNodes);
 
   if (maxDepth > SECURITY_LIMITS.MAX_DEPTH) {
     return {
@@ -271,14 +313,20 @@ export function validateCanvasState(input: unknown): ValidateCanvasStateResult {
   // Sanitize props in all nodes
   const sanitizedData = parseResult.data;
 
-  for (const nodeId in nodes) {
-    if (nodes[nodeId].props) {
-      nodes[nodeId].props = sanitizeProps(nodes[nodeId].props);
+  for (const nodeId in parsedNodes) {
+    if (parsedNodes[nodeId].props) {
+      parsedNodes[nodeId].props = sanitizeProps(parsedNodes[nodeId].props);
     }
   }
 
+  // If the original was in direct format, preserve that structure
+  // Otherwise, return the wrapped format
+  const result = ('nodes' in obj && obj.nodes)
+    ? sanitizedData
+    : { ...sanitizedData, nodes: sanitizedData.nodes };
+
   return {
     success: true,
-    data: sanitizedData,
+    data: result,
   };
 }
