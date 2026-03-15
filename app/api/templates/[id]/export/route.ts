@@ -13,6 +13,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 import { compileTemplate, compileMultiPageTemplate, ExportOptions, CanvasState, PageState } from '@/lib/export'
+import { exportRateLimiter, RateLimitResult } from '@/lib/security/rate-limit'
+import { validateCanvasState, ValidatedCanvasState } from '@/lib/validations/canvas-state'
 
 /**
  * Sanitize filename to prevent path traversal attacks
@@ -41,6 +43,24 @@ function sanitizeFilename(name: string | null | undefined): string {
   return sanitized || 'Report'
 }
 
+/**
+ * Generate rate limit key for a user
+ */
+function getRateLimitKey(user: { id: string }): string {
+  return `export:${user.id}`
+}
+
+/**
+ * Create rate limit headers from a rate limit result
+ */
+function createRateLimitHeaders(result: RateLimitResult): HeadersInit {
+  return {
+    'X-RateLimit-Limit': String(result.limit),
+    'X-RateLimit-Remaining': String(Math.max(0, result.limit - result.current)),
+    'X-RateLimit-Reset': String(Math.ceil(result.resetAt / 1000)), // Unix timestamp in seconds
+  }
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -57,7 +77,22 @@ export async function GET(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // 2. Get template and verify ownership
+  // 2. Check rate limit
+  const rateLimitResult = exportRateLimiter.check(getRateLimitKey(user))
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json(
+      { error: 'Too many export requests. Please try again later.' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(Math.ceil(rateLimitResult.resetIn / 1000)),
+          ...createRateLimitHeaders(rateLimitResult),
+        },
+      }
+    )
+  }
+
+  // 3. Get template and verify ownership
   const { data: template, error: fetchError } = await supabase
     .from('templates')
     .select('*')
@@ -72,7 +107,7 @@ export async function GET(
     return NextResponse.json({ error: 'Access denied' }, { status: 403 })
   }
 
-  // 3. Parse export options from query params
+  // 4. Parse export options from query params
   const { searchParams } = new URL(request.url)
   const includeSampleData = searchParams.get('includeSampleData') === 'true'
   const filename = sanitizeFilename(searchParams.get('filename') || template.name)
@@ -85,45 +120,86 @@ export async function GET(
     includeWatermark: false, // Always clean exports for open source
   }
 
-  // 4. Compile and return
+  // 5. Validate canvas state(s)
+  const templateSettings = template.settings as Record<string, unknown> | null
+  const templatePages = templateSettings?.pages as PageState[] | null
+  let validatedCanvasStates: ValidatedCanvasState[] = []
+
+  if (templatePages && Array.isArray(templatePages) && templatePages.length > 0) {
+    // Multi-page template: validate each page's canvas state
+    for (const page of templatePages) {
+      if (!page.canvasState || typeof page.canvasState !== 'object' || Object.keys(page.canvasState).length === 0) {
+        continue // Skip empty pages
+      }
+
+      const validationResult = validateCanvasState(page.canvasState)
+      if (!validationResult.success) {
+        return NextResponse.json(
+          { error: `Invalid canvas state for page "${page.name}": ${validationResult.error}` },
+          { status: 400 }
+        )
+      }
+
+      validatedCanvasStates.push(validationResult.data!)
+    }
+
+    if (validatedCanvasStates.length === 0) {
+      return NextResponse.json({ error: 'No valid pages found in template' }, { status: 400 })
+    }
+  } else {
+    // Single-page template: validate the template's canvas_state
+    const canvasState = template.canvas_state as unknown as CanvasState
+
+    if (!canvasState || typeof canvasState !== 'object' || Object.keys(canvasState).length === 0) {
+      return NextResponse.json({ error: 'Template has no content to export' }, { status: 400 })
+    }
+
+    const validationResult = validateCanvasState(canvasState)
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: `Invalid canvas state: ${validationResult.error}` },
+        { status: 400 }
+      )
+    }
+
+    validatedCanvasStates = [validationResult.data!]
+  }
+
+  // 6. Compile and return using validated canvas states
   try {
     const sampleData = options.includeSampleData
       ? (template.sample_data as Record<string, unknown> | null)
       : null
 
-    const templateSettings = template.settings as Record<string, unknown> | null
-    const templatePages = templateSettings?.pages as PageState[] | null
-    
-    if (templatePages && Array.isArray(templatePages) && templatePages.length > 0) {
-      const validPages = templatePages.filter(page =>
-        page.canvasState &&
-        typeof page.canvasState === 'object' &&
-        Object.keys(page.canvasState).length > 0
-      )
-      
-      if (validPages.length === 0) {
-        return NextResponse.json({ error: 'No valid pages found in template' }, { status: 400 })
-      }
-      
-      const html = await compileMultiPageTemplate(validPages, sampleData, options)
+    if (validatedCanvasStates.length > 1) {
+      // Multi-page: compile with validated pages
+      const validatedPages: PageState[] = templatePages!
+        .filter(page =>
+          page.canvasState &&
+          typeof page.canvasState === 'object' &&
+          Object.keys(page.canvasState).length > 0
+        )
+        .map((page, index) => ({
+          ...page,
+          canvasState: validatedCanvasStates[index] as unknown as CanvasState,
+        }))
+
+      const html = await compileMultiPageTemplate(validatedPages, sampleData, options)
       return new NextResponse(html, {
         headers: {
           'Content-Type': 'text/html; charset=utf-8',
           'Content-Disposition': `attachment; filename="${encodeURIComponent(options.filename)}.html"`,
+          ...createRateLimitHeaders(rateLimitResult),
         },
       })
     } else {
-      const canvasState = template.canvas_state as unknown as CanvasState
-      
-      if (!canvasState || typeof canvasState !== 'object' || Object.keys(canvasState).length === 0) {
-        return NextResponse.json({ error: 'Template has no content to export' }, { status: 400 })
-      }
-      
-      const html = await compileTemplate(canvasState, sampleData, options)
+      // Single-page: compile with validated canvas state
+      const html = await compileTemplate(validatedCanvasStates[0] as unknown as CanvasState, sampleData, options)
       return new NextResponse(html, {
         headers: {
           'Content-Type': 'text/html; charset=utf-8',
           'Content-Disposition': `attachment; filename="${encodeURIComponent(options.filename)}.html"`,
+          ...createRateLimitHeaders(rateLimitResult),
         },
       })
     }
@@ -149,7 +225,22 @@ export async function POST(
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // 2. Get template and verify ownership
+  // 2. Check rate limit
+  const rateLimitResult = exportRateLimiter.check(getRateLimitKey(user))
+  if (!rateLimitResult.allowed) {
+    return NextResponse.json(
+      { error: 'Too many export requests. Please try again later.' },
+      {
+        status: 429,
+        headers: {
+          'Retry-After': String(Math.ceil(rateLimitResult.resetIn / 1000)),
+          ...createRateLimitHeaders(rateLimitResult),
+        },
+      }
+    )
+  }
+
+  // 3. Get template and verify ownership
   const { data: template, error: fetchError } = await supabase
     .from('templates')
     .select('*')
@@ -164,7 +255,7 @@ export async function POST(
     return NextResponse.json({ error: 'Access denied' }, { status: 403 })
   }
 
-  // 3. Parse export options from request body
+  // 4. Parse export options from request body
   const body = await request.json()
 
   const options: ExportOptions = {
@@ -175,55 +266,96 @@ export async function POST(
     includeWatermark: false, // Always clean exports for open source
   }
 
-  // 4. Compile template
+  // 5. Validate canvas state(s)
+  const templateSettings = template.settings as Record<string, unknown> | null
+  const templatePages = templateSettings?.pages as PageState[] | null
+  let validatedCanvasStates: ValidatedCanvasState[] = []
+
+  if (templatePages && Array.isArray(templatePages) && templatePages.length > 0) {
+    // Multi-page template: validate each page's canvas state
+    for (const page of templatePages) {
+      if (!page.canvasState || typeof page.canvasState !== 'object' || Object.keys(page.canvasState).length === 0) {
+        continue // Skip empty pages
+      }
+
+      const validationResult = validateCanvasState(page.canvasState)
+      if (!validationResult.success) {
+        return NextResponse.json(
+          { error: `Invalid canvas state for page "${page.name}": ${validationResult.error}` },
+          { status: 400 }
+        )
+      }
+
+      validatedCanvasStates.push(validationResult.data!)
+    }
+
+    if (validatedCanvasStates.length === 0) {
+      return NextResponse.json(
+        { error: 'No valid pages found in template' },
+        { status: 400 }
+      )
+    }
+  } else {
+    // Single-page template: validate the template's canvas_state
+    const canvasState = template.canvas_state as unknown as CanvasState
+
+    if (!canvasState || typeof canvasState !== 'object' || Object.keys(canvasState).length === 0) {
+      return NextResponse.json(
+        { error: 'Template has no content to export' },
+        { status: 400 }
+      )
+    }
+
+    const validationResult = validateCanvasState(canvasState)
+    if (!validationResult.success) {
+      return NextResponse.json(
+        { error: `Invalid canvas state: ${validationResult.error}` },
+        { status: 400 }
+      )
+    }
+
+    validatedCanvasStates = [validationResult.data!]
+  }
+
+  // 6. Compile template using validated canvas states
   try {
     const sampleData = options.includeSampleData
       ? (template.sample_data as Record<string, unknown> | null)
       : null
 
-    const templateSettings = template.settings as Record<string, unknown> | null
-    const templatePages = templateSettings?.pages as PageState[] | null
-    
-    if (templatePages && Array.isArray(templatePages) && templatePages.length > 0) {
-      const validPages = templatePages.filter(page => 
-        page.canvasState && 
-        typeof page.canvasState === 'object' &&
-        Object.keys(page.canvasState).length > 0
-      )
-      
-      if (validPages.length === 0) {
-        return NextResponse.json(
-          { error: 'No valid pages found in template' },
-          { status: 400 }
+    if (validatedCanvasStates.length > 1) {
+      // Multi-page: compile with validated pages
+      const validatedPages: PageState[] = templatePages!
+        .filter(page =>
+          page.canvasState &&
+          typeof page.canvasState === 'object' &&
+          Object.keys(page.canvasState).length > 0
         )
-      }
-      
-      const html = await compileMultiPageTemplate(validPages, sampleData, options)
-      
+        .map((page, index) => ({
+          ...page,
+          canvasState: validatedCanvasStates[index] as unknown as CanvasState,
+        }))
+
+      const html = await compileMultiPageTemplate(validatedPages, sampleData, options)
+
       const filename = `${options.filename}.html`
       return new NextResponse(html, {
         headers: {
           'Content-Type': 'text/html; charset=utf-8',
           'Content-Disposition': `attachment; filename="${encodeURIComponent(filename)}"`,
+          ...createRateLimitHeaders(rateLimitResult),
         },
       })
     } else {
-      const canvasState = template.canvas_state as unknown as CanvasState
-      
-      if (!canvasState || typeof canvasState !== 'object' || Object.keys(canvasState).length === 0) {
-        return NextResponse.json(
-          { error: 'Template has no content to export' },
-          { status: 400 }
-        )
-      }
-      
-      const html = await compileTemplate(canvasState, sampleData, options)
-      
+      // Single-page: compile with validated canvas state
+      const html = await compileTemplate(validatedCanvasStates[0] as unknown as CanvasState, sampleData, options)
+
       const filename = `${options.filename}.html`
       return new NextResponse(html, {
         headers: {
           'Content-Type': 'text/html; charset=utf-8',
           'Content-Disposition': `attachment; filename="${encodeURIComponent(filename)}"`,
+          ...createRateLimitHeaders(rateLimitResult),
         },
       })
     }
