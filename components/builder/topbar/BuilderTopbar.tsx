@@ -3,13 +3,12 @@
 import { useEditor } from '@craftjs/core'
 import { useBuilderStore } from '@/lib/stores/builder-store'
 import { Button } from '@/components/ui/button'
-import { Save, Eye, EyeOff, Undo, Redo, ArrowLeft, Trash2, Magnet, Pencil, Check, Loader2, History, Share2 } from 'lucide-react'
+import { Save, Eye, EyeOff, Undo, Redo, ArrowLeft, Trash2, Magnet, Pencil, Check, Loader2, History } from 'lucide-react'
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { SampleDataLoader } from './SampleDataLoader'
 import { ExportButton } from '../export/ExportButton'
 import { VersionPanel } from '../versioning/VersionPanel'
-import { ShareDialog } from '../sharing/ShareDialog'
 
 // Autosave delay in milliseconds
 const AUTOSAVE_DELAY = 2000
@@ -39,7 +38,6 @@ export function BuilderTopbar() {
   const [editName, setEditName] = useState(templateName)
   const [showSaved, setShowSaved] = useState(false)
   const [showVersionPanel, setShowVersionPanel] = useState(false)
-  const [showShareDialog, setShowShareDialog] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const autosaveTimerRef = useRef<NodeJS.Timeout | null>(null)
   const savePromiseRef = useRef<Promise<void> | null>(null)
@@ -216,12 +214,6 @@ export function BuilderTopbar() {
         onClose={() => setShowVersionPanel(false)}
         onVersionRestored={handleVersionRestored}
       />
-      <ShareDialog
-        templateId={templateId || ''}
-        templateName={templateName}
-        isOpen={showShareDialog}
-        onClose={() => setShowShareDialog(false)}
-      />
       <header className="h-14 border-b border-[rgba(0,255,200,0.1)] bg-[#050810] flex items-center justify-between px-4 relative z-20">
         <div className="flex items-center gap-4">
           <Link
@@ -320,16 +312,6 @@ export function BuilderTopbar() {
             disabled={isPreviewMode}
           >
             <History className="w-4 h-4" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowShareDialog(true)}
-            title="Share Template"
-            disabled={isPreviewMode}
-          >
-            <Share2 className="w-4 h-4" />
           </Button>
 
           <Button

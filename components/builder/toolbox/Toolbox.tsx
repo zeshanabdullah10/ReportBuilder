@@ -29,11 +29,10 @@ import { SpecBox } from '../components/SpecBox'
 import { ToleranceBand } from '../components/ToleranceBand'
 import { PassRateChart } from '../components/PassRateChart'
 import { RevisionBlock } from '../components/RevisionBlock'
-import { CustomComponentsPanel } from '../custom/CustomComponentsPanel'
 import {
   Type, Square, Image as ImageIcon, Table2, BarChart3, Minus,
   FileText, GripVertical, CheckCircle, Divide, Hash, Calendar,
-  Gauge as GaugeIcon, Loader, List, Bookmark, ChevronDown, ChevronRight,
+  Gauge as GaugeIcon, Loader, List, ChevronDown, ChevronRight,
   QrCode, Barcode as BarcodeIcon, PenLine, ClipboardCheck, TestTube, ScatterChart,
   Building2, Droplet, Box, Ruler, PieChart, GitCommit
 } from 'lucide-react'
@@ -227,7 +226,7 @@ const toolboxItems = [
         name: 'Indicator',
         icon: CheckCircle,
         component: <Indicator />,
-        description: 'Pass/Fail status badge',
+        description: 'Pass/fail status badge',
       },
     ],
   },
@@ -239,7 +238,7 @@ const defaultExpanded = ['Document', 'Charts & Data', 'Test Reports']
 export function Toolbox() {
   const { connectors } = useEditor()
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(
-    new Set([...defaultExpanded, 'Custom Components'])
+    new Set([...defaultExpanded])
   )
 
   const toggleCategory = (category: string) => {
@@ -265,7 +264,6 @@ export function Toolbox() {
           Components
         </h3>
       </div>
-
       <div className="flex-1 overflow-y-auto">
         <div className="py-2" role="list" aria-labelledby="toolbox-title">
           {toolboxItems.map((category) => {
@@ -286,7 +284,6 @@ export function Toolbox() {
                     {category.items.length}
                   </span>
                 </button>
-
                 {isExpanded && (
                   <div className="px-3 pb-2 space-y-2" role="list">
                     {category.items.map((item) => (
@@ -315,30 +312,6 @@ export function Toolbox() {
               </div>
             )
           })}
-
-          {/* Custom Components Section */}
-          <div role="group" aria-label="Custom components" className="border-t border-[rgba(0,255,200,0.1)] mt-2">
-            <button
-              onClick={() => toggleCategory('Custom Components')}
-              className="flex items-center gap-2 text-xs text-gray-500 uppercase tracking-wider font-medium w-full px-4 py-2 hover:text-gray-400 hover:bg-[rgba(0,255,200,0.03)] transition-colors"
-            >
-              {expandedCategories.has('Custom Components') ? (
-                <ChevronDown className="w-4 h-4" />
-              ) : (
-                <ChevronRight className="w-4 h-4" />
-              )}
-              <Bookmark className="w-4 h-4" />
-              Custom Components
-            </button>
-
-            {expandedCategories.has('Custom Components') && (
-              <div className="px-3 pb-2">
-                <div className="border border-[rgba(0,255,200,0.1)] rounded-lg overflow-hidden">
-                  <CustomComponentsPanel />
-                </div>
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>
