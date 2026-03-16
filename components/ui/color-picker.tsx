@@ -74,7 +74,7 @@ export function ColorPicker({
   const displayHex = isTransparent ? 'TRANSPARENT' : (color.startsWith('rgba') ? color : color.toUpperCase())
 
   // Custom styles for dark theme ChromePicker
-  const pickerStyles: React.CSSProperties = {
+  const pickerStyles = {
     default: {
       background: '#0a0f14',
     },
@@ -107,7 +107,7 @@ export function ColorPicker({
     label: {
       color: '#9ca3af',
     },
-  }
+  } as React.CSSProperties
 
   return (
     <div className={cn('relative', className)}>
