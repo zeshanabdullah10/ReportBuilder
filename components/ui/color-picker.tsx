@@ -73,41 +73,6 @@ export function ColorPicker({
   const isTransparent = color === 'rgba(0, 0, 0, 0)' || color === 'transparent'
   const displayHex = isTransparent ? 'TRANSPARENT' : (color.startsWith('rgba') ? color : color.toUpperCase())
 
-  // Custom styles for dark theme ChromePicker
-  const pickerStyles = {
-    default: {
-      background: '#0a0f14',
-    },
-    body: {
-      background: '#0a0f14',
-      color: '#e5e7eb',
-    },
-    saturation: {
-      background: '#050810',
-    },
-    hue: {
-      background: '#050810',
-    },
-    controls: {
-      background: '#0a0f14',
-    },
-    swatch: {
-      background: '#0a0f14',
-      border: '1px solid rgba(0, 255, 200, 0.2)',
-    },
-    swatchSelected: {
-      background: '#0a0f14',
-      border: '2px solid #00ffc8',
-    },
-    input: {
-      background: '#050810',
-      color: '#e5e7eb',
-      border: '1px solid rgba(0, 255, 200, 0.3)',
-    },
-    label: {
-      color: '#9ca3af',
-    },
-  } as React.CSSProperties
 
   return (
     <div className={cn('relative', className)}>
@@ -199,7 +164,6 @@ export function ColorPicker({
                 color={color}
                 onChange={handleChange}
                 disableAlpha={!showAlpha}
-                styles={pickerStyles}
               />
             </div>
           </div>
@@ -234,18 +198,6 @@ export function ColorPickerInline({
     onChange(newColor)
   }
 
-  // Dark theme styles
-  const pickerStyles: React.CSSProperties = {
-    default: { background: '#0a0f14' },
-    body: { background: '#0a0f14', color: '#e5e7eb' },
-    saturation: { background: '#050810' },
-    hue: { background: '#050810' },
-    controls: { background: '#0a0f14' },
-    swatch: { background: '#0a0f14', border: '1px solid rgba(0, 255, 200, 0.2)' },
-    swatchSelected: { background: '#0a0f14', border: '2px solid #00ffc8' },
-    input: { background: '#050810', color: '#e5e7eb', border: '1px solid rgba(0, 255, 200, 0.3)' },
-    label: { color: '#9ca3af' },
-  }
 
   return (
     <div className={cn('color-picker-inline bg-[#0a0f14] border border-[rgba(0,255,200,0.2)] rounded-lg p-2', className)}>
@@ -253,7 +205,6 @@ export function ColorPickerInline({
         color={color}
         onChange={handleChange}
         disableAlpha={!showAlpha}
-        styles={pickerStyles}
       />
     </div>
   )
