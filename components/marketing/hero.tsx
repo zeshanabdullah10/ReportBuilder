@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { ArrowRight, Layers, FileCode, Cpu, ChevronDown, Github, Star } from 'lucide-react'
+import { ArrowRight, Layers, FileCode, Cpu, ChevronDown, Github, Star, Download } from 'lucide-react'
 
 // Pre-generated random positions for floating data points (avoid hydration mismatch)
 const floatingPoints = [
@@ -139,6 +139,20 @@ export function Hero() {
                 <div className="absolute inset-0 bg-[#39ff14] transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300" />
                 <ArrowRight className="relative z-10 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
+
+               <a
+                href="https://github.com/zeshanabdullah10/ReportBuilder/releases"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group relative inline-flex items-center justify-center gap-2 px-8 py-4 font-semibold text-[#0a0f14] bg-[#00ffc8] border border-[#00ffc8]/30 rounded-lg overflow-hidden"
+                style={{ fontFamily: "'JetBrains Mono', monospace" }}
+              >
+                <span className="relative z-10 flex items-center gap-2">
+                  <Download className="w-5 h-5" />
+                  DOWNLOAD CLI
+                </span>
+                <div className="absolute inset-0 bg-[#39ff14] transform scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-300" />
+              </a>
 
                <a
                 href="https://github.com/zeshanabdullah10/ReportBuilder"
