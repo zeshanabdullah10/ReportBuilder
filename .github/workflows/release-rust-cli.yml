@@ -1,0 +1,72 @@
+name: Release Rust CLI
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay-rust-toolchain@stable
+        with:
+          toolchain: stable
+
+      - name: Get version from tag
+        id: get_version
+        run: |
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build Windows (Release profile, versioned name)
+        run: |
+          cd report-cli
+          cargo build --release --target x86_64-pc-windows-gnu --bin "report-cli-v${{ steps.get_version.outputs.VERSION }}-windows-x64"
+        shell: bash
+
+      - name: Build Linux (Release profile, versioned name)
+        run: |
+          cd report-cli
+          cargo build --release --target x86_64-unknown-linux-gnu --bin "report-cli-v${{ steps.get_version.outputs.VERSION }}-linux-x64"
+        shell: bash
+
+      - name: Package source archive
+        run: |
+          cd report-cli
+          cargo package --allow-dirty
+        shell: bash
+
+      - name: Generate checksums
+        run: |
+          cd report-cli/target
+          shopt -s nullglob
+          for file in *.exe *.gz; do
+            sha256sum "$file" > "$file.sha256"
+          done
+        shell: bash
+
+      - name: Upload Windows binary
+        uses: softprops/action-gh-release@v1
+        with:
+          files: report-cli/target/x86_64-pc-windows-gnu/release/report-cli-v${{ steps.get_version.outputs.VERSION }}-windows-x64.exe
+          generate_release_notes: true
+
+      - name: Upload Linux binary
+        uses: softprops/action-gh-release@v1
+        with:
+          files: report-cli/target/x86_64-unknown-linux-gnu/release/report-cli-v${{ steps.get_version.outputs.VERSION }}-linux-x64
+
+      - name: Upload source archive
+        uses: softprops/action-gh-release@v1
+        with:
+          files: report-cli/target/*.crate.gz
+
+      - name: Upload checksums
+        uses: softprops/action-gh-release@v1
+        with:
+          files: report-cli/target/*.sha256

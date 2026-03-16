@@ -76,7 +76,7 @@ export default async function SettingsPage() {
                 </p>
               </div>
               <a
-                href="https://github.com/your-repo/report-builder"
+                href="https://github.com/zeshanabdullah10/ReportBuilder"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="px-4 py-2 rounded-md border border-[#00ffc8] text-[#00ffc8] hover:bg-[#00ffc8]/10 transition-colors text-sm font-medium flex items-center gap-2"

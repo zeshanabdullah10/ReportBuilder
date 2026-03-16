@@ -116,7 +116,7 @@ export function PageNavigation() {
   }
 
   return (
-    <div 
+    <div
       className="absolute bottom-0 left-0 right-0 z-40 bg-[#050810] border-t border-[rgba(0,255,200,0.2)]"
       onKeyDown={handleKeyDown}
       tabIndex={0}
@@ -124,7 +124,7 @@ export function PageNavigation() {
       aria-label="Page navigation"
     >
       <div className="flex items-center justify-between px-4 py-2">
-        {/* Left side - Navigation arrows and page indicator */}
+        {/* Left side - Navigation arrows, page indicator, Add Page, and More actions */}
         <div className="flex items-center gap-2">
           {/* Previous page button */}
           <button
@@ -148,6 +148,56 @@ export function PageNavigation() {
               Page <span className="text-[#00ffc8] font-semibold">{activeIndex + 1}</span> of {totalPages}
             </span>
           </button>
+
+          {/* Add Page button */}
+          <button
+            onClick={handleAddPage}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-300 hover:text-[#00ffc8] hover:bg-[rgba(0,255,200,0.1)] rounded transition-colors"
+            title="Add new page"
+          >
+            <Plus className="w-4 h-4" />
+            <span className="hidden sm:inline">Add</span>
+          </button>
+
+          {/* More actions menu button */}
+          <div ref={menuRef} className="relative">
+            <button
+              onClick={() => setShowPageMenu(!showPageMenu)}
+              className="p-2 text-gray-400 hover:text-[#00ffc8] hover:bg-[rgba(0,255,200,0.1)] rounded transition-colors"
+              title="Page actions"
+            >
+              <MoreHorizontal className="w-5 h-5" />
+            </button>
+
+            {/* Dropdown menu */}
+            {showPageMenu && (
+              <div className="absolute bottom-full left-0 mb-2 w-48 bg-[#0a0f14] border border-[rgba(0,255,200,0.3)] rounded-lg shadow-xl overflow-hidden">
+                <button
+                  onClick={handleAddPage}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:bg-[rgba(0,255,200,0.1)] hover:text-[#00ffc8] transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Add New Page
+                </button>
+                <button
+                  onClick={handleDuplicatePage}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:bg-[rgba(0,255,200,0.1)] hover:text-[#00ffc8] transition-colors"
+                >
+                  <Copy className="w-4 h-4" />
+                  Duplicate Page
+                </button>
+                <div className="border-t border-[rgba(0,255,200,0.1)]" />
+                <button
+                  onClick={handleDeletePage}
+                  disabled={totalPages <= 1}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Delete Page
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Next page button */}
           <button
@@ -204,58 +254,8 @@ export function PageNavigation() {
           )}
         </div>
 
-        {/* Right side - Page actions */}
-        <div className="flex items-center gap-1">
-          {/* Quick add button */}
-          <button
-            onClick={handleAddPage}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-300 hover:text-[#00ffc8] hover:bg-[rgba(0,255,200,0.1)] rounded transition-colors"
-            title="Add new page"
-          >
-            <Plus className="w-4 h-4" />
-            <span className="hidden sm:inline">Add Page</span>
-          </button>
-
-          {/* More actions menu */}
-          <div ref={menuRef} className="relative">
-            <button
-              onClick={() => setShowPageMenu(!showPageMenu)}
-              className="p-2 text-gray-400 hover:text-[#00ffc8] hover:bg-[rgba(0,255,200,0.1)] rounded transition-colors"
-              title="Page actions"
-            >
-              <MoreHorizontal className="w-5 h-5" />
-            </button>
-
-            {/* Dropdown menu */}
-            {showPageMenu && (
-              <div className="absolute bottom-full right-0 mb-2 w-48 bg-[#0a0f14] border border-[rgba(0,255,200,0.3)] rounded-lg shadow-xl overflow-hidden">
-                <button
-                  onClick={handleAddPage}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:bg-[rgba(0,255,200,0.1)] hover:text-[#00ffc8] transition-colors"
-                >
-                  <Plus className="w-4 h-4" />
-                  Add New Page
-                </button>
-                <button
-                  onClick={handleDuplicatePage}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-300 hover:bg-[rgba(0,255,200,0.1)] hover:text-[#00ffc8] transition-colors"
-                >
-                  <Copy className="w-4 h-4" />
-                  Duplicate Page
-                </button>
-                <div className="border-t border-[rgba(0,255,200,0.1)]" />
-                <button
-                  onClick={handleDeletePage}
-                  disabled={totalPages <= 1}
-                  className="w-full flex items-center gap-2 px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  Delete Page
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
+        {/* Right side - Empty for future features */}
+        <div />
       </div>
     </div>
   )

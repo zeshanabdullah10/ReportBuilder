@@ -2,9 +2,8 @@
 
 import React, { useState, useMemo } from 'react'
 import { useEditor } from '@craftjs/core'
-import { Trash2, Bookmark, AlertTriangle, AlertCircle } from 'lucide-react'
+import { Trash2, AlertTriangle, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { SaveComponentDialog } from '../custom/SaveComponentDialog'
 import { useBuilderStore } from '@/lib/stores/builder-store'
 import { getBindingStatus, hasBindings } from '@/lib/utils/binding'
 import { DataType } from '@/lib/utils/data-paths'
@@ -39,7 +38,6 @@ const BINDING_CONFIGS: Record<string, Array<{ prop: string; expectedType?: DataT
 }
 
 export function SettingsPanel() {
-  const [showSaveDialog, setShowSaveDialog] = useState(false)
   const { sampleData } = useBuilderStore()
 
   const { selected, actions, query } = useEditor((state, query) => {
@@ -156,21 +154,6 @@ export function SettingsPanel() {
                 </div>
               )}
 
-              {/* Save as Custom Component */}
-              {selected.isDeletable && (
-                <div className="pt-4 border-t border-[rgba(0,255,200,0.1)]">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowSaveDialog(true)}
-                    className="w-full text-[#00ffc8] border-[rgba(0,255,200,0.3)] hover:bg-[rgba(0,255,200,0.1)]"
-                  >
-                    <Bookmark className="w-4 h-4 mr-2" />
-                    Save as Component
-                  </Button>
-                </div>
-              )}
-
               {selected.isDeletable && (
                 <div className="pt-4 border-t border-[rgba(0,255,200,0.1)]">
                   <Button
@@ -188,15 +171,6 @@ export function SettingsPanel() {
           )}
         </div>
       </div>
-
-      {/* Save Component Dialog */}
-      {selected && showSaveDialog && (
-        <SaveComponentDialog
-          isOpen={showSaveDialog}
-          onClose={() => setShowSaveDialog(false)}
-          componentId={selected.id}
-        />
-      )}
     </>
   )
 }
