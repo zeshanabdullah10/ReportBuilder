@@ -34,12 +34,13 @@ jobs:
         run: cargo test --workspace
       - name: C ABI example
         run: |
+          cargo build -p reportcore-ffi
           cc engine/reportcore-ffi/examples/render.c -Iengine/reportcore-ffi/include -Ltarget/debug -lreportbuilder \
              -Wl,-rpath,$PWD/target/debug -o /tmp/render_c
           /tmp/render_c engine/reportcore/templates/ate-final-test.rbt.json engine/reportcore/templates/ate-final-test.data.json /tmp/c.pdf
-      - name: Python bindings
+      - name: Python bindings (debug library)
         working-directory: integrations/python
-        run: python3 test_reportbuilder.py
+        run: REPORTBUILDER_LIB=$PWD/../../target/debug/libreportbuilder.so python3 test_reportbuilder.py
 
   engine-windows:
     name: Engine, CLI and LabVIEW DLL (Windows x64 + x86)
