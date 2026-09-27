@@ -56,3 +56,11 @@ remotion/out/
 /target/
 *.pdf.partial
 __pycache__/
+
+# Desktop app
+/desktop/node_modules/
+/desktop/dist/
+/desktop/test-results/
+/desktop/playwright-report/
+/desktop/src-tauri/gen/
+/desktop/src-tauri/target/

@@ -99,7 +99,7 @@ pub fn gauge_svg(g: &GaugeData, theme: &Theme) -> String {
     let _ = write!(
         s,
         r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {w} {h}" font-family="{}">"#,
-        theme.font.typst_name()
+        crate::charts::font_stack(theme)
     );
     let _ = write!(
         s,

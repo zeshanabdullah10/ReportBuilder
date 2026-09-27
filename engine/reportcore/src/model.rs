@@ -37,6 +37,9 @@ pub struct Document {
     /// Example data used by the editor preview and by `validate`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sample_data: Option<Value>,
+    /// Editor-only state (extra data sets, UI preferences). Ignored by the renderer.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub editor: Option<Value>,
 }
 
 impl Default for Document {
@@ -51,6 +54,7 @@ impl Default for Document {
             body: Vec::new(),
             watermark: None,
             sample_data: None,
+            editor: None,
         }
     }
 }

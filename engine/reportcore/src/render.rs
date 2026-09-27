@@ -17,13 +17,23 @@ use typst::utils::LazyHash;
 use typst::{Library, LibraryExt, World};
 use typst_layout::PagedDocument;
 
-static INTER: [&[u8]; 6] = [
+/// Bundled fonts: identical output on every machine, no system font lookup.
+/// Inter (sans), Libertinus Serif (serif), DejaVu Sans Mono (mono). See fonts/*-LICENSE.txt.
+static BUNDLED_FONTS: [&[u8]; 14] = [
     include_bytes!("../fonts/Inter-Regular.ttf"),
     include_bytes!("../fonts/Inter-Italic.ttf"),
     include_bytes!("../fonts/Inter-Medium.ttf"),
     include_bytes!("../fonts/Inter-SemiBold.ttf"),
     include_bytes!("../fonts/Inter-Bold.ttf"),
     include_bytes!("../fonts/Inter-BoldItalic.ttf"),
+    include_bytes!("../fonts/LibertinusSerif-Regular.otf"),
+    include_bytes!("../fonts/LibertinusSerif-Italic.otf"),
+    include_bytes!("../fonts/LibertinusSerif-Semibold.otf"),
+    include_bytes!("../fonts/LibertinusSerif-Bold.otf"),
+    include_bytes!("../fonts/LibertinusSerif-BoldItalic.otf"),
+    include_bytes!("../fonts/DejaVuSansMono.ttf"),
+    include_bytes!("../fonts/DejaVuSansMono-Bold.ttf"),
+    include_bytes!("../fonts/DejaVuSansMono-Oblique.ttf"),
 ];
 
 struct FontSet {
@@ -33,11 +43,8 @@ struct FontSet {
 
 fn load_fonts(extra_dirs: &[PathBuf]) -> FontSet {
     let mut fonts = Vec::new();
-    for data in INTER.iter() {
+    for data in BUNDLED_FONTS.iter() {
         fonts.extend(Font::iter(Bytes::new(*data)));
-    }
-    for data in typst_assets::fonts() {
-        fonts.extend(Font::iter(Bytes::new(data)));
     }
     for dir in extra_dirs {
         if let Ok(entries) = std::fs::read_dir(dir) {
@@ -149,6 +156,9 @@ pub struct BlockRegion {
     /// Vertical extent in points from the top of the page.
     pub top: f64,
     pub bottom: f64,
+    /// Left edge (points) where the block starts; blocks inside columns start
+    /// at their column's left edge.
+    pub left: f64,
 }
 
 pub struct Compiled {
@@ -158,6 +168,8 @@ pub struct Compiled {
     pub title: String,
     /// Render time; written as the PDF creation date.
     pub now: chrono::DateTime<chrono::FixedOffset>,
+    /// Top and bottom page margins in points (for regions that span pages).
+    pub margins_pt: (f64, f64),
 }
 
 fn diag_text(diags: &[SourceDiagnostic]) -> String {
@@ -227,7 +239,9 @@ pub fn compile(doc: &Document, data: &Value, opts: &RenderOptions) -> Result<Com
         RenderError::Layout(msg)
     })?;
     let title = if doc.meta.name.is_empty() { "Report".into() } else { doc.meta.name.clone() };
-    Ok(Compiled { document, issues, source: generated.source, title, now })
+    let mm = 72.0 / 25.4;
+    let margins_pt = (doc.page.margins.top * mm, doc.page.margins.bottom * mm);
+    Ok(Compiled { document, issues, source: generated.source, title, now, margins_pt })
 }
 
 impl Compiled {
@@ -283,7 +297,7 @@ impl Compiled {
     pub fn block_regions(&self) -> Vec<BlockRegion> {
         use typst::foundations::{Label, Selector};
         let intro = self.document.introspector();
-        let collect = |name: &str| -> Vec<(String, usize, f64)> {
+        let collect = |name: &str| -> Vec<(String, usize, f64, f64)> {
             let Some(label) = Label::construct(name.into()).ok() else { return vec![] };
             intro
                 .query(&Selector::Label(label))
@@ -296,7 +310,7 @@ impl Compiled {
                     };
                     let loc = c.location()?;
                     let pos = intro.position(loc)?;
-                    Some((id, pos.page.get() - 1, pos.point.y.to_pt()))
+                    Some((id, pos.page.get() - 1, pos.point.y.to_pt(), pos.point.x.to_pt()))
                 })
                 .collect()
         };
@@ -304,7 +318,7 @@ impl Compiled {
         let ends = collect("rb-end");
         let mut out = Vec::new();
         let mut used = vec![false; ends.len()];
-        for (id, page, top) in starts {
+        for (id, page, top, left) in starts {
             // Match the next unused end marker with the same id.
             let Some(j) = ends
                 .iter()
@@ -314,18 +328,18 @@ impl Compiled {
                 continue;
             };
             used[j] = true;
-            let (_, end_page, bottom) = ends[j].clone();
+            let (_, end_page, bottom, _) = ends[j].clone();
             let page_h = self.page_size(page).map(|s| s.1).unwrap_or(842.0);
-            let margin_top = 0.0;
+            let (margin_top, margin_bottom) = self.margins_pt;
             if end_page == page {
-                out.push(BlockRegion { id: id.clone(), page, top, bottom: bottom.max(top + 2.0) });
+                out.push(BlockRegion { id: id.clone(), page, top, bottom: bottom.max(top + 2.0), left });
             } else {
-                out.push(BlockRegion { id: id.clone(), page, top, bottom: page_h });
+                out.push(BlockRegion { id: id.clone(), page, top, bottom: page_h - margin_bottom, left });
                 for p in page + 1..end_page {
                     let h = self.page_size(p).map(|s| s.1).unwrap_or(page_h);
-                    out.push(BlockRegion { id: id.clone(), page: p, top: margin_top, bottom: h });
+                    out.push(BlockRegion { id: id.clone(), page: p, top: margin_top, bottom: h - margin_bottom, left });
                 }
-                out.push(BlockRegion { id: id.clone(), page: end_page, top: margin_top, bottom });
+                out.push(BlockRegion { id: id.clone(), page: end_page, top: margin_top, bottom, left });
             }
         }
         out

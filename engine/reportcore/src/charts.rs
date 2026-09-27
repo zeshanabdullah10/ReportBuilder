@@ -43,6 +43,17 @@ pub struct ChartData {
     pub grid: bool,
 }
 
+/// Font stack for SVG text: the bundled theme font first (used by the PDF),
+/// then fallbacks for SVG previews shown in a browser without that font.
+pub fn font_stack(theme: &Theme) -> String {
+    let fallback = match theme.font {
+        crate::model::FontFamily::Serif => "Georgia, 'Times New Roman', serif",
+        crate::model::FontFamily::Mono => "Menlo, Consolas, monospace",
+        crate::model::FontFamily::Sans => "-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif",
+    };
+    format!("{}, {fallback}", theme.font.typst_name()).replace('"', "'")
+}
+
 pub fn esc(s: &str) -> String {
     s.replace('&', "&amp;").replace('<', "&lt;").replace('>', "&gt;").replace('"', "&quot;")
 }
@@ -115,7 +126,7 @@ impl Frame {
 /// Render a chart to an SVG document of `width_pt` × `height_pt`.
 pub fn render(data: &ChartData, theme: &Theme, width_pt: f64, height_pt: f64) -> String {
     let mut s = String::new();
-    let font = theme.font.typst_name();
+    let font = font_stack(theme);
     let w = width_pt.max(60.0);
     let h = height_pt.max(40.0);
     let _ = write!(

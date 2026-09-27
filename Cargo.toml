@@ -4,6 +4,7 @@ members = [
   "engine/reportcore",
   "engine/report-cli",
   "engine/reportcore-ffi",
+  "desktop/src-tauri",
 ]
 
 [workspace.package]
