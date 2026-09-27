@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "name": "Blank Report",
+    "description": "A clean page with header, footer and a title.",
+    "revision": "A",
+    "tags": [
+      "blank"
+    ]
+  },
+  "page": {
+    "size": "a4"
+  },
+  "footer": [
+    {
+      "id": "ftr",
+      "type": "columns",
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "ftr-left",
+              "type": "text",
+              "text": "{{ report.name }} · {{ theme.company }}",
+              "style": {
+                "color": "muted"
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "ftr-page",
+              "type": "text",
+              "text": "Page {{ page }} of {{ pages }}",
+              "style": {
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "body": [
+    {
+      "id": "h",
+      "type": "heading",
+      "level": 1,
+      "text": "{{ title ?? 'Untitled report' }}"
+    },
+    {
+      "id": "t",
+      "type": "text",
+      "text": "Start adding blocks from the library, or press ⌘K."
+    }
+  ]
+}

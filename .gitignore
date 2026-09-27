@@ -51,3 +51,8 @@ _bmad/
 remotion/node_modules/.cache/
 remotion/node_modules/.remotion/
 remotion/out/
+
+# Rust
+/target/
+*.pdf.partial
+__pycache__/

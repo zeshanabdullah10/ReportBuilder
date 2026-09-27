@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "name": "Certificate of Conformance",
+    "description": "Shipment-level declaration of conformity with line items and signatory.",
+    "author": "Quality",
+    "revision": "A",
+    "tags": [
+      "quality",
+      "shipping",
+      "coc"
+    ]
+  },
+  "page": {
+    "size": "letter",
+    "margins": {
+      "top": 22,
+      "right": 20,
+      "bottom": 20,
+      "left": 20
+    }
+  },
+  "theme": {
+    "company": "Acme Instruments",
+    "font": "serif",
+    "fontSize": 10.5
+  },
+  "footer": [
+    {
+      "id": "ftr",
+      "type": "columns",
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "ftr-left",
+              "type": "text",
+              "text": "{{ report.name }} · {{ theme.company }}",
+              "style": {
+                "color": "muted"
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "ftr-page",
+              "type": "text",
+              "text": "Page {{ page }} of {{ pages }}",
+              "style": {
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "body": [
+    {
+      "id": "h",
+      "type": "heading",
+      "level": 1,
+      "text": "Certificate of Conformance",
+      "align": "center"
+    },
+    {
+      "id": "no",
+      "type": "text",
+      "text": "No. {{ certificate }} · {{ date(date, 'MMMM D, YYYY') }}",
+      "style": {
+        "align": "center",
+        "color": "muted"
+      }
+    },
+    {
+      "id": "sp",
+      "type": "spacer",
+      "heightMm": 4
+    },
+    {
+      "id": "kv",
+      "type": "keyValue",
+      "columns": 2,
+      "items": [
+        {
+          "label": "Customer",
+          "value": "{{ customer.name }}"
+        },
+        {
+          "label": "Purchase order",
+          "value": "{{ customer.po }}"
+        }
+      ]
+    },
+    {
+      "id": "items",
+      "type": "table",
+      "source": "items",
+      "zebra": false,
+      "columns": [
+        {
+          "header": "Line",
+          "value": "row.line",
+          "align": "right"
+        },
+        {
+          "header": "Part number",
+          "value": "row.partNumber"
+        },
+        {
+          "header": "Description",
+          "value": "row.description",
+          "width": "1fr"
+        },
+        {
+          "header": "Qty",
+          "value": "row.quantity",
+          "align": "right"
+        },
+        {
+          "header": "Lot",
+          "value": "row.lot"
+        }
+      ]
+    },
+    {
+      "id": "stmt",
+      "type": "text",
+      "text": "We hereby certify that the items listed above were manufactured, inspected and tested in accordance with the applicable drawings, specifications and the requirements of the purchase order, and **conform in all respects** to those requirements. Records are retained and available for review on request."
+    },
+    {
+      "id": "total",
+      "type": "text",
+      "text": "Total quantity shipped: **{{ sum(items, 'quantity') }}**"
+    },
+    {
+      "id": "sig",
+      "type": "signatures",
+      "showDate": true,
+      "entries": [
+        {
+          "role": "{{ signatory.title }}",
+          "name": "{{ signatory.name }}"
+        }
+      ]
+    },
+    {
+      "id": "bc",
+      "type": "barcode",
+      "value": "{{ certificate }}",
+      "align": "right",
+      "widthMm": 55
+    }
+  ]
+}

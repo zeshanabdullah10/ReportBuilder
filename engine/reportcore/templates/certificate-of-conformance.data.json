@@ -1,0 +1,28 @@
+{
+  "certificate": "COC-2026-11873",
+  "date": "2026-03-02",
+  "customer": {
+    "name": "Northwind Robotics",
+    "po": "NR-PO-88213"
+  },
+  "items": [
+    {
+      "line": 1,
+      "partNumber": "900-0240-01",
+      "description": "PSU-240 Power Supply",
+      "quantity": 250,
+      "lot": "L2409-17"
+    },
+    {
+      "line": 2,
+      "partNumber": "900-0241-02",
+      "description": "PSU-240 Mounting Kit",
+      "quantity": 250,
+      "lot": "L2409-19"
+    }
+  ],
+  "signatory": {
+    "name": "R. Castillo",
+    "title": "Quality Manager"
+  }
+}

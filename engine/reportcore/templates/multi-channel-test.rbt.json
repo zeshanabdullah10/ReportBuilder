@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "name": "Multi-channel Test",
+    "description": "One section per channel, repeated from data, each with its own chart and limits.",
+    "author": "Test Engineering",
+    "revision": "A",
+    "tags": [
+      "repeat",
+      "channels",
+      "daq"
+    ]
+  },
+  "page": {
+    "size": "a4",
+    "margins": {
+      "top": 20,
+      "right": 16,
+      "bottom": 20,
+      "left": 16
+    }
+  },
+  "theme": {
+    "company": "Acme Instruments"
+  },
+  "footer": [
+    {
+      "id": "ftr",
+      "type": "columns",
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "ftr-left",
+              "type": "text",
+              "text": "{{ report.name }} · {{ theme.company }}",
+              "style": {
+                "color": "muted"
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "ftr-page",
+              "type": "text",
+              "text": "Page {{ page }} of {{ pages }}",
+              "style": {
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "body": [
+    {
+      "id": "h",
+      "type": "heading",
+      "level": 1,
+      "text": "Channel Characterisation"
+    },
+    {
+      "id": "s",
+      "type": "text",
+      "text": "{{ dut.model }} · S/N {{ dut.serial }} · {{ date(date, 'D MMM YYYY HH:mm') }} · {{ operator }}",
+      "style": {
+        "color": "muted"
+      }
+    },
+    {
+      "id": "overview",
+      "type": "chart",
+      "kind": "bar",
+      "title": "Worst-case deviation per channel",
+      "series": [
+        {
+          "label": "Max |dev|",
+          "source": "channels",
+          "x": "item.name",
+          "y": "max(each(item.results, 'abs(it.value)'))"
+        }
+      ],
+      "heightMm": 45,
+      "yLabel": "dB",
+      "limits": [
+        {
+          "label": "Limit 0.25 dB",
+          "value": "0.25"
+        }
+      ]
+    },
+    {
+      "id": "sec",
+      "type": "section",
+      "repeat": "channels",
+      "as": "ch",
+      "title": "{{ ch.name }}",
+      "keepTogether": true,
+      "blocks": [
+        {
+          "id": "sec-cols",
+          "type": "columns",
+          "gapMm": 5,
+          "columns": [
+            {
+              "width": 3,
+              "blocks": [
+                {
+                  "id": "sec-chart",
+                  "type": "chart",
+                  "kind": "line",
+                  "series": [
+                    {
+                      "label": "Gain",
+                      "source": "ch.gainTrace"
+                    }
+                  ],
+                  "heightMm": 38,
+                  "yLabel": "V/V",
+                  "xLabel": "Sample"
+                }
+              ]
+            },
+            {
+              "width": 2,
+              "blocks": [
+                {
+                  "id": "sec-status",
+                  "type": "status",
+                  "label": "Channel result",
+                  "value": "verdict(ch.results)"
+                },
+                {
+                  "id": "sec-tbl",
+                  "type": "table",
+                  "source": "ch.results",
+                  "rowTone": "status(row.value, row.low, row.high)",
+                  "columns": [
+                    {
+                      "header": "Test",
+                      "value": "row.name",
+                      "width": "1fr"
+                    },
+                    {
+                      "header": "dB",
+                      "value": "row.value | fixed(3)",
+                      "align": "right"
+                    },
+                    {
+                      "header": "",
+                      "value": "status(row.value, row.low, row.high)",
+                      "align": "center"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
