@@ -29,23 +29,9 @@ pub const RB_ERR_RENDER: i32 = 3;
 pub const RB_ERR_BUFFER: i32 = -1;
 pub const RB_ERR_INTERNAL: i32 = -2;
 
-const CP1252_HIGH: [char; 32] = [
-    '€', '\u{81}', '‚', 'ƒ', '„', '…', '†', '‡', 'ˆ', '‰', 'Š', '‹', 'Œ', '\u{8d}', 'Ž', '\u{8f}', '\u{90}', '‘', '’',
-    '“', '”', '•', '–', '—', '˜', '™', 'š', '›', 'œ', '\u{9d}', 'ž', 'Ÿ',
-];
-
 /// Decode UTF-8, falling back to Windows-1252 (LabVIEW's default on Windows).
 pub fn decode(bytes: &[u8]) -> String {
-    match std::str::from_utf8(bytes) {
-        Ok(s) => s.to_string(),
-        Err(_) => bytes
-            .iter()
-            .map(|&b| match b {
-                0x80..=0x9f => CP1252_HIGH[(b - 0x80) as usize],
-                _ => b as char,
-            })
-            .collect(),
-    }
+    reportcore::encoding::decode_text(bytes)
 }
 
 unsafe fn arg(p: *const c_char) -> String {

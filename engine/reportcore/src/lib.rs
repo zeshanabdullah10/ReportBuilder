@@ -8,6 +8,7 @@ pub mod api;
 pub mod charts;
 pub mod codes;
 pub mod datetime;
+pub mod encoding;
 pub mod expr;
 pub mod gallery;
 pub mod migrate;

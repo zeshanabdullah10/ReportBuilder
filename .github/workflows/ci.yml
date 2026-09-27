@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  engine-linux:
+    name: Engine, CLI, FFI and desktop shell (Linux)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - uses: Swatinem/rust-cache@v2
+      - name: System libraries for the desktop shell
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libsoup-3.0-dev librsvg2-dev libayatana-appindicator3-dev poppler-utils
+      - name: Format
+        run: cargo fmt --all --check
+      - name: Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: Tests
+        run: cargo test --workspace
+      - name: C ABI example
+        run: |
+          cc engine/reportcore-ffi/examples/render.c -Iengine/reportcore-ffi/include -Ltarget/debug -lreportbuilder \
+             -Wl,-rpath,$PWD/target/debug -o /tmp/render_c
+          /tmp/render_c engine/reportcore/templates/ate-final-test.rbt.json engine/reportcore/templates/ate-final-test.data.json /tmp/c.pdf
+      - name: Python bindings
+        working-directory: integrations/python
+        run: python3 test_reportbuilder.py
+
+  engine-windows:
+    name: Engine, CLI and LabVIEW DLL (Windows x64 + x86)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: i686-pc-windows-msvc
+      - uses: Swatinem/rust-cache@v2
+      - name: Tests
+        run: cargo test -p reportcore -p report-cli -p reportcore-ffi
+      - name: 32-bit DLL for 32-bit LabVIEW
+        run: cargo build -p reportcore-ffi --target i686-pc-windows-msvc
+      - name: Python bindings (x64 DLL)
+        working-directory: integrations/python
+        run: |
+          cargo build -p reportcore-ffi
+          python test_reportbuilder.py
+
+  desktop:
+    name: Desktop UI (unit + end-to-end)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - name: Build report-cli (engine server for the browser build)
+        run: cargo build --release -p report-cli
+      - name: Install
+        working-directory: desktop
+        run: npm ci
+      - name: Typecheck
+        working-directory: desktop
+        run: npx tsc -b --noEmit
+      - name: Unit tests
+        working-directory: desktop
+        run: npm test
+      - name: Production build
+        working-directory: desktop
+        run: npm run build
+      - name: End-to-end tests
+        working-directory: desktop
+        run: |
+          npx playwright install --with-deps chromium
+          npx playwright test
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: playwright-report
+          path: desktop/test-results

@@ -209,14 +209,14 @@ fn load_data(path: Option<&Path>, doc: &Document) -> Result<Value> {
     match path {
         None => Ok(doc.sample_data.clone().unwrap_or_else(|| json!({}))),
         Some(p) if p.as_os_str() == "-" => {
-            let mut s = String::new();
-            std::io::stdin().read_to_string(&mut s)?;
-            serde_json::from_str(&s).context("stdin is not valid JSON")
+            let mut bytes = Vec::new();
+            std::io::stdin().read_to_end(&mut bytes)?;
+            serde_json::from_str(&reportcore::encoding::decode_text(&bytes)).context("stdin is not valid JSON")
         }
         Some(p) => {
-            let text = std::fs::read_to_string(p).with_context(|| format!("cannot read data {}", p.display()))?;
-            // Tolerate a UTF-8 BOM (common from LabVIEW / Windows tools).
-            serde_json::from_str(text.trim_start_matches('\u{feff}'))
+            let bytes = std::fs::read(p).with_context(|| format!("cannot read data {}", p.display()))?;
+            // UTF-8 (with or without BOM) or Windows-1252, as LabVIEW writes it.
+            serde_json::from_str(&reportcore::encoding::decode_text(&bytes))
                 .with_context(|| format!("{} is not valid JSON", p.display()))
         }
     }

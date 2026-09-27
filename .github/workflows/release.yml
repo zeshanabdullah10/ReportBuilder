@@ -1,0 +1,94 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  desktop:
+    name: Desktop app (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: windows, os: windows-latest, args: '' }
+          - { name: macos, os: macos-latest, args: '--target universal-apple-darwin' }
+          - { name: linux, os: ubuntu-22.04, args: '' }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.name == 'macos' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: desktop/package-lock.json
+      - name: Linux system libraries
+        if: matrix.name == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libsoup-3.0-dev librsvg2-dev libayatana-appindicator3-dev patchelf
+      - run: npm ci
+        working-directory: desktop
+      - uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: desktop
+          tagName: ${{ github.ref_name }}
+          releaseName: Report Builder ${{ github.ref_name }}
+          releaseDraft: true
+          args: ${{ matrix.args }}
+
+  engine:
+    name: CLI + LabVIEW library (${{ matrix.target }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: x86_64-pc-windows-msvc, os: windows-latest, name: windows-x64 }
+          - { target: i686-pc-windows-msvc, os: windows-latest, name: windows-x86 }
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-22.04, name: linux-x64 }
+          - { target: aarch64-apple-darwin, os: macos-latest, name: macos-arm64 }
+          - { target: x86_64-apple-darwin, os: macos-latest, name: macos-x64 }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@v2
+      - name: Build
+        run: cargo build --release -p report-cli -p reportcore-ffi --target ${{ matrix.target }}
+      - name: Package
+        shell: bash
+        run: |
+          set -euo pipefail
+          out="reportbuilder-${{ matrix.name }}"
+          mkdir -p "$out/include" "$out/bindings" "$out/templates"
+          dir="target/${{ matrix.target }}/release"
+          for f in report-cli report-cli.exe reportbuilder.dll reportbuilder.dll.lib libreportbuilder.so libreportbuilder.dylib; do
+            if [ -f "$dir/$f" ]; then cp "$dir/$f" "$out/"; fi
+          done
+          cp engine/reportcore-ffi/include/reportbuilder.h "$out/include/"
+          cp integrations/python/reportbuilder.py integrations/csharp/ReportBuilder.cs "$out/bindings/"
+          cp integrations/labview/README.md "$out/LABVIEW.md"
+          cp docs/cli.md "$out/CLI.md"
+          cp engine/reportcore/templates/*.json "$out/templates/"
+          cp LICENSE "$out/"
+          if [ "${{ runner.os }}" = "Windows" ]; then 7z a "$out.zip" "$out" >/dev/null; else zip -qr "$out.zip" "$out"; fi
+      - uses: softprops/action-gh-release@v2
+        with:
+          draft: true
+          name: Report Builder ${{ github.ref_name }}
+          files: reportbuilder-${{ matrix.name }}.zip

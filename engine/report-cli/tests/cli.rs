@@ -31,7 +31,8 @@ fn exit_codes() {
     let dir = tempfile::tempdir().unwrap();
     let t = starter(dir.path());
     let partial = dir.path().join("partial.json");
-    std::fs::write(&partial, "\u{feff}{\"dut\": {}}").unwrap();
+    // Windows-1252 bytes (µ = 0xB5), as LabVIEW writes them, must be accepted.
+    std::fs::write(&partial, b"{\"dut\": {\"model\": \"5 \xb5A\"}}").unwrap();
     let out = dir.path().join("p.pdf");
     // Missing data renders (exit 0) but fails under --strict (exit 2).
     assert_eq!(
