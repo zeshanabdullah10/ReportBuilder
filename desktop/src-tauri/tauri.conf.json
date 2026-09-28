@@ -30,8 +30,8 @@
     "targets": "all",
     "category": "Productivity",
     "shortDescription": "Design test reports; render PDFs offline from LabVIEW and any language.",
-    "longDescription": "Report Builder designs data-driven test reports and renders them to PDF with an embedded typesetting engine: no browser, no network. Includes the report-cli command-line tool and the reportbuilder library for LabVIEW.",
-    "copyright": "MIT License",
+    "longDescription": "Report Builder designs data-driven test reports and renders them to PDF with an embedded typesetting engine: no browser, no network. Test stations render the same templates with report-cli or the reportbuilder library for LabVIEW, Python and C#, available as separate downloads.",
+    "copyright": "Copyright (c) 2024 LabVIEW Report Builder. MIT License.",
     "license": "MIT",
     "icon": [
       "icons/32x32.png",
@@ -39,7 +39,18 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "licenseFile": "../../LICENSE",
+    "resources": {
+      "../../LICENSE": "LICENSE",
+      "../../THIRD-PARTY-NOTICES.md": "THIRD-PARTY-NOTICES.md",
+      "../../engine/reportcore/fonts/Inter-LICENSE.txt": "licenses/Inter-LICENSE.txt",
+      "../../engine/reportcore/fonts/Libertinus-LICENSE.txt": "licenses/Libertinus-LICENSE.txt",
+      "../../engine/reportcore/fonts/DejaVu-LICENSE.txt": "licenses/DejaVu-LICENSE.txt"
+    },
+    "macOS": {
+      "signingIdentity": "-"
+    }
   },
   "plugins": {}
 }

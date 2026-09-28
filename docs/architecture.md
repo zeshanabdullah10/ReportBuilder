@@ -6,7 +6,6 @@ engine/report-cli      CLI + local HTTP API                         (report-cli)
 engine/reportcore-ffi  C ABI for LabVIEW / C / C# / Python          (reportbuilder.dll / .so / .dylib)
 desktop/               Tauri 2 desktop app: React editor (src/) + Rust shell (src-tauri/)
 integrations/          LabVIEW guide, Python and C# bindings
-app/ components/ lib/  Legacy Next.js + Supabase web builder (see below)
 ```
 
 **One engine, every surface.** The desktop editor, the CLI, the HTTP API and the LabVIEW library
@@ -55,8 +54,7 @@ Typst is a Rust library: one binary, deterministic output, real pagination and P
 - File commands only read and write `.json` files, and exports only `.pdf`. The CSP forbids remote
   content.
 
-## Legacy web app
+## Templates from the old web builder
 
-The Next.js + Supabase web builder (`app/`, `components/`, `lib/`, `supabase/`) is still in the
-repository but is no longer the product's focus. Its templates can be imported with
-`report-cli migrate` or *Import legacy template…* in the desktop app.
+An earlier version of Report Builder was a hosted web app. It has been retired; templates exported
+from it can be converted with `report-cli migrate` or *Import legacy template…* in the desktop app.

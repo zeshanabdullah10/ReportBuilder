@@ -1,5 +1,9 @@
 # Report Builder
 
+[![CI](https://github.com/zeshanabdullah10/ReportBuilder/actions/workflows/ci.yml/badge.svg)](https://github.com/zeshanabdullah10/ReportBuilder/actions/workflows/ci.yml)
+[![Latest release](https://img.shields.io/github/v/release/zeshanabdullah10/ReportBuilder)](https://github.com/zeshanabdullah10/ReportBuilder/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 **Design test reports visually. Render them from LabVIEW, Python, C# or the command line, offline,
 in milliseconds, identically on every machine.**
 
@@ -23,13 +27,38 @@ certificates of conformance. Design a template once; your test station sends JSO
 - **Built for LabVIEW.** Call `reportbuilder.dll` from a Call Library Function Node, or run
   `report-cli` from System Exec. The C ABI is also usable from TestStand, Python, C#, C and MATLAB.
 
+## Download
+
+Get the latest version from **[Releases](https://github.com/zeshanabdullah10/ReportBuilder/releases/latest)**.
+
+| You want to… | Download |
+|---|---|
+| Design templates on **Windows** | `…_x64-setup.exe` (or the `.msi`) |
+| Design templates on **macOS** (Apple silicon and Intel) | `…_universal.dmg` |
+| Design templates on **Linux** | `….AppImage`, `.deb` or `.rpm` |
+| Render reports on a **test station**: LabVIEW, CLI, Python, C# | `reportbuilder-<platform>.zip` (`windows-x64`, `windows-x86` for 32-bit LabVIEW, `linux-x64`, `macos-arm64`, `macos-x64`) |
+
+The installers are not code-signed yet, so your system asks before running them the first time:
+
+- **Windows**: if SmartScreen warns, click *More info → Run anyway*.
+- **macOS**: open the app once, then go to *System Settings → Privacy & Security* and click
+  *Open Anyway*. (On macOS 14 and earlier you can instead right-click the app and choose *Open*.)
+- **Linux**: install the `.deb`/`.rpm`, or make the AppImage executable (`chmod +x`) and run it.
+
+On macOS, also clear the download quarantine from `report-cli` and the library before first use:
+`xattr -dr com.apple.quarantine reportbuilder-macos-*/`.
+
+Each `reportbuilder-<platform>.zip` contains `report-cli`, the `reportbuilder` library
+(`.dll`/`.so`/`.dylib`) with its C header, the Python and C# bindings, the LabVIEW guide and the
+starter templates. Unzip it anywhere; nothing needs installing.
+
 ## Get started
 
 ### Desktop app
 
-Download the installer for Windows, macOS or Linux from
-[Releases](https://github.com/zeshanabdullah10/ReportBuilder/releases). Pick a starter from the
-gallery, then:
+![Starter gallery](docs/images/gallery.png)
+
+Open the app and pick a starter from the gallery, then:
 
 1. **Insert** blocks from the library (or press <kbd>⌘/Ctrl</kbd>+<kbd>K</kbd>). Drag them to
    reorder, or into columns and sections.
@@ -84,6 +113,8 @@ Read more: [expressions](docs/expressions.md) · [template format](docs/template
 
 ## Development
 
+See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, checks and the release process.
+
 ```bash
 # Engine, CLI, LabVIEW library
 cargo test --workspace            # Linux: needs libwebkit2gtk-4.1-dev for the desktop crate
@@ -103,9 +134,14 @@ npx playwright test               # end-to-end tests against report-cli serve
 | `engine/reportcore-ffi` | C ABI (`reportbuilder.dll`/`.so`/`.dylib`) and header |
 | `desktop` | Tauri 2 desktop app (React + TypeScript editor, Rust shell) |
 | `integrations` | LabVIEW guide, Python and C# bindings |
-| `app`, `components`, `lib` | Legacy Next.js web builder (templates can be imported) |
+
+## Contributing and support
+
+Bug reports and ideas: [Issues](https://github.com/zeshanabdullah10/ReportBuilder/issues).
+Contributions: [CONTRIBUTING.md](CONTRIBUTING.md). Security problems: [SECURITY.md](SECURITY.md).
+Release history: [CHANGELOG.md](CHANGELOG.md).
 
 ## License
 
-MIT. Bundled fonts: Inter, Libertinus Serif (SIL OFL 1.1) and DejaVu Sans Mono (Bitstream Vera
-license); see `engine/reportcore/fonts`.
+[MIT](LICENSE). Bundled fonts: Inter and Libertinus Serif (SIL OFL 1.1), and DejaVu Sans Mono
+(Bitstream Vera license). See [THIRD-PARTY-NOTICES.md](THIRD-PARTY-NOTICES.md).

@@ -1,11 +1,15 @@
 name: Release
 
+# Push a v* tag to publish a release:
+#   1. `create` opens a draft release for the tag,
+#   2. every build job uploads its installer or package into that draft,
+#   3. `publish` makes the release public once all builds have succeeded.
+# Pull requests that change the packaging run the same builds as a dry run and
+# upload the results as workflow artifacts instead.
+
 on:
   push:
     tags: ['v*']
-  workflow_dispatch:
-  # Dry run: build every installer and package when the packaging changes.
-  # Publishing happens only for v* tags; other runs upload workflow artifacts.
   pull_request:
     paths:
       - .github/workflows/release.yml
@@ -17,10 +21,37 @@ permissions:
 
 env:
   CARGO_TERM_COLOR: always
+  IS_RELEASE: ${{ startsWith(github.ref, 'refs/tags/v') }}
 
 jobs:
+  create:
+    name: Create draft release
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    outputs:
+      release_id: ${{ steps.draft.outputs.id }}
+    steps:
+      - id: draft
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          set -euo pipefail
+          notes="Downloads:
+          - **Desktop editor**: Windows \`.msi\`/\`-setup.exe\`, macOS \`.dmg\` (Apple silicon and Intel), Linux \`.AppImage\`/\`.deb\`/\`.rpm\`
+          - **Test stations** (\`report-cli\` + \`reportbuilder\` library for LabVIEW, Python and C#): \`reportbuilder-<platform>.zip\`. Use \`windows-x86\` for 32-bit LabVIEW.
+
+          The installers are not code-signed yet: on Windows choose *More info → Run anyway*; on macOS right-click the app and choose *Open*."
+          gh release create "$TAG" --repo "$GITHUB_REPOSITORY" --draft \
+            --title "Report Builder $TAG" --notes "$notes" --verify-tag
+          id=$(gh api "repos/$GITHUB_REPOSITORY/releases" --jq ".[] | select(.tag_name==\"$TAG\") | .id" | head -n1)
+          test -n "$id"
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+
   desktop:
     name: Desktop app (${{ matrix.name }})
+    needs: create
+    if: ${{ !cancelled() && (needs.create.result == 'success' || needs.create.result == 'skipped') }}
     strategy:
       fail-fast: false
       matrix:
@@ -35,6 +66,10 @@ jobs:
         with:
           targets: ${{ matrix.name == 'macos' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
       - uses: Swatinem/rust-cache@v2
+        with:
+          # Keyed by runner image: CI jobs of the same name build on a newer Ubuntu, and
+          # their build scripts need a newer glibc than the ubuntu-22.04 release runners have.
+          key: release-${{ matrix.os }}-${{ matrix.target || matrix.name }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -52,12 +87,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: desktop
-          tagName: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '' }}
-          releaseName: Report Builder ${{ github.ref_name }}
-          releaseDraft: true
+          # Empty on dry runs: build only, no upload.
+          releaseId: ${{ needs.create.outputs.release_id }}
           args: ${{ matrix.args }}
       - uses: actions/upload-artifact@v4
-        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        if: env.IS_RELEASE != 'true'
         with:
           name: desktop-${{ matrix.name }}
           path: |
@@ -67,6 +101,8 @@ jobs:
 
   engine:
     name: CLI + LabVIEW library (${{ matrix.target }})
+    needs: create
+    if: ${{ !cancelled() && (needs.create.result == 'success' || needs.create.result == 'skipped') }}
     strategy:
       fail-fast: false
       matrix:
@@ -83,7 +119,15 @@ jobs:
         with:
           targets: ${{ matrix.target }}
       - uses: Swatinem/rust-cache@v2
+        with:
+          # Keyed by runner image: CI jobs of the same name build on a newer Ubuntu, and
+          # their build scripts need a newer glibc than the ubuntu-22.04 release runners have.
+          key: release-${{ matrix.os }}-${{ matrix.target || matrix.name }}
       - name: Build
+        # Link the C runtime statically on Windows so report-cli.exe and reportbuilder.dll run on
+        # test stations without the Visual C++ Redistributable.
+        env:
+          RUSTFLAGS: ${{ contains(matrix.target, 'windows-msvc') && '-C target-feature=+crt-static' || '' }}
         run: cargo build --release -p report-cli -p reportcore-ffi --target ${{ matrix.target }}
       - name: Package
         shell: bash
@@ -100,17 +144,40 @@ jobs:
           cp integrations/labview/README.md "$out/LABVIEW.md"
           cp docs/cli.md "$out/CLI.md"
           cp engine/reportcore/templates/*.json "$out/templates/"
-          cp LICENSE "$out/"
+          cp LICENSE THIRD-PARTY-NOTICES.md "$out/"
+          mkdir -p "$out/licenses"
+          cp engine/reportcore/fonts/*-LICENSE.txt "$out/licenses/"
           if [ "${{ runner.os }}" = "Windows" ]; then 7z a "$out.zip" "$out" >/dev/null; else zip -qr "$out.zip" "$out"; fi
+      - name: Smoke test the packaged CLI
+        # x86_64-apple-darwin is cross-compiled on an Apple-silicon runner and can't run there.
+        if: matrix.target != 'x86_64-apple-darwin'
+        shell: bash
+        run: |
+          set -euo pipefail
+          pkg="reportbuilder-${{ matrix.name }}"
+          cli="$pkg/report-cli"; [ -f "$cli.exe" ] && cli="$cli.exe"
+          "$cli" --version
+          "$cli" render --strict -t "$pkg/templates/ate-final-test.rbt.json" -d "$pkg/templates/ate-final-test.data.json" -o smoke.pdf
+          head -c 5 smoke.pdf | grep -q '%PDF-'
+      - name: Upload to release
+        if: env.IS_RELEASE == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ github.ref_name }}" "reportbuilder-${{ matrix.name }}.zip" --repo "$GITHUB_REPOSITORY" --clobber
       - uses: actions/upload-artifact@v4
-        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        if: env.IS_RELEASE != 'true'
         with:
           name: reportbuilder-${{ matrix.name }}
           path: reportbuilder-${{ matrix.name }}.zip
           if-no-files-found: error
-      - uses: softprops/action-gh-release@v2
-        if: startsWith(github.ref, 'refs/tags/v')
-        with:
-          draft: true
-          name: Report Builder ${{ github.ref_name }}
-          files: reportbuilder-${{ matrix.name }}.zip
+
+  publish:
+    name: Publish release
+    needs: [create, desktop, engine]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release edit "${{ github.ref_name }}" --repo "$GITHUB_REPOSITORY" --draft=false --latest

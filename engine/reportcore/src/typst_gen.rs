@@ -682,13 +682,14 @@ impl<'a> Generator<'a> {
                 None => path,
             }
         };
-        let bytes = std::fs::read(&path).map_err(|e| format!("cannot read image '{}': {e}", path.display()))?;
+        // Check the extension before touching the file, so a template can only ever read images.
         let ext = path
             .extension()
             .and_then(|e| e.to_str())
             .map(|e| e.to_ascii_lowercase())
             .filter(|e| matches!(e.as_str(), "png" | "jpg" | "jpeg" | "gif" | "svg" | "webp"))
             .ok_or_else(|| format!("unsupported image file '{}'", path.display()))?;
+        let bytes = std::fs::read(&path).map_err(|e| format!("cannot read image '{}': {e}", path.display()))?;
         Ok(self.file("img", &ext, bytes))
     }
 
@@ -1478,6 +1479,18 @@ mod tests {
         lex_markdown("**\u{E000}** x", &mut t, &mut vec![Tok::Text("V".into())].into_iter());
         let s = build_inline(t, FontFamily::Sans);
         assert!(s.starts_with("{ strong(\"V\")"), "{s}");
+    }
+
+    #[test]
+    fn images_only_read_image_files() {
+        let doc = Document::default();
+        let opts = GenOptions::default();
+        let mut g = Generator::new(&doc, &opts);
+        // A non-image path is rejected before the file is read, even when it exists.
+        let err = g.load_image(concat!(env!("CARGO_MANIFEST_DIR"), "/Cargo.toml")).unwrap_err();
+        assert!(err.starts_with("unsupported image file"), "{err}");
+        let err = g.load_image("/no/such/logo.png").unwrap_err();
+        assert!(err.starts_with("cannot read image"), "{err}");
     }
 
     #[test]
