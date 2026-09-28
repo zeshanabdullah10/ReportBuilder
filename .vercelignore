@@ -1,0 +1,5 @@
+# The Vercel project deploys only the legacy Next.js web app.
+desktop/
+engine/
+integrations/
+target/
