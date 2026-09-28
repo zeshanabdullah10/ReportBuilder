@@ -4,6 +4,13 @@ on:
   push:
     tags: ['v*']
   workflow_dispatch:
+  # Dry run: build every installer and package when the packaging changes.
+  # Publishing happens only for v* tags; other runs upload workflow artifacts.
+  pull_request:
+    paths:
+      - .github/workflows/release.yml
+      - desktop/src-tauri/tauri.conf.json
+      - desktop/src-tauri/Cargo.toml
 
 permissions:
   contents: write
@@ -45,10 +52,18 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: desktop
-          tagName: ${{ github.ref_name }}
+          tagName: ${{ startsWith(github.ref, 'refs/tags/v') && github.ref_name || '' }}
           releaseName: Report Builder ${{ github.ref_name }}
           releaseDraft: true
           args: ${{ matrix.args }}
+      - uses: actions/upload-artifact@v4
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        with:
+          name: desktop-${{ matrix.name }}
+          path: |
+            target/release/bundle/
+            target/*/release/bundle/
+          if-no-files-found: error
 
   engine:
     name: CLI + LabVIEW library (${{ matrix.target }})
@@ -87,7 +102,14 @@ jobs:
           cp engine/reportcore/templates/*.json "$out/templates/"
           cp LICENSE "$out/"
           if [ "${{ runner.os }}" = "Windows" ]; then 7z a "$out.zip" "$out" >/dev/null; else zip -qr "$out.zip" "$out"; fi
+      - uses: actions/upload-artifact@v4
+        if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+        with:
+          name: reportbuilder-${{ matrix.name }}
+          path: reportbuilder-${{ matrix.name }}.zip
+          if-no-files-found: error
       - uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/v')
         with:
           draft: true
           name: Report Builder ${{ github.ref_name }}
