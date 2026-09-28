@@ -68,4 +68,6 @@ By contributing, you agree that your contributions are licensed under the [MIT L
    and add a section to [CHANGELOG.md](CHANGELOG.md).
 2. Merge to `master`, then tag it: `git tag v1.2.3 && git push origin v1.2.3`.
 3. The [Release workflow](.github/workflows/release.yml) builds every installer and package, and
-   publishes the GitHub Release once all builds succeed.
+   publishes the GitHub Release once all builds succeed. If a run fails, fix the cause on `master`
+   and start the workflow manually (*Actions → Release → Run workflow*) with the same tag; it
+   reuses the draft release and replaces its files.
