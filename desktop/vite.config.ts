@@ -5,9 +5,6 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   clearScreen: false,
-  // Inline (empty) PostCSS config: stops Vite from picking up the legacy web app's
-  // Tailwind config in the repo root, whose dependencies aren't installed here.
-  css: { postcss: {} },
   server: {
     port: 1420,
     strictPort: true,

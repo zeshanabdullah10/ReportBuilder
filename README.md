@@ -103,7 +103,6 @@ npx playwright test               # end-to-end tests against report-cli serve
 | `engine/reportcore-ffi` | C ABI (`reportbuilder.dll`/`.so`/`.dylib`) and header |
 | `desktop` | Tauri 2 desktop app (React + TypeScript editor, Rust shell) |
 | `integrations` | LabVIEW guide, Python and C# bindings |
-| `app`, `components`, `lib` | Legacy Next.js web builder (templates can be imported) |
 
 ## License
 
