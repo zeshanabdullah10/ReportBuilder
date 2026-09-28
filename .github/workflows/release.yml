@@ -84,7 +84,7 @@ jobs:
           - { name: linux, os: ubuntu-22.04, args: '' }
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ env.TAG }}
       - uses: dtolnay/rust-toolchain@stable
@@ -95,7 +95,7 @@ jobs:
           # Keyed by runner image: CI jobs of the same name build on a newer Ubuntu, and
           # their build scripts need a newer glibc than the ubuntu-22.04 release runners have.
           key: release-${{ matrix.os }}-${{ matrix.name }}
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
@@ -107,7 +107,7 @@ jobs:
           sudo apt-get install -y libwebkit2gtk-4.1-dev libsoup-3.0-dev librsvg2-dev libayatana-appindicator3-dev patchelf
       - run: npm ci
         working-directory: desktop
-      - uses: tauri-apps/tauri-action@v0
+      - uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -115,7 +115,7 @@ jobs:
           # Empty on dry runs: build only, no upload.
           releaseId: ${{ needs.create.outputs.release_id }}
           args: ${{ matrix.args }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: env.IS_RELEASE != 'true'
         with:
           name: desktop-${{ matrix.name }}
@@ -139,7 +139,7 @@ jobs:
           - { target: x86_64-apple-darwin, os: macos-latest, name: macos-x64 }
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ env.TAG }}
       - uses: dtolnay/rust-toolchain@stable
@@ -202,7 +202,7 @@ jobs:
           curl -sSf -X POST -H "Authorization: Bearer $GH_TOKEN" -H "Content-Type: application/zip" \
             --data-binary "@$f" "https://uploads.github.com/repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID/assets?name=$f" > /dev/null
           echo "Uploaded $f"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: env.IS_RELEASE != 'true'
         with:
           name: reportbuilder-${{ matrix.name }}
