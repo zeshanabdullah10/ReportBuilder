@@ -1,0 +1,45 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Report Builder",
+  "version": "1.0.0",
+  "identifier": "io.github.zeshanabdullah10.reportbuilder",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Report Builder",
+        "width": 1440,
+        "height": 920,
+        "minWidth": 1080,
+        "minHeight": 640,
+        "center": true,
+        "dragDropEnabled": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self' data:; connect-src ipc: http://ipc.localhost"
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "Productivity",
+    "shortDescription": "Design test reports; render PDFs offline from LabVIEW and any language.",
+    "longDescription": "Report Builder designs data-driven test reports and renders them to PDF with an embedded typesetting engine: no browser, no network. Includes the report-cli command-line tool and the reportbuilder library for LabVIEW.",
+    "copyright": "MIT License",
+    "license": "MIT",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  },
+  "plugins": {}
+}

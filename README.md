@@ -1,405 +1,111 @@
-# LabVIEW Report Builder
+# Report Builder
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+**Design test reports visually. Render them from LabVIEW, Python, C# or the command line, offline,
+in milliseconds, identically on every machine.**
 
-A modern, open-source, drag-and-drop report builder application for creating customizable test reports with LabVIEW integration. Built with Next.js, React, and Craft.js.
+![Report Builder editor](docs/images/editor.png)
 
-## Features
+Report Builder is a local-first desktop app and rendering engine for data-driven test
+documentation: end-of-line test reports, calibration certificates, first-article inspections and
+certificates of conformance. Design a template once; your test station sends JSON and gets a PDF.
 
-- **Drag-and-Drop Builder**: Intuitive interface for designing report layouts using Craft.js
-- **Rich Component Library**: Pre-built components for test reports including:
-  - Measurement tables with pass/fail status
-  - Charts (line, bar, scatter, histogram)
-  - Status indicators and progress bars
-  - QR codes and barcodes
-  - Specification tables
-  - Revision history
-- **LabVIEW Integration**: JSON-based data binding for seamless integration with LabVIEW test systems
-- **Export Capabilities**: Export reports to standalone HTML files that work offline
-- **Authentication**: Secure user authentication with Supabase
-- **Video Generation**: Remotion integration for video report generation
-- **Version Control**: Report versioning and history tracking
-- **Sharing & Collaboration**: Share reports with team members
-- **100% Open Source**: MIT licensed - free to use, modify, and distribute
+- **What you see is what prints.** The editor preview comes from the same engine that renders
+  production PDFs, so they are pixel-identical.
+- **Reports that flow with your data.** Long measurement tables break across pages and repeat
+  their headers. Sections can repeat per channel or per DUT. Headers, footers and "Page X of Y"
+  are built in. You never position anything by hand.
+- **Test-native blocks.** Measurement tables with automatic PASS/FAIL against limits, verdict
+  banners with pass rate, spec grids, charts with limit lines, histograms, gauges, QR codes and
+  barcodes, and signature blocks.
+- **No browser, no server, no network.** A single Rust engine with embedded typesetting (Typst)
+  and bundled fonts. It renders a 2-page report in about 35 ms, and can write PDF/A-2b for
+  archives.
+- **Built for LabVIEW.** Call `reportbuilder.dll` from a Call Library Function Node, or run
+  `report-cli` from System Exec. The C ABI is also usable from TestStand, Python, C#, C and MATLAB.
 
-## Tech Stack
+## Get started
 
-- **Frontend**: Next.js 16, React 19, TypeScript
-- **Styling**: Tailwind CSS
-- **Drag-and-Drop**: Craft.js
-- **Charts**: Chart.js, react-chartjs-2
-- **Backend**: Supabase (Auth, Database)
-- **Video**: Remotion
-- **Testing**: Vitest, Testing Library
-- **State Management**: Zustand
-- **Form Handling**: React Hook Form, Zod
+### Desktop app
 
-## Getting Started
+Download the installer for Windows, macOS or Linux from
+[Releases](https://github.com/zeshanabdullah10/ReportBuilder/releases). Pick a starter from the
+gallery, then:
 
-### Prerequisites
+1. **Insert** blocks from the library (or press <kbd>⌘/Ctrl</kbd>+<kbd>K</kbd>). Drag them to
+   reorder, or into columns and sections.
+2. **Bind** fields: type `{{` in any text field for autocomplete from your data.
+3. **Check** edge cases with the data-set switcher: your sample data, a generated *stress test*
+   with long lists, and *empty* data for missing fields.
+4. **Save** the template (`.rbt.json`) and **Export PDF** to check the final output.
 
-- Node.js 18+ 
-- npm or yarn
-- Supabase account (free tier works great)
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/yourusername/labview-report-builder.git
-cd labview-report-builder
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Set up environment variables:
-```bash
-cp .env.example .env.local
-```
-
-Configure the following environment variables:
-```
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
-
-4. Run the development server:
-```bash
-npm run dev
-```
-
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
-
-### Supabase Setup
-
-1. Create a new project at [supabase.com](https://supabase.com)
-2. Run the following SQL in the SQL Editor to create the required tables:
-
-```sql
--- Profiles table
-CREATE TABLE profiles (
-  id UUID PRIMARY KEY REFERENCES auth.users(id),
-  full_name TEXT,
-  company TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Templates table
-CREATE TABLE templates (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES profiles(id) NOT NULL,
-  name TEXT NOT NULL,
-  description TEXT,
-  canvas_state JSONB NOT NULL DEFAULT '{}',
-  sample_data JSONB,
-  settings JSONB,
-  is_public BOOLEAN DEFAULT FALSE,
-  is_shared BOOLEAN DEFAULT FALSE,
-  version INTEGER DEFAULT 1,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Template versions table
-CREATE TABLE template_versions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  template_id UUID REFERENCES templates(id) NOT NULL,
-  version_number INTEGER NOT NULL,
-  canvas_state JSONB NOT NULL,
-  sample_data JSONB,
-  settings JSONB,
-  change_description TEXT,
-  created_by UUID REFERENCES profiles(id),
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Template shares table
-CREATE TABLE template_shares (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  template_id UUID REFERENCES templates(id) NOT NULL,
-  share_type TEXT NOT NULL CHECK (share_type IN ('link', 'user', 'org')),
-  share_token UUID DEFAULT gen_random_uuid(),
-  shared_with_email TEXT,
-  organization_id UUID,
-  permission TEXT NOT NULL DEFAULT 'view' CHECK (permission IN ('view', 'edit')),
-  password_hash TEXT,
-  expires_at TIMESTAMPTZ,
-  created_by UUID REFERENCES profiles(id) NOT NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  last_accessed_at TIMESTAMPTZ
-);
-
--- Custom components table
-CREATE TABLE custom_components (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES profiles(id) NOT NULL,
-  name TEXT NOT NULL,
-  description TEXT,
-  category TEXT NOT NULL DEFAULT 'custom',
-  component_type TEXT NOT NULL,
-  config JSONB NOT NULL,
-  thumbnail_url TEXT,
-  is_public BOOLEAN DEFAULT FALSE,
-  usage_count INTEGER DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Template assets table
-CREATE TABLE template_assets (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  template_id UUID REFERENCES templates(id) NOT NULL,
-  file_path TEXT NOT NULL,
-  file_name TEXT NOT NULL,
-  file_size INTEGER,
-  mime_type TEXT,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Enable RLS
-ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
-ALTER TABLE templates ENABLE ROW LEVEL SECURITY;
-ALTER TABLE template_versions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE template_shares ENABLE ROW LEVEL SECURITY;
-ALTER TABLE custom_components ENABLE ROW LEVEL SECURITY;
-ALTER TABLE template_assets ENABLE ROW LEVEL SECURITY;
-
--- Create basic RLS policies (customize as needed)
-CREATE POLICY "Users can view own profile" ON profiles FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "Users can update own profile" ON profiles FOR UPDATE USING (auth.uid() = id);
-CREATE POLICY "Users can view own templates" ON templates FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "Users can create templates" ON templates FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "Users can update own templates" ON templates FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "Users can delete own templates" ON templates FOR DELETE USING (auth.uid() = user_id);
-```
-
-## Available Scripts
-
-| Script | Description |
-|--------|-------------|
-| `npm run dev` | Start development server |
-| `npm run build` | Build for production |
-| `npm run start` | Start production server |
-| `npm run lint` | Run ESLint |
-| `npm run test` | Run tests in watch mode |
-| `npm run test:run` | Run tests once |
-| `npm run test:coverage` | Run tests with coverage |
-| `npm run video` | Start Remotion studio |
-| `npm run video:render` | Render video project |
-
-## Project Structure
+### From LabVIEW
 
 ```
-labview-report-builder/
-├── app/                    # Next.js App Router pages
-│   ├── (app)/             # Authenticated app routes
-│   ├── (auth)/            # Authentication pages
-│   ├── (marketing)/       # Marketing/public pages
-│   ├── api/               # API routes
-│   └── actions/           # Server actions
-├── components/
-│   ├── builder/           # Report builder components
-│   │   ├── canvas/        # Canvas/drawing area
-│   │   ├── components/    # Draggable report components
-│   │   ├── custom/        # Custom components
-│   │   ├── export/        # Export functionality
-│   │   ├── layers/        # Layer management
-│   │   ├── navigation/    # Builder navigation
-│   │   ├── settings/      # Component settings
-│   │   ├── toolbox/       # Component toolbox
-│   │   └── topbar/        # Top toolbar
-│   ├── dashboard/         # Dashboard components
-│   ├── ui/                # Reusable UI components
-│   └── ...
-├── docs/                  # Documentation
-├── sample-data/           # Sample JSON data for testing
-├── plans/                 # Project planning documents
-└── _bmad/                 # BMAD workflow configuration
-├── report-cli/            # Rust CLI for offline PDF generation
-│   ├── src/               # CLI source code
-│   ├── Cargo.toml         # Rust dependencies
-│   └── README.md          # CLI documentation
-└── Report.html            # Standalone HTML report template
+status = rb_render(template_path, data_json, output_pdf, "{\"pdfa\":true}", result, 4096)
 ```
 
-## Offline PDF Generation (report-cli)
+The complete setup, including Call Library Function Node settings, building JSON from clusters,
+error codes and TestStand, is in the **[LabVIEW integration guide](integrations/labview/README.md)**.
 
-The `report-cli` tool enables fully offline PDF generation from HTML templates and JSON data. This is ideal for test stations that need to generate reports without internet connectivity.
-
-### Features
-
-- **Fully Offline**: No server or internet connection required
-- **Pure JSON Input**: External systems only need to write JSON data
-- **Headless Browser**: Uses Chrome/Edge for accurate PDF rendering
-- **Cross-Platform**: Works on Windows, macOS, and Linux
-
-### Installation
-
-Pre-built binaries are available in the `report-cli/target/release/` directory, or build from source.
-
-### Developer Build Instructions
-
-#### Prerequisites
-
-1. **Rust**: Install from [rustup.rs](https://rustup.rs/)
-2. **Visual Studio Build Tools** (Windows only): Required for compiling native dependencies
-   - Install from [Visual Studio Downloads](https://visualstudio.microsoft.com/downloads/)
-   - Select "C++ build tools" workload
-
-#### Building on Windows
-
-The CLI requires native dependencies that need the Visual Studio development environment. Use one of these methods:
-
-**Method 1: Using VsDevCmd (Recommended)**
-```cmd
-cmd /c ""C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\Common7\Tools\VsDevCmd.bat" && cd /d "PATH\TO\report-cli" && cargo build --release"
-```
-
-**Method 2: Using Developer Command Prompt**
-1. Open "Developer Command Prompt for VS 2022" from Start Menu
-2. Navigate to the report-cli directory
-3. Run `cargo build --release`
-
-**Method 3: Using x64 Native Tools Command Prompt**
-1. Open "x64 Native Tools Command Prompt for VS 2022" from Start Menu
-2. Navigate to the report-cli directory
-3. Run `cargo build --release`
-
-#### Building on macOS/Linux
+### From the command line
 
 ```bash
-cd report-cli
-cargo build --release
+report-cli render -t FinalTest.rbt.json -d SN123.json -o reports/SN123.pdf --pdfa
+report-cli batch  -t FinalTest.rbt.json --data-dir runs/ --out-dir reports/ --name "{{ dut.serial }}"
+report-cli validate -t FinalTest.rbt.json -d SN123.json --strict
 ```
 
-#### Build Output
+See the [CLI reference](docs/cli.md). Exit codes are stable (0 ok, 1 I/O, 2 validation,
+3 render) for use in scripts.
 
-The compiled binary will be at:
-- Windows: `report-cli/target/release/report-cli.exe`
-- macOS/Linux: `report-cli/target/release/report-cli`
+### From Python / C#
 
-### Usage
-
-```bash
-report-cli.exe --template Report.html --data test_results.json --output Report.pdf
-```
-
-### Options
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `-t, --template` | HTML template file | (required) |
-| `-d, --data` | JSON data file | (required) |
-| `-o, --output` | Output PDF file | (required) |
-| `-w, --wait` | JavaScript render wait time (ms) | 2000 |
-| `-f, --format` | Page format (A4, Letter, Legal) | A4 |
-| `-m, --margin` | Page margin in mm | 20 |
-| `--no-header-footer` | Exclude page headers/footers | false |
-| `-v, --verbose` | Verbose output | false |
-
-### Integration Examples
-
-**Python:**
 ```python
-import json
-import subprocess
-
-data = {"testName": "Production Test", "overallStatus": "PASS"}
-with open("results.json", "w") as f:
-    json.dump(data, f)
-
-subprocess.run(["report-cli.exe", "-t", "Report.html", "-d", "results.json", "-o", "Report.pdf"])
+from reportbuilder import ReportBuilder
+ReportBuilder().render("FinalTest.rbt.json", {"dut": {"serial": "SN123"}, "measurements": [...]}, "SN123.pdf")
 ```
 
-**LabVIEW:**
-1. Use "Write to Text File" VI to create JSON file
-2. Use "System Exec.vi" to call `report-cli.exe`
+Bindings: [`integrations/python`](integrations/python/reportbuilder.py) ·
+[`integrations/csharp`](integrations/csharp/ReportBuilder.cs) ·
+C header: [`reportbuilder.h`](engine/reportcore-ffi/include/reportbuilder.h)
 
-See [report-cli/README.md](report-cli/README.md) for detailed documentation.
+## Data
 
-## LabVIEW Integration
-
-The Report Builder integrates with LabVIEW through a JSON-based data binding system. LabVIEW generates JSON data files that are automatically loaded into report templates.
-
-### Data Binding Syntax
-
-Components use the `{{data.path}}` syntax to reference values:
+Send any JSON; field names are up to you. A measurement table only needs rows like
+`{"name": "VBUS", "value": 5.01, "low": 4.75, "high": 5.25, "unit": "V"}`. PASS/FAIL, counts and
+pass rate are computed for you. Expressions add formatting and logic:
 
 ```
-{{data.meta.reportTitle}}     → "PCB Assembly Test Report"
-{{data.testInfo.operator}}    → "John Smith"
-{{data.summary.passed}}       → 142
+{{ vbus | fixed(3) }} V · {{ date(test.start, 'D MMM YYYY HH:mm') }} · {{ pass_rate(measurements) | percent(1) }}
 ```
 
-### JSON Schema
+Read more: [expressions](docs/expressions.md) · [template format](docs/template-format.md) ·
+[architecture](docs/architecture.md)
 
-See [docs/labview-json-schema.md](docs/labview-json-schema.md) for the complete JSON schema specification.
+## Development
 
-## Deployment
+```bash
+# Engine, CLI, LabVIEW library
+cargo test --workspace            # Linux: needs libwebkit2gtk-4.1-dev for the desktop crate
+cargo build --release -p report-cli -p reportcore-ffi
 
-### Vercel (Recommended)
-
-The easiest way to deploy this application is using [Vercel](https://vercel.com):
-
-1. Push your code to GitHub
-2. Import the project in Vercel
-3. Add your environment variables
-4. Deploy
-
-### Docker
-
-```dockerfile
-FROM node:18-alpine AS builder
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci
-COPY . .
-RUN npm run build
-
-FROM node:18-alpine AS runner
-WORKDIR /app
-ENV NODE_ENV production
-COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/static ./.next/static
-COPY --from=builder /app/public ./public
-EXPOSE 3000
-CMD ["node", "server.js"]
+# Desktop app
+cd desktop && npm install
+npm run tauri dev                 # native app with hot reload
+npm test                          # unit tests (Vitest)
+npx playwright test               # end-to-end tests against report-cli serve
 ```
 
-### Self-Hosted
-
-1. Build the application: `npm run build`
-2. Start the server: `npm run start`
-3. The application will be available at `http://localhost:3000`
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+| Path | Contents |
+|---|---|
+| `engine/reportcore` | Engine: model, expressions, validation, charts, Typst layout, PDF/SVG |
+| `engine/report-cli` | `report-cli` binary and local HTTP API |
+| `engine/reportcore-ffi` | C ABI (`reportbuilder.dll`/`.so`/`.dylib`) and header |
+| `desktop` | Tauri 2 desktop app (React + TypeScript editor, Rust shell) |
+| `integrations` | LabVIEW guide, Python and C# bindings |
+| `app`, `components`, `lib` | Legacy Next.js web builder (templates can be imported) |
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## Support
-
-- 📖 [Documentation](docs/)
-- 🐛 [Issue Tracker](https://github.com/yourusername/labview-report-builder/issues)
-- 💬 [Discussions](https://github.com/yourusername/labview-report-builder/discussions)
-
-## Acknowledgments
-
-- [Craft.js](https://craft.js.org/) - For the amazing drag-and-drop framework
-- [Supabase](https://supabase.com/) - For the backend infrastructure
-- [Next.js](https://nextjs.org/) - For the React framework
+MIT. Bundled fonts: Inter, Libertinus Serif (SIL OFL 1.1) and DejaVu Sans Mono (Bitstream Vera
+license); see `engine/reportcore/fonts`.

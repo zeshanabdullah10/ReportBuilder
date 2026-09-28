@@ -1,0 +1,123 @@
+{
+  "certificate": {
+    "number": "CAL-2026-004817",
+    "issued": "2026-02-27",
+    "dueDate": "2027-02-27",
+    "procedure": "CP-DMM-6.5 rev 3"
+  },
+  "customer": {
+    "name": "Acme Instruments Ltd.",
+    "address": "12 Harbour Road, Bristol BS1 4QA"
+  },
+  "instrument": {
+    "manufacturer": "Keysight",
+    "model": "34465A",
+    "description": "6½-digit digital multimeter",
+    "serial": "MY59001234",
+    "assetId": "ACME-DMM-0142"
+  },
+  "conditions": {
+    "temperature": 23.1,
+    "humidity": 44
+  },
+  "standards": [
+    {
+      "name": "Multifunction calibrator",
+      "model": "Fluke 5730A",
+      "serial": "4415002",
+      "dueDate": "2026-09-30",
+      "traceability": "NPL"
+    },
+    {
+      "name": "Reference DMM",
+      "model": "Keysight 3458A",
+      "serial": "MY45048567",
+      "dueDate": "2026-06-12",
+      "traceability": "NPL"
+    }
+  ],
+  "points": [
+    {
+      "function": "DC V 10 V",
+      "nominal": 1.0,
+      "unit": "V",
+      "asFound": 1.000007,
+      "asLeft": 1.000038,
+      "low": 0.99988,
+      "high": 1.00012,
+      "uncertainty": 3.5e-05
+    },
+    {
+      "function": "DC V 10 V",
+      "nominal": 5.0,
+      "unit": "V",
+      "asFound": 4.999804,
+      "asLeft": 5.000087,
+      "low": 4.99965,
+      "high": 5.00035,
+      "uncertainty": 9e-05
+    },
+    {
+      "function": "DC V 10 V",
+      "nominal": 10.0,
+      "unit": "V",
+      "asFound": 9.999907,
+      "asLeft": 9.999961,
+      "low": 9.9994,
+      "high": 10.0006,
+      "uncertainty": 0.00017
+    },
+    {
+      "function": "DC V 100 V",
+      "nominal": 50.0,
+      "unit": "V",
+      "asFound": 50.0057,
+      "asLeft": 50.000177,
+      "low": 49.9955,
+      "high": 50.0045,
+      "uncertainty": 0.0011
+    },
+    {
+      "function": "AC V 10 V 1 kHz",
+      "nominal": 5.0,
+      "unit": "V",
+      "asFound": 4.999884,
+      "asLeft": 5.000821,
+      "low": 4.9955,
+      "high": 5.0045,
+      "uncertainty": 0.0012
+    },
+    {
+      "function": "Resistance 10 kΩ",
+      "nominal": 10.0,
+      "unit": "kΩ",
+      "asFound": 10.000811,
+      "asLeft": 9.999991,
+      "low": 9.9988,
+      "high": 10.0012,
+      "uncertainty": 0.00031
+    },
+    {
+      "function": "DC I 100 mA",
+      "nominal": 50.0,
+      "unit": "mA",
+      "asFound": 50.010584,
+      "asLeft": 49.992697,
+      "low": 49.97,
+      "high": 50.03,
+      "uncertainty": 0.008
+    },
+    {
+      "function": "Frequency",
+      "nominal": 1.0,
+      "unit": "kHz",
+      "asFound": 0.999978,
+      "asLeft": 0.999989,
+      "low": 0.9999,
+      "high": 1.0001,
+      "uncertainty": 2e-05
+    }
+  ],
+  "technician": "A. Okafor",
+  "approver": "Dr. M. Lindqvist"
+}

@@ -5,7 +5,7 @@ import path from 'path'
 export default defineConfig({
   test: {
     include: ['**/*.test.{ts,tsx,js,jsx}'],
-    exclude: ['node_modules', '.next', '.claude'],
+    exclude: ['**/node_modules/**', '.next', '.claude', 'desktop', 'engine', 'integrations', 'target'],
     globals: true,
     environment: 'node',
   },

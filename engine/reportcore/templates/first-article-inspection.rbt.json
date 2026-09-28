@@ -1,0 +1,207 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "name": "First Article Inspection",
+    "description": "AS9102-style characteristic accountability with ballooned features and verdict.",
+    "author": "Quality",
+    "revision": "A",
+    "tags": [
+      "quality",
+      "fai",
+      "as9102"
+    ]
+  },
+  "page": {
+    "size": "a4",
+    "orientation": "landscape",
+    "margins": {
+      "top": 16,
+      "right": 14,
+      "bottom": 16,
+      "left": 14
+    }
+  },
+  "theme": {
+    "company": "Acme Instruments"
+  },
+  "footer": [
+    {
+      "id": "ftr",
+      "type": "columns",
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "ftr-left",
+              "type": "text",
+              "text": "{{ report.name }} · {{ theme.company }}",
+              "style": {
+                "color": "muted"
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "ftr-page",
+              "type": "text",
+              "text": "Page {{ page }} of {{ pages }}",
+              "style": {
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "body": [
+    {
+      "id": "h",
+      "type": "heading",
+      "level": 1,
+      "text": "First Article Inspection Report"
+    },
+    {
+      "id": "sub",
+      "type": "text",
+      "text": "{{ part.name }} · {{ part.number }} rev {{ part.revision }} · {{ date(date, 'D MMM YYYY') }}",
+      "style": {
+        "color": "muted"
+      }
+    },
+    {
+      "id": "top",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "pi",
+              "type": "keyValue",
+              "title": "Part & supplier",
+              "columns": 2,
+              "items": [
+                {
+                  "label": "Part number",
+                  "value": "{{ part.number }}"
+                },
+                {
+                  "label": "Drawing",
+                  "value": "{{ part.drawing }}"
+                },
+                {
+                  "label": "Material",
+                  "value": "{{ part.material }}"
+                },
+                {
+                  "label": "PO",
+                  "value": "{{ po }}"
+                },
+                {
+                  "label": "Supplier",
+                  "value": "{{ supplier.name }}"
+                },
+                {
+                  "label": "Supplier code",
+                  "value": "{{ supplier.code }}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "v",
+              "type": "summary",
+              "title": "FAI result",
+              "source": "characteristics",
+              "showCounts": true,
+              "showRate": false
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "ch",
+      "type": "heading",
+      "level": 2,
+      "text": "Characteristic accountability"
+    },
+    {
+      "id": "tbl",
+      "type": "table",
+      "source": "characteristics",
+      "rowTone": "row.status ?? status(row.value, row.low, row.high)",
+      "columns": [
+        {
+          "header": "#",
+          "value": "row.balloon",
+          "align": "right"
+        },
+        {
+          "header": "Characteristic",
+          "value": "row.characteristic",
+          "width": "1fr"
+        },
+        {
+          "header": "Requirement",
+          "value": "row.requirement"
+        },
+        {
+          "header": "Measured",
+          "value": "row.value != null ? fixed(row.value, 3) : row.measured",
+          "align": "right"
+        },
+        {
+          "header": "Unit",
+          "value": "row.unit"
+        },
+        {
+          "header": "Method",
+          "value": "row.method"
+        },
+        {
+          "header": "Result",
+          "value": "row.status ?? status(row.value, row.low, row.high)",
+          "align": "center"
+        }
+      ]
+    },
+    {
+      "id": "nc",
+      "type": "callout",
+      "tone": "fail",
+      "title": "Nonconformance",
+      "text": "{{ count_if(characteristics, 'status', 'FAIL') }} characteristic(s) out of tolerance. Raise NCR and hold the lot.",
+      "visibleIf": "verdict(characteristics) == 'FAIL'"
+    },
+    {
+      "id": "sig",
+      "type": "signatures",
+      "entries": [
+        {
+          "role": "Inspected by",
+          "name": "{{ inspector }}"
+        },
+        {
+          "role": "Quality engineer",
+          "name": ""
+        },
+        {
+          "role": "Customer representative",
+          "name": ""
+        }
+      ]
+    }
+  ]
+}

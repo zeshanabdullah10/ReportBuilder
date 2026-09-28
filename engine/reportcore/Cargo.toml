@@ -1,0 +1,19 @@
+[package]
+name = "reportcore"
+description = "Report Builder engine: document model, expressions, Typst-based PDF rendering"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
+typst = "0.15"
+typst-pdf = "0.15"
+typst-svg = "0.15"
+typst-layout = "0.15"
+qrcode = { version = "0.14", default-features = false }
+barcoders = "2"
+base64 = "0.22"

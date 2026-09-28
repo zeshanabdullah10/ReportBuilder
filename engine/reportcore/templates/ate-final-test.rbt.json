@@ -1,0 +1,339 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "name": "ATE Final Test Report",
+    "description": "Production end-of-line functional test with measurement table, verdict, trend and histogram.",
+    "author": "Test Engineering",
+    "revision": "A",
+    "tags": [
+      "production",
+      "ate",
+      "functional"
+    ]
+  },
+  "page": {
+    "size": "a4",
+    "orientation": "portrait",
+    "margins": {
+      "top": 24,
+      "right": 16,
+      "bottom": 20,
+      "left": 16
+    }
+  },
+  "theme": {
+    "company": "Acme Instruments"
+  },
+  "header": [
+    {
+      "id": "hdr",
+      "type": "columns",
+      "gapMm": 4,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "hdr-title",
+              "type": "text",
+              "text": "**{{ theme.company }}** · {{ test.name }}",
+              "style": {
+                "size": 8.5
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "hdr-sn",
+              "type": "text",
+              "text": "S/N {{ dut.serial }}",
+              "style": {
+                "size": 8.5,
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hdr-rule",
+      "type": "divider",
+      "thickness": 0.5
+    }
+  ],
+  "footer": [
+    {
+      "id": "ftr",
+      "type": "columns",
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "ftr-left",
+              "type": "text",
+              "text": "{{ report.name }} rev {{ report.revision }} · Generated {{ date(report.generatedAt, 'YYYY-MM-DD HH:mm') }}",
+              "style": {
+                "color": "muted"
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "ftr-page",
+              "type": "text",
+              "text": "Page {{ page }} of {{ pages }}",
+              "style": {
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "body": [
+    {
+      "id": "title",
+      "type": "heading",
+      "level": 1,
+      "text": "{{ test.name }}"
+    },
+    {
+      "id": "subtitle",
+      "type": "text",
+      "text": "{{ dut.model }} · Procedure {{ test.procedure }}",
+      "style": {
+        "color": "muted",
+        "size": 10.5
+      }
+    },
+    {
+      "id": "verdict",
+      "type": "summary",
+      "title": "Overall result",
+      "source": "measurements",
+      "statusField": "status",
+      "showCounts": true,
+      "showRate": true
+    },
+    {
+      "id": "info",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "dut-info",
+              "type": "keyValue",
+              "title": "Unit under test",
+              "columns": 1,
+              "boxed": true,
+              "items": [
+                {
+                  "label": "Serial number",
+                  "value": "{{ dut.serial }}"
+                },
+                {
+                  "label": "Model",
+                  "value": "{{ dut.model }}"
+                },
+                {
+                  "label": "Part number",
+                  "value": "{{ dut.partNumber }} rev {{ dut.revision }}"
+                },
+                {
+                  "label": "Lot",
+                  "value": "{{ dut.lot }}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "station-info",
+              "type": "keyValue",
+              "title": "Test conditions",
+              "columns": 1,
+              "boxed": true,
+              "items": [
+                {
+                  "label": "Station",
+                  "value": "{{ station.id }} · {{ station.location }}"
+                },
+                {
+                  "label": "Operator",
+                  "value": "{{ station.operator }}"
+                },
+                {
+                  "label": "Started",
+                  "value": "{{ date(test.start, 'D MMM YYYY, HH:mm') }} ({{ duration(test.durationSeconds) }})"
+                },
+                {
+                  "label": "Environment",
+                  "value": "{{ test.temperature }} °C · {{ test.humidity }} %RH"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "meas-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Measurements"
+    },
+    {
+      "id": "meas",
+      "type": "measurementTable",
+      "source": "measurements",
+      "decimals": 3,
+      "showLimits": true,
+      "showUnit": true,
+      "showStatus": true,
+      "highlightFailures": true
+    },
+    {
+      "id": "fail-note",
+      "type": "callout",
+      "tone": "fail",
+      "title": "{{ count_if(measurements, 'status', 'FAIL') }} measurement(s) out of limits",
+      "text": "See highlighted rows. Disposition required before shipment.",
+      "visibleIf": "verdict(measurements) == 'FAIL'"
+    },
+    {
+      "id": "charts",
+      "type": "columns",
+      "gapMm": 6,
+      "columns": [
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "trend",
+              "type": "chart",
+              "kind": "line",
+              "title": "VBUS settling",
+              "series": [
+                {
+                  "label": "VBUS",
+                  "source": "vbusTrace",
+                  "x": "item.t",
+                  "y": "item.v"
+                }
+              ],
+              "xLabel": "Time (ms)",
+              "yLabel": "Volts",
+              "heightMm": 55,
+              "limits": [
+                {
+                  "label": "High 5.25 V",
+                  "value": "5.25"
+                },
+                {
+                  "label": "Low 4.75 V",
+                  "value": "4.75"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "hist",
+              "type": "chart",
+              "kind": "histogram",
+              "title": "Ripple distribution",
+              "series": [
+                {
+                  "label": "Ripple",
+                  "source": "ripple.samples"
+                }
+              ],
+              "xLabel": "Ripple (mV)",
+              "yLabel": "Count",
+              "bins": 10,
+              "heightMm": 55,
+              "limits": [
+                {
+                  "label": "USL",
+                  "value": "30"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "notes-h",
+      "type": "heading",
+      "level": 3,
+      "text": "Notes",
+      "visibleIf": "notes"
+    },
+    {
+      "id": "notes",
+      "type": "text",
+      "text": "{{ notes }}",
+      "visibleIf": "notes"
+    },
+    {
+      "id": "trace",
+      "type": "columns",
+      "gapMm": 6,
+      "columns": [
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "qr",
+              "type": "qrCode",
+              "value": "https://mes.example.com/unit/{{ dut.serial }}",
+              "sizeMm": 22,
+              "caption": "Traceability record"
+            }
+          ]
+        },
+        {
+          "width": 3,
+          "blocks": [
+            {
+              "id": "sig",
+              "type": "signatures",
+              "showDate": true,
+              "entries": [
+                {
+                  "role": "Tested by",
+                  "name": "{{ station.operator }}"
+                },
+                {
+                  "role": "Quality approval",
+                  "name": ""
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

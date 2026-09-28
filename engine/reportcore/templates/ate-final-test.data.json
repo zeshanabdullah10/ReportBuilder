@@ -1,0 +1,289 @@
+{
+  "station": {
+    "id": "ATE-07",
+    "location": "Line 3, Building B",
+    "operator": "J. Rivera",
+    "softwareVersion": "TestExec 4.12.0",
+    "fixture": "FX-221 rev C"
+  },
+  "dut": {
+    "serial": "PSU-24-0012873",
+    "model": "PSU-240 Power Supply",
+    "partNumber": "900-0240-01",
+    "revision": "C",
+    "lot": "L2409-17"
+  },
+  "test": {
+    "name": "Final Functional Test",
+    "procedure": "TP-0240-FT rev 5",
+    "start": "2026-03-01T09:14:05+01:00",
+    "durationSeconds": 184.6,
+    "temperature": 23.4,
+    "humidity": 41
+  },
+  "measurements": [
+    {
+      "name": "VBUS output voltage",
+      "value": 4.9949,
+      "low": 4.75,
+      "high": 5.25,
+      "nominal": 5.0,
+      "unit": "V"
+    },
+    {
+      "name": "3V3 rail",
+      "value": 3.3051,
+      "low": 3.2,
+      "high": 3.4,
+      "nominal": 3.3,
+      "unit": "V"
+    },
+    {
+      "name": "1V8 rail",
+      "value": 1.7986,
+      "low": 1.746,
+      "high": 1.854,
+      "nominal": 1.8,
+      "unit": "V"
+    },
+    {
+      "name": "Quiescent current",
+      "value": 11.874,
+      "low": null,
+      "high": 15,
+      "nominal": 12,
+      "unit": "mA"
+    },
+    {
+      "name": "Ripple @ 1 A",
+      "value": 31.7,
+      "low": null,
+      "high": 30,
+      "nominal": 18,
+      "unit": "mV"
+    },
+    {
+      "name": "Load regulation",
+      "value": 0.3787,
+      "low": null,
+      "high": 1.0,
+      "nominal": 0.4,
+      "unit": "%"
+    },
+    {
+      "name": "Oscillator frequency",
+      "value": 25.0007,
+      "low": 24.9975,
+      "high": 25.0025,
+      "nominal": 25.0,
+      "unit": "MHz"
+    },
+    {
+      "name": "Efficiency @ 2 A",
+      "value": 91.7545,
+      "low": 88,
+      "high": null,
+      "nominal": 91.5,
+      "unit": "%"
+    },
+    {
+      "name": "Thermal rise",
+      "value": 24.0738,
+      "low": null,
+      "high": 35,
+      "nominal": 22,
+      "unit": "°C"
+    },
+    {
+      "name": "Insulation resistance",
+      "value": 1219.9122,
+      "low": 500,
+      "high": null,
+      "nominal": 1200,
+      "unit": "MΩ"
+    },
+    {
+      "name": "Hi-pot leakage",
+      "value": 0.879,
+      "low": null,
+      "high": 2.0,
+      "nominal": 0.8,
+      "unit": "µA"
+    },
+    {
+      "name": "Startup time",
+      "value": 4.2927,
+      "low": null,
+      "high": 5.0,
+      "nominal": 4.2,
+      "unit": "ms"
+    }
+  ],
+  "ripple": {
+    "samples": [
+      15.5,
+      21.25,
+      22.47,
+      23.8,
+      21.29,
+      21.36,
+      22.12,
+      21.64,
+      21.2,
+      18.78,
+      17.64,
+      14.03,
+      13.92,
+      13.02,
+      11.01,
+      14.82,
+      13.95,
+      16.33,
+      15.39,
+      17.19,
+      19.73,
+      21.78,
+      24.15,
+      24.27,
+      23.27,
+      21.89,
+      21.34,
+      22.3,
+      17.34,
+      16.93,
+      15.38,
+      11.03,
+      12.39,
+      13.96,
+      9.32,
+      12.82,
+      14.62,
+      15.39,
+      19.35,
+      20.43
+    ]
+  },
+  "vbusTrace": [
+    {
+      "t": 0,
+      "v": 5.0727
+    },
+    {
+      "t": 5,
+      "v": 5.0378
+    },
+    {
+      "t": 10,
+      "v": 4.9832
+    },
+    {
+      "t": 15,
+      "v": 4.9673
+    },
+    {
+      "t": 20,
+      "v": 4.988
+    },
+    {
+      "t": 25,
+      "v": 5.0083
+    },
+    {
+      "t": 30,
+      "v": 5.0177
+    },
+    {
+      "t": 35,
+      "v": 5.004
+    },
+    {
+      "t": 40,
+      "v": 5.0015
+    },
+    {
+      "t": 45,
+      "v": 4.9893
+    },
+    {
+      "t": 50,
+      "v": 4.9922
+    },
+    {
+      "t": 55,
+      "v": 4.9937
+    },
+    {
+      "t": 60,
+      "v": 4.9985
+    },
+    {
+      "t": 65,
+      "v": 5.0002
+    },
+    {
+      "t": 70,
+      "v": 5.0068
+    },
+    {
+      "t": 75,
+      "v": 4.9884
+    },
+    {
+      "t": 80,
+      "v": 4.9913
+    },
+    {
+      "t": 85,
+      "v": 5.0009
+    },
+    {
+      "t": 90,
+      "v": 5.0078
+    },
+    {
+      "t": 95,
+      "v": 5.0036
+    },
+    {
+      "t": 100,
+      "v": 4.9907
+    },
+    {
+      "t": 105,
+      "v": 4.9872
+    },
+    {
+      "t": 110,
+      "v": 5.0015
+    },
+    {
+      "t": 115,
+      "v": 4.9962
+    },
+    {
+      "t": 120,
+      "v": 4.9945
+    },
+    {
+      "t": 125,
+      "v": 5.005
+    },
+    {
+      "t": 130,
+      "v": 5.0056
+    },
+    {
+      "t": 135,
+      "v": 5.0008
+    },
+    {
+      "t": 140,
+      "v": 5.0012
+    },
+    {
+      "t": 145,
+      "v": 5.0021
+    }
+  ],
+  "notes": "Unit reworked at C214 prior to test. Re-test authorised by QA."
+}

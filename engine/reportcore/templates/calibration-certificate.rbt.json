@@ -1,0 +1,300 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "name": "Calibration Certificate",
+    "description": "ISO/IEC 17025 style certificate with as-found/as-left results, uncertainty and traceable standards.",
+    "author": "Calibration Lab",
+    "revision": "B",
+    "tags": [
+      "calibration",
+      "17025",
+      "metrology"
+    ]
+  },
+  "page": {
+    "size": "a4",
+    "margins": {
+      "top": 20,
+      "right": 18,
+      "bottom": 20,
+      "left": 18
+    }
+  },
+  "theme": {
+    "company": "Acme Calibration Laboratory",
+    "accentColor": "#0a5dc2"
+  },
+  "footer": [
+    {
+      "id": "ftr",
+      "type": "columns",
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "ftr-left",
+              "type": "text",
+              "text": "{{ report.name }} · {{ theme.company }}",
+              "style": {
+                "color": "muted"
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "ftr-page",
+              "type": "text",
+              "text": "Page {{ page }} of {{ pages }}",
+              "style": {
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "body": [
+    {
+      "id": "top",
+      "type": "columns",
+      "columns": [
+        {
+          "width": 3,
+          "blocks": [
+            {
+              "id": "t1",
+              "type": "heading",
+              "level": 1,
+              "text": "Certificate of Calibration"
+            },
+            {
+              "id": "t2",
+              "type": "text",
+              "text": "Certificate **{{ certificate.number }}** · issued {{ date(certificate.issued, 'D MMMM YYYY') }}",
+              "style": {
+                "color": "muted"
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "qr",
+              "type": "qrCode",
+              "value": "CERT:{{ certificate.number }}",
+              "sizeMm": 20,
+              "align": "right"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "verdict",
+      "type": "summary",
+      "title": "As-left condition",
+      "source": "each(points, 'status(it.asLeft, it.low, it.high)')",
+      "statusField": "status",
+      "showCounts": true,
+      "showRate": false
+    },
+    {
+      "id": "cols",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "inst",
+              "type": "keyValue",
+              "title": "Instrument",
+              "columns": 1,
+              "items": [
+                {
+                  "label": "Description",
+                  "value": "{{ instrument.description }}"
+                },
+                {
+                  "label": "Make / model",
+                  "value": "{{ instrument.manufacturer }} {{ instrument.model }}"
+                },
+                {
+                  "label": "Serial",
+                  "value": "{{ instrument.serial }}"
+                },
+                {
+                  "label": "Asset ID",
+                  "value": "{{ instrument.assetId }}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "cust",
+              "type": "keyValue",
+              "title": "Customer & conditions",
+              "columns": 1,
+              "items": [
+                {
+                  "label": "Customer",
+                  "value": "{{ customer.name }}"
+                },
+                {
+                  "label": "Address",
+                  "value": "{{ customer.address }}"
+                },
+                {
+                  "label": "Environment",
+                  "value": "{{ conditions.temperature }} °C · {{ conditions.humidity }} %RH"
+                },
+                {
+                  "label": "Next due",
+                  "value": "{{ date(certificate.dueDate, 'D MMM YYYY') }}"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "res-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Results"
+    },
+    {
+      "id": "res",
+      "type": "table",
+      "source": "points",
+      "rowTone": "status(row.asLeft, row.low, row.high)",
+      "columns": [
+        {
+          "header": "Function",
+          "value": "row.function",
+          "width": "1fr"
+        },
+        {
+          "header": "Nominal",
+          "value": "row.nominal + ' ' + row.unit",
+          "align": "right"
+        },
+        {
+          "header": "Lower limit",
+          "value": "row.low | fixed(5)",
+          "align": "right"
+        },
+        {
+          "header": "As found",
+          "value": "row.asFound | fixed(5)",
+          "align": "right"
+        },
+        {
+          "header": "Found",
+          "value": "status(row.asFound, row.low, row.high)",
+          "align": "center"
+        },
+        {
+          "header": "As left",
+          "value": "row.asLeft | fixed(5)",
+          "align": "right"
+        },
+        {
+          "header": "Upper limit",
+          "value": "row.high | fixed(5)",
+          "align": "right"
+        },
+        {
+          "header": "U (k=2)",
+          "value": "row.uncertainty | fixed(5)",
+          "align": "right"
+        },
+        {
+          "header": "Left",
+          "value": "status(row.asLeft, row.low, row.high)",
+          "align": "center"
+        }
+      ]
+    },
+    {
+      "id": "adj",
+      "type": "callout",
+      "tone": "warn",
+      "title": "Adjusted",
+      "text": "{{ count(points, \"status(it.asFound, it.low, it.high) == 'FAIL'\") }} point(s) were out of tolerance as found and were adjusted. Customer notification required per ISO/IEC 17025 clause 7.10.",
+      "visibleIf": "count(points, \"status(it.asFound, it.low, it.high) == 'FAIL'\") > 0"
+    },
+    {
+      "id": "std-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Reference standards"
+    },
+    {
+      "id": "std",
+      "type": "table",
+      "source": "standards",
+      "columns": [
+        {
+          "header": "Standard",
+          "value": "row.name",
+          "width": "1fr"
+        },
+        {
+          "header": "Model",
+          "value": "row.model"
+        },
+        {
+          "header": "Serial",
+          "value": "row.serial"
+        },
+        {
+          "header": "Cal. due",
+          "value": "date(row.dueDate, 'D MMM YYYY')"
+        },
+        {
+          "header": "Traceable to",
+          "value": "row.traceability"
+        }
+      ]
+    },
+    {
+      "id": "stmt",
+      "type": "text",
+      "text": "The reported expanded uncertainty is stated as the standard uncertainty multiplied by the coverage factor k = 2, providing a coverage probability of approximately 95 %. Results relate only to the item calibrated. This certificate shall not be reproduced except in full without written approval of the laboratory.",
+      "style": {
+        "size": 8,
+        "color": "muted"
+      }
+    },
+    {
+      "id": "sig",
+      "type": "signatures",
+      "showDate": true,
+      "entries": [
+        {
+          "role": "Calibrated by",
+          "name": "{{ technician }}"
+        },
+        {
+          "role": "Approved by",
+          "name": "{{ approver }}"
+        }
+      ]
+    }
+  ]
+}
