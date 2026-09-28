@@ -66,6 +66,10 @@ jobs:
         with:
           targets: ${{ matrix.name == 'macos' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
       - uses: Swatinem/rust-cache@v2
+        with:
+          # Keyed by runner image: CI jobs of the same name build on a newer Ubuntu, and
+          # their build scripts need a newer glibc than the ubuntu-22.04 release runners have.
+          key: release-${{ matrix.os }}-${{ matrix.target || matrix.name }}
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -115,6 +119,10 @@ jobs:
         with:
           targets: ${{ matrix.target }}
       - uses: Swatinem/rust-cache@v2
+        with:
+          # Keyed by runner image: CI jobs of the same name build on a newer Ubuntu, and
+          # their build scripts need a newer glibc than the ubuntu-22.04 release runners have.
+          key: release-${{ matrix.os }}-${{ matrix.target || matrix.name }}
       - name: Build
         run: cargo build --release -p report-cli -p reportcore-ffi --target ${{ matrix.target }}
       - name: Package
