@@ -16,4 +16,4 @@ typst-svg = "0.15"
 typst-layout = "0.15"
 qrcode = { version = "0.14", default-features = false }
 barcoders = "2"
-base64 = "0.22"
+base64 = "0.23"

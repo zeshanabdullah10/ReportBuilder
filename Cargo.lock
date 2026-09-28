@@ -3705,7 +3705,7 @@ name = "reportcore"
 version = "1.0.0"
 dependencies = [
  "barcoders",
- "base64 0.22.1",
+ "base64 0.23.1",
  "chrono",
  "qrcode",
  "serde",
