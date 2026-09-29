@@ -1,0 +1,117 @@
+{
+  "part": {
+    "number": "710-0100-04",
+    "description": "Electrolytic capacitor 100 µF / 25 V"
+  },
+  "receipt": {
+    "supplier": "Kestrel Components",
+    "po": "PO-77120",
+    "lot": "KC-55019",
+    "receivedAt": "2026-03-04",
+    "qty": 5000
+  },
+  "sampling": {
+    "plan": "ANSI Z1.4, level II",
+    "aql": "0.65",
+    "sampleSize": 8,
+    "accept": 1
+  },
+  "checks": [
+    {
+      "characteristic": "Body length",
+      "method": "Caliper",
+      "spec": "12.00 ± 0.10 mm",
+      "low": 11.9,
+      "high": 12.1,
+      "unit": "mm",
+      "samples": [
+        12.02,
+        11.98,
+        12.05,
+        12.01,
+        11.99,
+        12.03,
+        12.0,
+        12.04
+      ]
+    },
+    {
+      "characteristic": "Lead pitch",
+      "method": "Optical",
+      "spec": "5.00 ± 0.05 mm",
+      "low": 4.95,
+      "high": 5.05,
+      "unit": "mm",
+      "samples": [
+        5.01,
+        5.0,
+        4.99,
+        5.02,
+        5.0,
+        5.01,
+        4.98,
+        5.0
+      ]
+    },
+    {
+      "characteristic": "Capacitance",
+      "method": "LCR meter",
+      "spec": "100 µF ± 20 %",
+      "low": 80,
+      "high": 120,
+      "unit": "µF",
+      "samples": [
+        96.4,
+        101.2,
+        98.7,
+        104.5,
+        99.9,
+        102.3,
+        97.8,
+        100.6
+      ]
+    },
+    {
+      "characteristic": "ESR @ 100 kHz",
+      "method": "LCR meter",
+      "spec": "≤ 90 mΩ",
+      "low": 0,
+      "high": 90,
+      "unit": "mΩ",
+      "samples": [
+        71,
+        74,
+        69,
+        78,
+        73,
+        70,
+        76,
+        72
+      ]
+    }
+  ],
+  "visual": [
+    {
+      "item": "Packaging intact, labels legible",
+      "result": "PASS",
+      "note": ""
+    },
+    {
+      "item": "Certificate of conformance present",
+      "result": "PASS",
+      "note": "COC 55019"
+    },
+    {
+      "item": "Markings and polarity",
+      "result": "PASS",
+      "note": ""
+    },
+    {
+      "item": "Lead finish, no oxidation",
+      "result": "PASS",
+      "note": ""
+    }
+  ],
+  "comments": "Sample of 8 drawn from cartons 3, 11 and 24.",
+  "inspector": "L. Bianchi"
+}

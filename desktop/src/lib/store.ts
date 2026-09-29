@@ -1,14 +1,17 @@
 import { create } from 'zustand'
 import { blockInfo } from './blocks'
 import { EMPTY_ID, SAMPLE_ID, STRESS_ID, dataSets, isGeneratedSet, newDocument, normalizeDocument } from './defaults'
-import { duplicateBlock, findBlock, flatIds, insertBlock, type Location, moveBlock, newId, removeBlock, updateBlock } from './doc-ops'
+import { duplicateBlock, findBlock, flatIds, insertBlock, type Location, newId, updateBlock } from './doc-ops'
+import { setDropHandler } from './dnd'
+import { type FieldNode } from './data-model'
+import { applyDrop, bindField, type DropTarget, moveBlockTidy, type Payload, removeBlockTidy } from './drop'
 import type { Block, BlockType, DataSet, ReportDocument } from './types'
 
 const HISTORY_LIMIT = 200
 /** Edits to the same field within this window merge into one undo step. */
 const COALESCE_MS = 800
 
-export type Panel = 'outline' | 'library' | 'data'
+export type Panel = 'data' | 'layers'
 
 export interface Toast {
   id: number
@@ -32,10 +35,16 @@ interface State {
   zoom: number
   paletteOpen: boolean
   documentSettingsOpen: boolean
+  usePanelOpen: boolean
+  saving: boolean
   toasts: Toast[]
+  /** The add-block menu: where the block goes (null = after the selection) and where to draw it. */
+  addMenu: { loc: Location | null; x: number; y: number } | null
 
   load: (doc: ReportDocument, path: string | null) => void
   newFromStarter: (template: string, data: string) => void
+  /** A new unsaved document from a template and the user's own data. */
+  newFromData: (doc: ReportDocument, data: unknown, dataName: string) => void
   closeWelcome: () => void
   showWelcome: () => void
   markSaved: (path: string) => void
@@ -47,6 +56,10 @@ interface State {
   hover: (id: string | null) => void
   selectRelative: (delta: number) => void
   insert: (type: BlockType, at?: Location) => void
+  /** Apply a drag-and-drop or add-menu result. */
+  drop: (payload: Payload, target: DropTarget) => void
+  /** Bind a field to the selected block, or add a block for it. */
+  useField: (node: FieldNode) => void
   remove: (id: string) => void
   duplicate: (id: string) => void
   move: (id: string, to: Location) => void
@@ -59,7 +72,10 @@ interface State {
   setLeftPanel: (p: Panel) => void
   setZoom: (z: number) => void
   setPaletteOpen: (v: boolean) => void
+  openAddMenu: (loc: Location | null, x: number, y: number) => void
+  closeAddMenu: () => void
   setDocumentSettingsOpen: (v: boolean) => void
+  setUsePanelOpen: (v: boolean) => void
   toast: (kind: Toast['kind'], text: string) => void
   dismissToast: (id: number) => void
 }
@@ -77,11 +93,14 @@ export const useStore = create<State>((set, get) => ({
   future: [],
   lastEdit: null,
   activeDataSet: SAMPLE_ID,
-  leftPanel: 'outline',
+  leftPanel: 'data',
   zoom: 1,
   paletteOpen: false,
   documentSettingsOpen: false,
+  usePanelOpen: false,
+  saving: false,
   toasts: [],
+  addMenu: null,
 
   load: (doc, path) =>
     set({
@@ -101,6 +120,12 @@ export const useStore = create<State>((set, get) => ({
     raw.sampleData = JSON.parse(data)
     get().load(raw, null)
     set({ dirty: true })
+  },
+
+  newFromData: (doc, data, dataName) => {
+    get().load({ ...doc, sampleData: data, editor: { ...doc.editor, activeDataSet: SAMPLE_ID } }, null)
+    set({ dirty: true, leftPanel: 'data' })
+    get().toast('info', `Using “${dataName}” as the sample data`)
   },
 
   closeWelcome: () => set({ welcome: false }),
@@ -179,6 +204,26 @@ export const useStore = create<State>((set, get) => ({
     set({ selectedId: block.id })
   },
 
+  drop: (payload, target) => {
+    const r = applyDrop(get().doc, payload, target)
+    if (r.doc === get().doc) return
+    get().change(() => r.doc)
+    if (r.selectId) set({ selectedId: r.selectId })
+  },
+
+  useField: (node) => {
+    const { doc, selectedId } = get()
+    const found = selectedId ? findBlock(doc, selectedId) : null
+    if (found) {
+      const bound = bindField(found.block, node, found.path)
+      if (bound) {
+        get().change((d) => updateBlock(d, found.block.id, () => bound))
+        return
+      }
+    }
+    get().drop({ kind: 'field', node }, found ? { kind: 'onto', id: found.block.id } : { kind: 'gap', loc: { region: 'body', index: doc.body.length } })
+  },
+
   remove: (id) => {
     const found = findBlock(get().doc, id)
     if (!found) return
@@ -192,7 +237,7 @@ export const useStore = create<State>((set, get) => ({
         })()
       : get().doc[found.loc.region]
     const neighbour = siblings[found.loc.index - 1] ?? siblings[found.loc.index + 1]
-    get().change((d) => removeBlock(d, id))
+    get().change((d) => removeBlockTidy(d, id))
     set({ selectedId: neighbour?.id ?? found.loc.parentId ?? null })
   },
 
@@ -206,7 +251,7 @@ export const useStore = create<State>((set, get) => ({
     if (created) set({ selectedId: created })
   },
 
-  move: (id, to) => get().change((d) => moveBlock(d, id, to)),
+  move: (id, to) => get().change((d) => moveBlockTidy(d, id, to)),
 
   nudge: (id, delta) => {
     const found = findBlock(get().doc, id)
@@ -254,7 +299,10 @@ export const useStore = create<State>((set, get) => ({
   setLeftPanel: (p) => set({ leftPanel: p }),
   setZoom: (z) => set({ zoom: Math.max(0.3, Math.min(3, Math.round(z * 100) / 100)) }),
   setPaletteOpen: (v) => set({ paletteOpen: v }),
+  openAddMenu: (loc, x, y) => set({ addMenu: { loc, x, y } }),
+  closeAddMenu: () => set({ addMenu: null }),
   setDocumentSettingsOpen: (v) => set({ documentSettingsOpen: v }),
+  setUsePanelOpen: (v) => set({ usePanelOpen: v }),
 
   toast: (kind, text) => {
     const id = ++toastId
@@ -276,3 +324,5 @@ export { EMPTY_ID, SAMPLE_ID, STRESS_ID }
 export function serialize(doc: ReportDocument): string {
   return JSON.stringify(doc, null, 2) + '\n'
 }
+
+setDropHandler((payload, target) => useStore.getState().drop(payload, target))

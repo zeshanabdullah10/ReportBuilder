@@ -1,0 +1,295 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "name": "Station Daily Summary",
+    "description": "Daily production summary for a test line: throughput per hour, yield per station and top failure reasons.",
+    "author": "Test Engineering",
+    "revision": "A",
+    "tags": [
+      "production",
+      "daily",
+      "station",
+      "yield"
+    ]
+  },
+  "page": {
+    "size": "a4",
+    "margins": {
+      "top": 24,
+      "right": 16,
+      "bottom": 20,
+      "left": 16
+    }
+  },
+  "theme": {
+    "company": "Acme Instruments"
+  },
+  "header": [
+    {
+      "id": "hdr",
+      "type": "columns",
+      "gapMm": 4,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "hdr-l",
+              "type": "text",
+              "text": "**{{ theme.company }}** · Daily summary",
+              "style": {
+                "size": 8.5
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "hdr-r",
+              "type": "text",
+              "text": "{{ line.name }}",
+              "style": {
+                "size": 8.5,
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hdr-rule",
+      "type": "divider",
+      "thickness": 0.5
+    }
+  ],
+  "footer": [
+    {
+      "id": "ftr",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "ftr-l",
+              "type": "text",
+              "text": "{{ report.name }} rev {{ report.revision }} · Generated {{ date(report.generatedAt, 'YYYY-MM-DD HH:mm') }}",
+              "style": {
+                "color": "muted"
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "ftr-p",
+              "type": "text",
+              "text": "Page {{ page }} of {{ pages }}",
+              "style": {
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "body": [
+    {
+      "id": "title",
+      "type": "heading",
+      "level": 1,
+      "text": "Test Line Daily Summary"
+    },
+    {
+      "id": "sub",
+      "type": "text",
+      "text": "{{ line.name }} · {{ date(line.date, 'dddd, D MMMM YYYY') }}",
+      "style": {
+        "color": "muted",
+        "size": 10.5
+      }
+    },
+    {
+      "id": "kpi",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "k-yield",
+              "type": "progress",
+              "label": "Line yield",
+              "value": "sum(stations, 'passed') / sum(stations, 'tested') * 100",
+              "max": "100",
+              "showValue": true
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "k-tot",
+              "type": "keyValue",
+              "title": "",
+              "columns": 1,
+              "boxed": false,
+              "items": [
+                {
+                  "label": "Units tested",
+                  "value": "{{ sum(stations, 'tested') }}"
+                },
+                {
+                  "label": "Units failed",
+                  "value": "{{ sum(stations, 'tested') - sum(stations, 'passed') }}"
+                },
+                {
+                  "label": "Average uptime",
+                  "value": "{{ fixed(avg(stations, 'uptime'), 1) }} %"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "st-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Stations"
+    },
+    {
+      "id": "st",
+      "type": "table",
+      "source": "stations",
+      "columns": [
+        {
+          "header": "Station",
+          "value": "row.id",
+          "width": "1fr"
+        },
+        {
+          "header": "Tested",
+          "value": "row.tested",
+          "width": "auto",
+          "align": "right"
+        },
+        {
+          "header": "Passed",
+          "value": "row.passed",
+          "width": "auto",
+          "align": "right"
+        },
+        {
+          "header": "Yield",
+          "value": "percent(row.passed / row.tested, 1)",
+          "width": "auto",
+          "align": "right"
+        },
+        {
+          "header": "Cycle (s)",
+          "value": "row.avgCycle",
+          "width": "auto",
+          "align": "right"
+        },
+        {
+          "header": "Uptime",
+          "value": "fixed(row.uptime, 1) + ' %'",
+          "width": "auto",
+          "align": "right"
+        }
+      ],
+      "rowTone": "row.passed / row.tested >= 0.95 ? 'PASS' : 'WARN'"
+    },
+    {
+      "id": "charts",
+      "type": "columns",
+      "gapMm": 6,
+      "columns": [
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "hourly",
+              "type": "chart",
+              "kind": "bar",
+              "title": "Units tested per hour",
+              "series": [
+                {
+                  "label": "Tested",
+                  "source": "hourly",
+                  "x": "item.hour",
+                  "y": "item.tested"
+                }
+              ],
+              "heightMm": 50,
+              "legend": false
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "hy",
+              "type": "chart",
+              "kind": "line",
+              "title": "Yield per hour (%)",
+              "series": [
+                {
+                  "label": "Yield",
+                  "source": "hourly",
+                  "x": "item.hour",
+                  "y": "item.passed / item.tested * 100"
+                }
+              ],
+              "heightMm": 50,
+              "legend": false,
+              "limits": [
+                {
+                  "label": "Target 95 %",
+                  "value": "95"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "top-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Top failure reasons"
+    },
+    {
+      "id": "top",
+      "type": "chart",
+      "kind": "bar",
+      "title": "",
+      "series": [
+        {
+          "label": "Failures",
+          "source": "topFailures",
+          "x": "item.reason",
+          "y": "item.count"
+        }
+      ],
+      "heightMm": 45,
+      "legend": false,
+      "yLabel": "Units"
+    }
+  ]
+}

@@ -119,4 +119,4 @@ export interface Issue { severity: 'error' | 'warning' | 'info'; blockId: string
 export interface BlockRegion { id: string; page: number; top: number; bottom: number; left: number }
 export interface PreviewResult { pages: string[]; pageSizes: [number, number][]; regions: BlockRegion[]; issues: Issue[]; elapsedMs: number }
 export interface DataPath { path: string; kind: string; sample: string }
-export interface Starter { id: string; name: string; description: string; template: string; data: string }
+export interface Starter { id: string; name: string; description: string; category: string; template: string; data: string }

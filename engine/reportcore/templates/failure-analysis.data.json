@@ -1,0 +1,64 @@
+{
+  "rma": {
+    "number": "RMA-26-0388",
+    "received": "2026-02-24",
+    "customer": "Northwind Robotics",
+    "reason": "Intermittent shutdown under load",
+    "confirmed": true
+  },
+  "unit": {
+    "model": "PSU-240 Power Supply",
+    "serial": "PSU-24-0008412",
+    "built": "2025-08-14",
+    "hours": 4180
+  },
+  "findings": [
+    {
+      "step": "Incoming visual inspection",
+      "observation": "Discolouration on PCB near U7; no mechanical damage.",
+      "result": "WARN"
+    },
+    {
+      "step": "Functional test at 25 °C",
+      "observation": "Passes all tests; shuts down after 6 min at 2 A.",
+      "result": "FAIL"
+    },
+    {
+      "step": "Thermal imaging",
+      "observation": "Hot spot at U7, 118 °C at 2 A after 5 min.",
+      "result": "FAIL"
+    },
+    {
+      "step": "Cross-section of C214 joint",
+      "observation": "Cracked fillet, cold solder joint.",
+      "result": "FAIL"
+    }
+  ],
+  "photos": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0ODAiIGhlaWdodD0iMzAwIiB2aWV3Qm94PSIwIDAgNDgwIDMwMCI+PHJlY3Qgd2lkdGg9IjQ4MCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiNlOWVkZjIiLz48cmVjdCB4PSI0MCIgeT0iNDAiIHdpZHRoPSI0MDAiIGhlaWdodD0iMjIwIiByeD0iOCIgZmlsbD0iIzFmNmIzYSIgc3Ryb2tlPSIjMGYzZDIwIiBzdHJva2Utd2lkdGg9IjMiLz48ZyBmaWxsPSIjYzlhMjI3Ij48cmVjdCB4PSI3MCIgeT0iNzAiIHdpZHRoPSI2MCIgaGVpZ2h0PSI0MCIvPjxyZWN0IHg9IjE1MCIgeT0iNzAiIHdpZHRoPSI2MCIgaGVpZ2h0PSI0MCIvPjxyZWN0IHg9IjIzMCIgeT0iNzAiIHdpZHRoPSIxMjAiIGhlaWdodD0iNDAiLz48L2c+PGcgZmlsbD0iIzIyMiI+PHJlY3QgeD0iNzAiIHk9IjE1MCIgd2lkdGg9IjE0MCIgaGVpZ2h0PSI3MCIgcng9IjQiLz48cmVjdCB4PSIyNTAiIHk9IjE1MCIgd2lkdGg9IjkwIiBoZWlnaHQ9IjcwIiByeD0iNCIvPjwvZz48Y2lyY2xlIGN4PSIyOTAiIGN5PSIxODUiIHI9IjM0IiBmaWxsPSJub25lIiBzdHJva2U9IiNkMTI0MmYiIHN0cm9rZS13aWR0aD0iNSIvPjwvc3ZnPg==",
+      "caption": "Overview: discoloured area near U7"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0ODAiIGhlaWdodD0iMzAwIiB2aWV3Qm94PSIwIDAgNDgwIDMwMCI+PHJlY3Qgd2lkdGg9IjQ4MCIgaGVpZ2h0PSIzMDAiIGZpbGw9IiNkZmU2ZWUiLz48cmVjdCB4PSI0MCIgeT0iNDAiIHdpZHRoPSI0MDAiIGhlaWdodD0iMjIwIiByeD0iOCIgZmlsbD0iIzFmNmIzYSIgc3Ryb2tlPSIjMGYzZDIwIiBzdHJva2Utd2lkdGg9IjMiLz48ZyBmaWxsPSIjYzlhMjI3Ij48cmVjdCB4PSI3MCIgeT0iNzAiIHdpZHRoPSI2MCIgaGVpZ2h0PSI0MCIvPjxyZWN0IHg9IjE1MCIgeT0iNzAiIHdpZHRoPSI2MCIgaGVpZ2h0PSI0MCIvPjxyZWN0IHg9IjIzMCIgeT0iNzAiIHdpZHRoPSIxMjAiIGhlaWdodD0iNDAiLz48L2c+PGcgZmlsbD0iIzIyMiI+PHJlY3QgeD0iNzAiIHk9IjE1MCIgd2lkdGg9IjE0MCIgaGVpZ2h0PSI3MCIgcng9IjQiLz48cmVjdCB4PSIyNTAiIHk9IjE1MCIgd2lkdGg9IjkwIiBoZWlnaHQ9IjcwIiByeD0iNCIvPjwvZz48Y2lyY2xlIGN4PSIxNTAiIGN5PSI5MCIgcj0iMzAiIGZpbGw9Im5vbmUiIHN0cm9rZT0iI2QxMjQyZiIgc3Ryb2tlLXdpZHRoPSI1Ii8+PC9zdmc+",
+      "caption": "Detail: cracked solder joint at C214"
+    }
+  ],
+  "rootCause": {
+    "category": "Manufacturing",
+    "description": "Insufficient solder at C214 caused intermittent contact and local overheating."
+  },
+  "actions": [
+    {
+      "action": "Add 3D solder-paste inspection at SPI station",
+      "owner": "Process engineering",
+      "due": "2026-03-20"
+    },
+    {
+      "action": "Screen all units from build week 33 with thermal test",
+      "owner": "Quality",
+      "due": "2026-03-13"
+    }
+  ],
+  "analyst": "S. Lindqvist"
+}

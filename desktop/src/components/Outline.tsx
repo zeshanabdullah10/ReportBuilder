@@ -1,86 +1,117 @@
-import { ChevronDown, ChevronRight } from 'lucide-react'
-import { useState } from 'react'
+import { ChevronDown, ChevronRight, Plus } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
 import { blockInfo, blockSummary } from '../lib/blocks'
-import { dragPayload, endDrag, startDrag } from '../lib/dnd'
-import { isWithin, type ListRef, type Location } from '../lib/doc-ops'
+import { beginDrag, registerZone, type Resolver, useDrag } from '../lib/dnd'
+import { findBlock, isWithin, type ListRef, type Location } from '../lib/doc-ops'
+import { bindField } from '../lib/drop'
 import { usePreview } from '../lib/preview'
 import { useStore } from '../lib/store'
 import type { Block, Region } from '../lib/types'
 import { BlockIcon } from './Icon'
 
 type DropMode = 'before' | 'after' | 'inside'
-interface DropTarget { key: string; mode: DropMode }
 
-function useDrop() {
-  const [target, setTarget] = useState<DropTarget | null>(null)
-  const doc = useStore((s) => s.doc)
-  const move = useStore((s) => s.move)
-  const insert = useStore((s) => s.insert)
+const locOf = (el: HTMLElement): Location => JSON.parse(el.dataset.loc!) as Location
 
-  const allowed = (loc: Location) => {
-    const p = dragPayload()
-    if (!p) return false
-    if (p.kind === 'move' && loc.parentId && isWithin(doc, loc.parentId, p.id)) return false
-    return true
-  }
+/** Which layer row or list is under the pointer, and what dropping there would do. */
+function useLayersZone(rootRef: React.RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    const resolve: Resolver = (x, y, payload) => {
+      const root = rootRef.current
+      if (!root) return null
+      const r = root.getBoundingClientRect()
+      if (x < r.left || x > r.right || y < r.top || y > r.bottom) return null
+      const el = (document.elementFromPoint(x, y) as HTMLElement | null)?.closest<HTMLElement>('[data-drop]')
+      if (!el) return null
+      const doc = useStore.getState().doc
+      const allowed = (loc: Location) => !(payload.kind === 'move' && loc.parentId && isWithin(doc, loc.parentId, payload.id))
+      if (el.dataset.drop === 'list') {
+        const loc = locOf(el)
+        if (!allowed(loc)) return { target: null, indicator: null }
+        return { target: { kind: 'gap', loc }, indicator: { zone: 'outline', key: el.dataset.key!, mode: 'inside' }, hint: 'Add here' }
+      }
+      const id = el.dataset.blockId!
+      if (payload.kind === 'move' && payload.id === id) return { target: null, indicator: null }
+      const found = findBlock(doc, id)
+      if (!found) return null
+      if (payload.kind === 'field' && bindField(found.block, payload.node, found.path)) {
+        return { target: { kind: 'onto', id }, indicator: { zone: 'outline', key: id, mode: 'inside' }, hint: 'Use this field here' }
+      }
+      const rect = el.getBoundingClientRect()
+      const f = (y - rect.top) / rect.height
+      let mode: DropMode = f < 0.5 ? 'before' : 'after'
+      if (found.block.type === 'section' && f > 0.3 && f < 0.7) mode = 'inside'
+      const at: Location =
+        mode === 'inside'
+          ? { region: found.loc.region, parentId: id, index: (found.block as Extract<Block, { type: 'section' }>).blocks.length }
+          : { ...found.loc, index: found.loc.index + (mode === 'after' ? 1 : 0) }
+      if (!allowed(at)) return { target: null, indicator: null }
+      return { target: { kind: 'gap', loc: at }, indicator: { zone: 'outline', key: id, mode } }
+    }
+    return registerZone('outline', resolve, () => rootRef.current)
+  }, [rootRef])
+}
 
-  const drop = (loc: Location) => {
-    const p = dragPayload()
-    const ok = !!p && allowed(loc)
-    setTarget(null)
-    endDrag()
-    if (!p || !ok) return
-    if (p.kind === 'move') move(p.id, loc)
-    else insert(p.type, loc)
-  }
-
-  return { target, setTarget, allowed, drop }
+/** "key|mode" of the drop indicator in this panel, if any. */
+function useDropIndicator(): { key: string; mode: DropMode } | null {
+  const v = useDrag((s) => (s.drag?.indicator?.zone === 'outline' ? `${s.drag.indicator.mode}|${s.drag.indicator.key}` : null))
+  if (!v) return null
+  const i = v.indexOf('|')
+  return { mode: v.slice(0, i) as DropMode, key: v.slice(i + 1) }
 }
 
 export function Outline() {
   const doc = useStore((s) => s.doc)
-  const dnd = useDrop()
+  const openAddMenu = useStore((s) => s.openAddMenu)
+  const rootRef = useRef<HTMLDivElement>(null)
+  useLayersZone(rootRef)
   const regions: { region: Region; label: string }[] = [
     { region: 'header', label: 'Header' },
     { region: 'body', label: 'Body' },
     { region: 'footer', label: 'Footer' },
   ]
   return (
-    <div className="scroll" onDragEnd={() => dnd.setTarget(null)}>
-      {regions.map(({ region, label }) => (
-        <div key={region}>
-          <div className="section-label">
-            <span className="grow">{label}</span>
-            <span>{doc[region].length || ''}</span>
+    <>
+      <div className="sidebar-head" style={{ paddingTop: 0 }}>
+        <button
+          className="btn bordered full-width"
+          onClick={(e) => {
+            const r = e.currentTarget.getBoundingClientRect()
+            openAddMenu(null, r.left, r.bottom + 4)
+          }}
+        >
+          <Plus size={14} /> Add block
+        </button>
+      </div>
+      <div className="scroll" ref={rootRef}>
+        {regions.map(({ region, label }) => (
+          <div key={region}>
+            <div className="section-label">
+              <span className="grow">{label}</span>
+              <span>{doc[region].length || ''}</span>
+            </div>
+            <div className="tree">
+              <BlockList list={doc[region]} listRef={{ region }} depth={0} emptyText={region === 'body' ? 'Drag fields here, or add a block' : `Drop blocks here for the ${label.toLowerCase()}`} />
+            </div>
           </div>
-          <div className="tree">
-            <BlockList list={doc[region]} listRef={{ region }} depth={0} dnd={dnd} emptyText={region === 'body' ? 'Add blocks from Insert' : `Drop blocks here for the ${label.toLowerCase()}`} />
-          </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    </>
   )
 }
 
-function BlockList({ list, listRef, depth, dnd, emptyText }: { list: Block[]; listRef: ListRef; depth: number; dnd: ReturnType<typeof useDrop>; emptyText: string }) {
+function BlockList({ list, listRef, depth, emptyText }: { list: Block[]; listRef: ListRef; depth: number; emptyText: string }) {
   const key = `${listRef.region}/${listRef.parentId ?? ''}/${listRef.column ?? ''}`
+  const ind = useDropIndicator()
   if (list.length === 0) {
-    const loc = { ...listRef, index: 0 }
-    const active = dnd.target?.key === key
+    const active = ind?.key === key
     return (
       <div
         className={`region-empty${active ? ' drop-inside' : ''}`}
         style={{ marginLeft: 6 + depth * 14 }}
-        onDragOver={(e) => {
-          if (!dnd.allowed(loc)) return
-          e.preventDefault()
-          dnd.setTarget({ key, mode: 'inside' })
-        }}
-        onDragLeave={() => dnd.setTarget(null)}
-        onDrop={(e) => {
-          e.preventDefault()
-          dnd.drop(loc)
-        }}
+        data-drop="list"
+        data-key={key}
+        data-loc={JSON.stringify({ ...listRef, index: 0 })}
       >
         {emptyText}
       </div>
@@ -89,69 +120,42 @@ function BlockList({ list, listRef, depth, dnd, emptyText }: { list: Block[]; li
   return (
     <>
       {list.map((b, i) => (
-        <Row key={b.id} block={b} loc={{ ...listRef, index: i }} depth={depth} dnd={dnd} />
+        <Row key={b.id} block={b} loc={{ ...listRef, index: i }} depth={depth} />
       ))}
     </>
   )
 }
 
-function Row({ block, loc, depth, dnd }: { block: Block; loc: Location; depth: number; dnd: ReturnType<typeof useDrop> }) {
+function Row({ block, loc, depth }: { block: Block; loc: Location; depth: number }) {
   const selected = useStore((s) => s.selectedId === block.id)
   const select = useStore((s) => s.select)
   const hover = useStore((s) => s.hover)
   const issues = usePreview((s) => s.issuesByBlock.get(block.id))
+  const ind = useDropIndicator()
   const [open, setOpen] = useState(true)
   const container = block.type === 'section' || block.type === 'columns'
   const info = blockInfo(block.type)
   const worst = issues?.some((i) => i.severity === 'error') ? 'error' : issues?.some((i) => i.severity === 'warning') ? 'warning' : null
-  const dropMode = dnd.target?.key === block.id ? dnd.target.mode : null
-
-  const modeAt = (e: React.DragEvent): DropMode | null => {
-    const p = dragPayload()
-    if (!p || (p.kind === 'move' && p.id === block.id)) return null
-    const rect = e.currentTarget.getBoundingClientRect()
-    const y = (e.clientY - rect.top) / rect.height
-    let mode: DropMode = y < 0.5 ? 'before' : 'after'
-    if (block.type === 'section' && y > 0.3 && y < 0.7) mode = 'inside'
-    return dnd.allowed(targetLoc(mode)) ? mode : null
-  }
-
-  const onDragOver = (e: React.DragEvent) => {
-    const mode = modeAt(e)
-    if (!mode) return
-    e.preventDefault()
-    if (dropMode !== mode) dnd.setTarget({ key: block.id, mode })
-  }
-
-  const targetLoc = (mode: DropMode): Location =>
-    mode === 'inside' ? { region: loc.region, parentId: block.id, index: block.type === 'section' ? block.blocks.length : 0 } : { ...loc, index: loc.index + (mode === 'after' ? 1 : 0) }
+  const dropMode = ind?.key === block.id ? ind.mode : null
 
   return (
     <>
       <div
         className={`tree-row${selected ? ' selected' : ''}${worst === 'warning' ? ' warn' : ''}${dropMode ? ` drop-${dropMode}` : ''}`}
         style={{ paddingLeft: 6 + depth * 14 }}
-        draggable
+        data-drop="row"
         data-block-id={block.id}
+        data-loc={JSON.stringify(loc)}
         role="treeitem"
         aria-selected={selected}
         onClick={() => select(block.id)}
         onMouseEnter={() => hover(block.id)}
         onMouseLeave={() => hover(null)}
-        onDragStart={(e) => startDrag(e, { kind: 'move', id: block.id })}
-        onDragOver={onDragOver}
-        onDragLeave={(e) => {
-          // Ignore leaves into our own children (label spans).
-          if (!e.currentTarget.contains(e.relatedTarget as Node)) dnd.setTarget(null)
-        }}
-        onDrop={(e) => {
-          e.preventDefault()
-          const mode = modeAt(e)
-          if (mode) dnd.drop(targetLoc(mode))
-        }}
+        onPointerDown={(e) => beginDrag(e, { kind: 'move', id: block.id }, info.label)}
       >
         <span
           className="chev"
+          onPointerDown={(e) => container && e.stopPropagation()}
           onClick={(e) => {
             if (!container) return
             e.stopPropagation()
@@ -168,7 +172,7 @@ function Row({ block, loc, depth, dnd }: { block: Block; loc: Location; depth: n
         {worst && <span className="issue-dot" title={issues!.map((i) => i.message).join('\n')} />}
       </div>
       {container && open && block.type === 'section' && (
-        <BlockList list={block.blocks} listRef={{ region: loc.region, parentId: block.id }} depth={depth + 1} dnd={dnd} emptyText="Empty section — drop blocks here" />
+        <BlockList list={block.blocks} listRef={{ region: loc.region, parentId: block.id }} depth={depth + 1} emptyText="Empty group — drop blocks here" />
       )}
       {container && open && block.type === 'columns' &&
         block.columns.map((c, ci) => {
@@ -177,26 +181,18 @@ function Row({ block, loc, depth, dnd }: { block: Block; loc: Location; depth: n
           return (
             <div key={ci}>
               <div
-                className={`tree-sub${dnd.target?.key === key ? ' drop-inside' : ''}`}
+                className={`tree-sub${ind?.key === key ? ' drop-inside' : ''}`}
                 style={{ marginLeft: 20 + depth * 14 }}
-                onDragOver={(e) => {
-                  if (!dnd.allowed(colLoc)) return
-                  e.preventDefault()
-                  dnd.setTarget({ key, mode: 'inside' })
-                }}
-                onDragLeave={() => dnd.setTarget(null)}
-                onDrop={(e) => {
-                  e.preventDefault()
-                  dnd.drop(colLoc)
-                }}
+                data-drop="list"
+                data-key={key}
+                data-loc={JSON.stringify(colLoc)}
               >
                 Column {ci + 1}
               </div>
-              {c.blocks.length > 0 && <BlockList list={c.blocks} listRef={{ region: loc.region, parentId: block.id, column: ci }} depth={depth + 2} dnd={dnd} emptyText="" />}
+              {c.blocks.length > 0 && <BlockList list={c.blocks} listRef={{ region: loc.region, parentId: block.id, column: ci }} depth={depth + 2} emptyText="" />}
             </div>
           )
         })}
     </>
   )
 }
-

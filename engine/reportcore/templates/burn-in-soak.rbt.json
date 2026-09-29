@@ -1,0 +1,303 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "name": "Burn-in / Environmental Soak",
+    "description": "Chamber temperature and unit current over a soak, with statistics, limit lines and an event log.",
+    "author": "Test Engineering",
+    "revision": "A",
+    "tags": [
+      "environmental",
+      "burn-in",
+      "soak",
+      "reliability"
+    ]
+  },
+  "page": {
+    "size": "a4",
+    "margins": {
+      "top": 24,
+      "right": 16,
+      "bottom": 20,
+      "left": 16
+    }
+  },
+  "theme": {
+    "company": "Acme Instruments"
+  },
+  "header": [
+    {
+      "id": "hdr",
+      "type": "columns",
+      "gapMm": 4,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "hdr-l",
+              "type": "text",
+              "text": "**{{ theme.company }}** · Burn-in",
+              "style": {
+                "size": 8.5
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "hdr-r",
+              "type": "text",
+              "text": "S/N {{ dut.serial }}",
+              "style": {
+                "size": 8.5,
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hdr-rule",
+      "type": "divider",
+      "thickness": 0.5
+    }
+  ],
+  "footer": [
+    {
+      "id": "ftr",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "ftr-l",
+              "type": "text",
+              "text": "{{ report.name }} rev {{ report.revision }} · Generated {{ date(report.generatedAt, 'YYYY-MM-DD HH:mm') }}",
+              "style": {
+                "color": "muted"
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "ftr-p",
+              "type": "text",
+              "text": "Page {{ page }} of {{ pages }}",
+              "style": {
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "body": [
+    {
+      "id": "title",
+      "type": "heading",
+      "level": 1,
+      "text": "Burn-in Report"
+    },
+    {
+      "id": "sub",
+      "type": "text",
+      "text": "{{ dut.model }} · S/N {{ dut.serial }} · Chamber {{ chamber.id }}",
+      "style": {
+        "color": "muted",
+        "size": 10.5
+      }
+    },
+    {
+      "id": "verdict",
+      "type": "status",
+      "label": "Soak result",
+      "value": "max(samples, 'temp') <= chamber.maxTemp && max(samples, 'current') <= limits.currentMax ? 'PASS' : 'FAIL'",
+      "style": "banner"
+    },
+    {
+      "id": "info",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "setup",
+              "type": "keyValue",
+              "title": "Setup",
+              "columns": 1,
+              "boxed": true,
+              "items": [
+                {
+                  "label": "Profile",
+                  "value": "{{ chamber.profile }}"
+                },
+                {
+                  "label": "Setpoint",
+                  "value": "{{ chamber.setpoint }} °C"
+                },
+                {
+                  "label": "Duration",
+                  "value": "{{ samples[-1].t }} h"
+                },
+                {
+                  "label": "Started",
+                  "value": "{{ date(start, 'D MMM YYYY, HH:mm') }}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "stats",
+              "type": "keyValue",
+              "title": "Statistics",
+              "columns": 1,
+              "boxed": true,
+              "items": [
+                {
+                  "label": "Temperature",
+                  "value": "{{ fixed(min(samples, 'temp'), 1) }} … {{ fixed(max(samples, 'temp'), 1) }} °C"
+                },
+                {
+                  "label": "Mean current",
+                  "value": "{{ fixed(avg(samples, 'current'), 1) }} mA"
+                },
+                {
+                  "label": "Peak current",
+                  "value": "{{ fixed(max(samples, 'current'), 1) }} mA"
+                },
+                {
+                  "label": "Supply",
+                  "value": "{{ fixed(avg(samples, 'vcc'), 3) }} V ± {{ fixed(stdev(samples, 'vcc') * 1000, 1) }} mV"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "temp-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Chamber temperature"
+    },
+    {
+      "id": "temp",
+      "type": "chart",
+      "kind": "line",
+      "title": "",
+      "series": [
+        {
+          "label": "Temperature",
+          "source": "samples",
+          "x": "item.t",
+          "y": "item.temp"
+        }
+      ],
+      "xLabel": "Hours",
+      "yLabel": "°C",
+      "heightMm": 55,
+      "legend": false,
+      "limits": [
+        {
+          "label": "Max {{ chamber.maxTemp }} °C",
+          "value": "chamber.maxTemp"
+        }
+      ]
+    },
+    {
+      "id": "cur-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Unit current"
+    },
+    {
+      "id": "cur",
+      "type": "chart",
+      "kind": "line",
+      "title": "",
+      "series": [
+        {
+          "label": "Current",
+          "source": "samples",
+          "x": "item.t",
+          "y": "item.current"
+        }
+      ],
+      "xLabel": "Hours",
+      "yLabel": "mA",
+      "heightMm": 50,
+      "legend": false,
+      "limits": [
+        {
+          "label": "Limit",
+          "value": "limits.currentMax"
+        }
+      ]
+    },
+    {
+      "id": "ev-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Events"
+    },
+    {
+      "id": "events",
+      "type": "table",
+      "source": "events",
+      "columns": [
+        {
+          "header": "Time (h)",
+          "value": "row.t",
+          "width": "auto",
+          "align": "right"
+        },
+        {
+          "header": "Level",
+          "value": "row.level",
+          "width": "auto",
+          "align": "center"
+        },
+        {
+          "header": "Event",
+          "value": "row.message",
+          "width": "1fr"
+        }
+      ],
+      "rowTone": "row.level",
+      "emptyText": "No events logged"
+    },
+    {
+      "id": "sig",
+      "type": "signatures",
+      "showDate": true,
+      "entries": [
+        {
+          "role": "Test engineer",
+          "name": ""
+        },
+        {
+          "role": "Reviewed by",
+          "name": ""
+        }
+      ]
+    }
+  ]
+}

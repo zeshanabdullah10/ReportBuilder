@@ -10,17 +10,19 @@ export interface BlockInfo {
   keywords: string
   /** lucide icon name, resolved in components/Icon.tsx */
   icon: string
+  /** Shown first in the add menu. */
+  common?: boolean
   create: () => Omit<Block, 'id'>
 }
 
 export const CATALOG: BlockInfo[] = [
   {
-    type: 'heading', label: 'Heading', category: 'Text', icon: 'Heading', keywords: 'title h1 h2',
+    type: 'heading', common: true, label: 'Heading', category: 'Text', icon: 'Heading', keywords: 'title h1 h2',
     description: 'Section or page title',
     create: () => ({ type: 'heading', text: 'Heading', level: 2 }),
   },
   {
-    type: 'text', label: 'Text', category: 'Text', icon: 'Pilcrow', keywords: 'paragraph body note',
+    type: 'text', common: true, label: 'Text', category: 'Text', icon: 'Pilcrow', keywords: 'paragraph body note',
     description: 'Paragraph with **bold**, *italic* and {{ fields }}',
     create: () => ({ type: 'text', text: 'Write something, insert fields with {{ }}', style: {} }),
   },
@@ -30,7 +32,7 @@ export const CATALOG: BlockInfo[] = [
     create: () => ({ type: 'callout', title: 'Note', text: '', tone: 'info' }),
   },
   {
-    type: 'keyValue', label: 'Info grid', category: 'Data', icon: 'LayoutList', keywords: 'key value spec dut station details',
+    type: 'keyValue', common: true, label: 'Info grid', category: 'Data', icon: 'LayoutList', keywords: 'key value spec dut station details',
     description: 'Label / value pairs: unit, station, spec',
     create: () => ({
       type: 'keyValue', title: 'Details', columns: 2, boxed: true,
@@ -38,12 +40,12 @@ export const CATALOG: BlockInfo[] = [
     }),
   },
   {
-    type: 'table', label: 'Table', category: 'Data', icon: 'Table', keywords: 'grid rows list data',
+    type: 'table', common: true, label: 'Table', category: 'Data', icon: 'Table', keywords: 'grid rows list data',
     description: 'Rows from a list in your data',
     create: () => ({ type: 'table', source: '', columns: [], zebra: true, repeatHeader: true, emptyText: 'No data' }),
   },
   {
-    type: 'measurementTable', label: 'Measurements', category: 'Results', icon: 'Ruler', keywords: 'limits measurement pass fail results',
+    type: 'measurementTable', common: true, label: 'Measurements', category: 'Results', icon: 'Ruler', keywords: 'limits measurement pass fail results',
     description: 'Values vs limits with automatic PASS/FAIL',
     create: () => ({
       type: 'measurementTable', source: 'measurements',
@@ -53,7 +55,7 @@ export const CATALOG: BlockInfo[] = [
     }),
   },
   {
-    type: 'summary', label: 'Verdict', category: 'Results', icon: 'BadgeCheck', keywords: 'summary overall result pass fail rate',
+    type: 'summary', common: true, label: 'Verdict', category: 'Results', icon: 'BadgeCheck', keywords: 'summary overall result pass fail rate',
     description: 'Overall PASS/FAIL with counts and pass rate',
     create: () => ({ type: 'summary', title: 'Overall result', source: 'measurements', statusField: 'status', showCounts: true, showRate: true }),
   },
@@ -63,7 +65,7 @@ export const CATALOG: BlockInfo[] = [
     create: () => ({ type: 'status', label: 'Result', value: 'status', style: 'badge' }),
   },
   {
-    type: 'chart', label: 'Chart', category: 'Visuals', icon: 'ChartLine', keywords: 'graph plot trend line bar scatter histogram pie',
+    type: 'chart', common: true, label: 'Chart', category: 'Visuals', icon: 'ChartLine', keywords: 'graph plot trend line bar scatter histogram pie',
     description: 'Line, bar, scatter, histogram or pie',
     create: () => ({
       type: 'chart', kind: 'line', title: '', series: [{ label: 'Series 1', source: '', x: '', y: '' }], xLabel: '', yLabel: '',
@@ -81,7 +83,7 @@ export const CATALOG: BlockInfo[] = [
     create: () => ({ type: 'progress', label: 'Progress', value: '', max: '100', showValue: true }),
   },
   {
-    type: 'image', label: 'Image', category: 'Visuals', icon: 'Image', keywords: 'picture photo diagram',
+    type: 'image', common: true, label: 'Image', category: 'Visuals', icon: 'Image', keywords: 'picture photo diagram',
     description: 'Embedded image or photo',
     create: () => ({ type: 'image', src: '', width: 50, align: 'left', caption: '' }),
   },
@@ -107,12 +109,12 @@ export const CATALOG: BlockInfo[] = [
   },
   {
     type: 'columns', label: 'Columns', category: 'Layout', icon: 'Columns2', keywords: 'side by side grid split',
-    description: 'Place blocks side by side',
+    description: 'Side by side. Tip: drop a block on the edge of another instead',
     create: () => ({ type: 'columns', gapMm: 6, columns: [{ width: 1, blocks: [] }, { width: 1, blocks: [] }] }),
   },
   {
-    type: 'section', label: 'Section', category: 'Layout', icon: 'SquareStack', keywords: 'group repeat loop box per channel',
-    description: 'Group blocks; repeat per item in a list',
+    type: 'section', label: 'Group / Repeat', category: 'Layout', icon: 'SquareStack', keywords: 'section group repeat loop box per channel',
+    description: 'Group blocks, or repeat them for each item in a list',
     create: () => ({ type: 'section', title: '', blocks: [], as: 'item', keepTogether: false, pageBreakBefore: false, boxed: false }),
   },
   {

@@ -1,0 +1,65 @@
+{
+  "certificate": {
+    "number": "COT-2026-04417",
+    "issued": "2026-03-03"
+  },
+  "test": {
+    "procedure": "TP-0240-FT rev 5",
+    "date": "2026-03-02"
+  },
+  "unit": {
+    "model": "PSU-240 Power Supply",
+    "serial": "PSU-24-0012873",
+    "partNumber": "900-0240-01"
+  },
+  "customer": {
+    "name": "Northwind Robotics",
+    "order": "NR-PO-88213",
+    "city": "Hamburg, DE"
+  },
+  "signatory": {
+    "name": "R. Castillo"
+  },
+  "results": [
+    {
+      "name": "VBUS output voltage",
+      "value": 4.9951,
+      "low": 4.75,
+      "high": 5.25,
+      "nominal": 5.0,
+      "unit": "V"
+    },
+    {
+      "name": "3V3 rail",
+      "value": 3.3049,
+      "low": 3.2,
+      "high": 3.4,
+      "nominal": 3.3,
+      "unit": "V"
+    },
+    {
+      "name": "1V8 rail",
+      "value": 1.7991,
+      "low": 1.746,
+      "high": 1.854,
+      "nominal": 1.8,
+      "unit": "V"
+    },
+    {
+      "name": "Oscillator frequency",
+      "value": 25.0012,
+      "low": 24.997,
+      "high": 25.003,
+      "nominal": 25,
+      "unit": "MHz"
+    },
+    {
+      "name": "Efficiency @ 2 A",
+      "value": 91.2,
+      "low": 88,
+      "high": null,
+      "nominal": 90,
+      "unit": "%"
+    }
+  ]
+}

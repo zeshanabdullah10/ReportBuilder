@@ -1,0 +1,120 @@
+{
+  "line": {
+    "name": "Line 3, Building B",
+    "date": "2026-03-04"
+  },
+  "stations": [
+    {
+      "id": "ATE-05",
+      "tested": 697,
+      "passed": 682,
+      "avgCycle": 166.9,
+      "uptime": 96.5
+    },
+    {
+      "id": "ATE-06",
+      "tested": 683,
+      "passed": 670,
+      "avgCycle": 176.1,
+      "uptime": 91.2
+    },
+    {
+      "id": "ATE-07",
+      "tested": 714,
+      "passed": 693,
+      "avgCycle": 185.9,
+      "uptime": 98.4
+    },
+    {
+      "id": "ATE-08",
+      "tested": 690,
+      "passed": 661,
+      "avgCycle": 175.5,
+      "uptime": 84.7
+    }
+  ],
+  "hourly": [
+    {
+      "hour": "06:00",
+      "tested": 58,
+      "passed": 57
+    },
+    {
+      "hour": "07:00",
+      "tested": 57,
+      "passed": 57
+    },
+    {
+      "hour": "08:00",
+      "tested": 65,
+      "passed": 62
+    },
+    {
+      "hour": "09:00",
+      "tested": 62,
+      "passed": 62
+    },
+    {
+      "hour": "10:00",
+      "tested": 59,
+      "passed": 57
+    },
+    {
+      "hour": "11:00",
+      "tested": 66,
+      "passed": 66
+    },
+    {
+      "hour": "12:00",
+      "tested": 54,
+      "passed": 52
+    },
+    {
+      "hour": "13:00",
+      "tested": 60,
+      "passed": 58
+    },
+    {
+      "hour": "14:00",
+      "tested": 58,
+      "passed": 57
+    },
+    {
+      "hour": "15:00",
+      "tested": 66,
+      "passed": 64
+    },
+    {
+      "hour": "16:00",
+      "tested": 59,
+      "passed": 56
+    },
+    {
+      "hour": "17:00",
+      "tested": 70,
+      "passed": 68
+    }
+  ],
+  "topFailures": [
+    {
+      "reason": "Ripple > 30 mV",
+      "count": 32
+    },
+    {
+      "reason": "Startup time",
+      "count": 18
+    },
+    {
+      "reason": "Efficiency",
+      "count": 14
+    },
+    {
+      "reason": "VBUS low",
+      "count": 9
+    },
+    {
+      "reason": "Fixture contact",
+      "count": 5
+    }
+  ]
+}

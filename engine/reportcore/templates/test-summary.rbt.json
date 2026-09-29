@@ -1,0 +1,284 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "name": "Test Summary (One Page)",
+    "description": "One-page operator sheet: big verdict, unit and run details, and only the measurements that failed.",
+    "author": "Test Engineering",
+    "revision": "A",
+    "tags": [
+      "production",
+      "summary",
+      "one-page"
+    ]
+  },
+  "page": {
+    "size": "a4",
+    "margins": {
+      "top": 24,
+      "right": 16,
+      "bottom": 20,
+      "left": 16
+    }
+  },
+  "theme": {
+    "company": "Acme Instruments"
+  },
+  "header": [
+    {
+      "id": "hdr",
+      "type": "columns",
+      "gapMm": 4,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "hdr-l",
+              "type": "text",
+              "text": " **{{ theme.company }}** · Test summary",
+              "style": {
+                "size": 8.5
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "hdr-r",
+              "type": "text",
+              "text": "S/N {{ dut.serial }}",
+              "style": {
+                "size": 8.5,
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hdr-rule",
+      "type": "divider",
+      "thickness": 0.5
+    }
+  ],
+  "footer": [
+    {
+      "id": "ftr",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "ftr-l",
+              "type": "text",
+              "text": "{{ report.name }} rev {{ report.revision }} · Generated {{ date(report.generatedAt, 'YYYY-MM-DD HH:mm') }}",
+              "style": {
+                "color": "muted"
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "ftr-p",
+              "type": "text",
+              "text": "Page {{ page }} of {{ pages }}",
+              "style": {
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "body": [
+    {
+      "id": "title",
+      "type": "heading",
+      "level": 1,
+      "text": "{{ test.name }}"
+    },
+    {
+      "id": "sub",
+      "type": "text",
+      "text": "{{ dut.model }} · S/N {{ dut.serial }} · {{ date(test.start, 'D MMM YYYY, HH:mm') }}",
+      "style": {
+        "color": "muted",
+        "size": 10.5
+      }
+    },
+    {
+      "id": "verdict",
+      "type": "status",
+      "label": "Overall result",
+      "value": "verdict(measurements)",
+      "style": "banner"
+    },
+    {
+      "id": "info",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "dut",
+              "type": "keyValue",
+              "title": "Unit under test",
+              "columns": 1,
+              "boxed": true,
+              "items": [
+                {
+                  "label": "Serial number",
+                  "value": "{{ dut.serial }}"
+                },
+                {
+                  "label": "Model",
+                  "value": "{{ dut.model }}"
+                },
+                {
+                  "label": "Part number",
+                  "value": "{{ dut.partNumber }} rev {{ dut.revision }}"
+                },
+                {
+                  "label": "Lot",
+                  "value": "{{ dut.lot }}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "run",
+              "type": "keyValue",
+              "title": "Test run",
+              "columns": 1,
+              "boxed": true,
+              "items": [
+                {
+                  "label": "Station",
+                  "value": "{{ station.id }}"
+                },
+                {
+                  "label": "Operator",
+                  "value": "{{ station.operator }}"
+                },
+                {
+                  "label": "Duration",
+                  "value": "{{ duration(test.durationSeconds) }}"
+                },
+                {
+                  "label": "Fixture",
+                  "value": "{{ station.fixture }}"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "stats",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "rate",
+              "type": "progress",
+              "label": "Measurements passing",
+              "value": "pass_rate(measurements) * 100",
+              "max": "100",
+              "showValue": true
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "counts",
+              "type": "text",
+              "text": "{{ len(measurements) }} measured · {{ count_if(measurements, 'status', 'PASS') }} within limits · {{ count_if(measurements, 'status', 'FAIL') }} out of limits"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "fails-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Out-of-limit measurements",
+      "visibleIf": "verdict(measurements) == 'FAIL'"
+    },
+    {
+      "id": "fails",
+      "type": "measurementTable",
+      "source": "measurements",
+      "decimals": 3,
+      "showLimits": true,
+      "showUnit": true,
+      "showStatus": true,
+      "highlightFailures": true,
+      "failuresOnly": true,
+      "emptyText": "Every measurement is within limits.",
+      "fields": {
+        "name": "name",
+        "value": "value",
+        "low": "low",
+        "high": "high",
+        "nominal": "nominal",
+        "unit": "unit",
+        "status": ""
+      }
+    },
+    {
+      "id": "disp",
+      "type": "callout",
+      "tone": "fail",
+      "title": "Disposition required",
+      "text": "Route the unit to repair. Do not ship until retested.",
+      "visibleIf": "verdict(measurements) == 'FAIL'"
+    },
+    {
+      "id": "ok",
+      "type": "callout",
+      "tone": "pass",
+      "title": "Unit passed all checks",
+      "text": "Release to packing.",
+      "visibleIf": "verdict(measurements) == 'PASS'"
+    },
+    {
+      "id": "sig",
+      "type": "signatures",
+      "showDate": true,
+      "entries": [
+        {
+          "role": "Operator",
+          "name": "{{ station.operator }}"
+        },
+        {
+          "role": "Supervisor",
+          "name": ""
+        }
+      ]
+    }
+  ]
+}
