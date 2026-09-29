@@ -45,7 +45,7 @@ export async function openTemplate(): Promise<void> {
   }
 }
 
-export async function saveTemplate(saveAs = false): Promise<boolean> {
+export async function saveTemplate(saveAs = false, silent = false): Promise<boolean> {
   const s = useStore.getState()
   const text = serialize(s.doc)
   try {
@@ -57,7 +57,7 @@ export async function saveTemplate(saveAs = false): Promise<boolean> {
       }
       await engine.writeTextFile(path, text)
       s.markSaved(path)
-      s.toast('success', `Saved ${basename(path)}`)
+      if (!silent) s.toast('success', `Saved ${basename(path)}`)
     } else {
       const name = s.filePath ?? `${safeName(s.doc.meta.name)}.rbt.json`
       engine.downloadInBrowser(name, new Blob([text], { type: 'application/json' }))
@@ -70,11 +70,11 @@ export async function saveTemplate(saveAs = false): Promise<boolean> {
   }
 }
 
-export async function exportPdf(pdfa = false): Promise<void> {
+export async function exportPdf(pdfa = false, dataOverride?: unknown): Promise<void> {
   const s = useStore.getState()
   const req: engine.RenderRequest = {
     template: s.doc,
-    data: activeData(s.doc, s.activeDataSet),
+    data: dataOverride !== undefined ? dataOverride : activeData(s.doc, s.activeDataSet),
     baseDir: s.filePath && engine.isTauri ? dirname(s.filePath) : null,
     pdfStandard: pdfa ? 'a2b' : 'none',
   }
@@ -153,4 +153,27 @@ export async function openPath(path: string): Promise<void> {
   } catch (e) {
     s.toast('error', `Could not open ${basename(path)}: ${String(e)}`)
   }
+}
+
+/** Pick a JSON file and parse it (desktop dialog or browser picker). */
+export async function pickJsonFile(): Promise<{ name: string; data: unknown } | null> {
+  let name: string
+  let text: string
+  if (engine.isTauri) {
+    const path = await engine.openDialog(DATA_FILTER)
+    if (!path) return null
+    name = basename(path)
+    text = await engine.readTextFile(path)
+  } else {
+    const f = await engine.pickFileInBrowser('.json,application/json')
+    if (!f) return null
+    name = f.name
+    text = f.text
+  }
+  return { name: name.replace(/\.json$/i, ''), data: parseJson(text) }
+}
+
+/** Parse JSON text, tolerating a BOM (LabVIEW and Windows tools often write one). */
+export function parseJson(text: string): unknown {
+  return JSON.parse(text.replace(/^\uFEFF/, ''))
 }

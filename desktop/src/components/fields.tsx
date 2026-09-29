@@ -1,3 +1,4 @@
+import { ChevronRight } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { usePreview } from '../lib/preview'
 import type { DataPath } from '../lib/types'
@@ -23,6 +24,20 @@ export function Group({ title, action, children }: { title: string; action?: Rea
       </div>
       {children}
     </div>
+  )
+}
+
+/** A collapsed-by-default section for less common settings. */
+export function Disclosure({ title, note, defaultOpen, children }: { title: string; note?: string; defaultOpen?: boolean; children: ReactNode }) {
+  return (
+    <details className="disclosure" open={defaultOpen}>
+      <summary>
+        <span className="chev"><ChevronRight size={12} /></span>
+        {title}
+        {note && <span className="note">{note}</span>}
+      </summary>
+      <div className="group">{children}</div>
+    </details>
   )
 }
 

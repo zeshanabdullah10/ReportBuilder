@@ -49,7 +49,8 @@ export function CommandPalette() {
       { group: 'View', label: 'Zoom to 100%', keys: '⌘0', run: () => s.setZoom(1) },
       { group: 'View', label: 'Zoom in', keys: '⌘+', run: () => s.setZoom(s.zoom * 1.15) },
       { group: 'View', label: 'Zoom out', keys: '⌘−', run: () => s.setZoom(s.zoom / 1.15) },
-      { group: 'View', label: 'Show outline', run: () => s.setLeftPanel('outline') },
+      { group: 'View', label: 'Show layers', run: () => s.setLeftPanel('layers') },
+      { group: 'File', label: 'Use this template: save, test, call from LabVIEW…', run: () => s.setUsePanelOpen(true) },
       { group: 'View', label: 'Show data', run: () => s.setLeftPanel('data') },
       { group: 'View', label: 'Document settings', run: () => s.select(null) },
     ]

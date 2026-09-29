@@ -8,7 +8,8 @@ import type { Align, Block, BlockOf, BlockType, Issue } from '../lib/types'
 
 const NO_ISSUES: Issue[] = []
 import { DocumentInspector } from './DocumentInspector'
-import { ColorInput, ExprInput, Field, Group, itemFields, type LocalVar, NumberInput, Segmented, Select, TextInput, Toggle } from './fields'
+import { BindingInput, TemplateEditor } from './binding'
+import { ColorInput, Disclosure, ExprInput, Field, Group, itemFields, type LocalVar, NumberInput, Segmented, Select, TextInput, Toggle } from './fields'
 import { BlockIcon } from './Icon'
 
 const ALIGN_OPTIONS: { value: Align; label: string }[] = [
@@ -62,6 +63,17 @@ function BlockInspector({ block, ancestors }: { block: Block; ancestors: Block[]
 
   return (
     <>
+      {ancestors.length > 0 && (
+        <div className="crumbs" aria-label="Where this block lives">
+          {ancestors.map((a) => (
+            <span key={a.id}>
+              <button onClick={() => s.select(a.id)}>{blockInfo(a.type).label}</button>
+              <span>›</span>
+            </span>
+          ))}
+          <span style={{ color: 'var(--text-2)' }}>{info.label}</span>
+        </div>
+      )}
       <div className="inspector-head">
         <span className="icon-bubble">
           <BlockIcon type={block.type} size={16} />
@@ -100,20 +112,20 @@ function BlockInspector({ block, ancestors }: { block: Block; ancestors: Block[]
           </div>
         )}
         <BlockFields block={block} up={up} set={set} locals={scopeLocals} />
-        <Group title="Visibility">
+        <Disclosure title="Advanced" defaultOpen={!!block.visibleIf}>
           <Field label="Show if" stack hint="Leave empty to always show. Example: status == 'FAIL' or len(notes) > 0">
             <ExprInput value={block.visibleIf ?? ''} onChange={(v) => set('visibleIf', v.trim() ? v : undefined)} placeholder="always" locals={scopeLocals} ariaLabel="Visibility condition" />
           </Field>
-        </Group>
-        <div className="group" style={{ borderBottom: 0 }}>
           <div className="hint">
             ID <code>{block.id}</code>
           </div>
-        </div>
+        </Disclosure>
       </div>
     </>
   )
 }
+
+const COLUMN_PRESETS = [[1, 1], [1, 2], [2, 1], [1, 1, 1], [1, 1, 1, 1]]
 
 type Up = <T extends BlockType>(field: string) => (patch: Partial<BlockOf<T>>) => void
 
@@ -159,7 +171,7 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
       return (
         <Group title="Heading">
           <Field label="Text" stack hint="Use {{ field }} to insert data.">
-            <ExprInput template value={block.text} onChange={(v) => set('text', v)} locals={locals} ariaLabel="Heading text" />
+            <TemplateEditor value={block.text} onChange={(v) => set('text', v)} locals={locals} ariaLabel="Heading text" />
           </Field>
           <Field label="Level">
             <Segmented value={String(block.level)} options={[{ value: '1', label: 'Title' }, { value: '2', label: 'Section' }, { value: '3', label: 'Small' }]} onChange={(v) => set('level', Number(v))} />
@@ -177,10 +189,10 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
         <>
           <Group title="Text">
             <Field label="Content" stack hint="**bold**, *italic*, `mono`, blank line for a new paragraph, {{ field }} for data.">
-              <ExprInput template multiline rows={5} value={block.text} onChange={(v) => set('text', v)} locals={locals} ariaLabel="Text content" />
+              <TemplateEditor multiline rows={5} value={block.text} onChange={(v) => set('text', v)} locals={locals} ariaLabel="Text content" />
             </Field>
           </Group>
-          <Group title="Style">
+          <Disclosure title="Style">
             <Field label="Size">
               <NumberInput value={block.style.size} placeholder="theme" unit="pt" min={4} max={96} step={0.5} onChange={(v) => up<'text'>('style.size')({ style: { ...block.style, size: v } })} />
             </Field>
@@ -199,7 +211,7 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
             </Field>
             <Toggle label="Italic" checked={!!block.style.italic} onChange={(v) => up<'text'>('style')({ style: { ...block.style, italic: v || undefined } })} />
             <Toggle label="Monospace" checked={!!block.style.mono} onChange={(v) => up<'text'>('style')({ style: { ...block.style, mono: v || undefined } })} />
-          </Group>
+          </Disclosure>
         </>
       )
     case 'callout':
@@ -209,10 +221,10 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
             <Segmented value={block.tone} options={[{ value: 'info', label: 'Info' }, { value: 'pass', label: 'Pass' }, { value: 'warn', label: 'Warn' }, { value: 'fail', label: 'Fail' }]} onChange={(v) => set('tone', v)} />
           </Field>
           <Field label="Title" stack>
-            <ExprInput template value={block.title} onChange={(v) => set('title', v)} locals={locals} />
+            <TemplateEditor value={block.title} onChange={(v) => set('title', v)} locals={locals} />
           </Field>
           <Field label="Text" stack>
-            <ExprInput template multiline value={block.text} onChange={(v) => set('text', v)} locals={locals} />
+            <TemplateEditor multiline value={block.text} onChange={(v) => set('text', v)} locals={locals} />
           </Field>
         </Group>
       )
@@ -221,7 +233,7 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
         <Group title="Image">
           <Field label="Source" stack hint="Embed a file, or enter a path relative to the template or a {{ field }}.">
             <div className="row">
-              <ExprInput template value={block.src.startsWith('data:') ? '' : block.src} placeholder={block.src.startsWith('data:') ? 'Embedded image' : 'path or {{ field }}'} onChange={(v) => set('src', v)} locals={locals} />
+              <TemplateEditor value={block.src.startsWith('data:') ? '' : block.src} placeholder={block.src.startsWith('data:') ? 'Embedded image' : 'path or {{ field }}'} onChange={(v) => set('src', v)} locals={locals} />
               <button className="btn icon bordered" title="Embed an image file" onClick={async () => { const d = await readImageFile(); if (d) set('src', d) }}>
                 <ImagePlus size={14} />
               </button>
@@ -234,7 +246,7 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
             <Segmented value={block.align} options={ALIGN_OPTIONS} onChange={(v) => set('align', v)} />
           </Field>
           <Field label="Caption" stack>
-            <ExprInput template value={block.caption} onChange={(v) => set('caption', v)} locals={locals} />
+            <TemplateEditor value={block.caption} onChange={(v) => set('caption', v)} locals={locals} />
           </Field>
         </Group>
       )
@@ -255,11 +267,8 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
       return (
         <>
           <Group title="Data">
-            <Field label="Rows from" stack hint="A list in your data, e.g. results or dut.channels">
-              <ExprInput value={block.source} onChange={(v) => set('source', v)} locals={locals} placeholder="results" ariaLabel="Table source" />
-            </Field>
-            <Field label="Row tint" stack hint="Optional: an expression giving PASS/FAIL/WARN or a colour per row.">
-              <ExprInput value={block.rowTone ?? ''} onChange={(v) => set('rowTone', v.trim() ? v : undefined)} locals={rowLocals} placeholder="row.status" />
+            <Field label="Rows from" stack hint="Pick a list, or drag one here from the Data tab.">
+              <BindingInput accept="list" value={block.source} onChange={(v) => set('source', v)} locals={locals} placeholder="results" ariaLabel="Table source" />
             </Field>
           </Group>
           <Group
@@ -290,19 +299,22 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
                     <TextInput value={c.header} onChange={(v) => setCol({ header: v })} />
                   </Field>
                   <Field label="Value">
-                    <ExprInput value={c.value} onChange={(v) => setCol({ value: v })} locals={rowLocals} placeholder="row.name" />
-                  </Field>
-                  <Field label="Width" hint="auto, 1fr, 30mm or 20%">
-                    <TextInput value={c.width} onChange={(v) => setCol({ width: v })} code />
+                    <BindingInput accept="scalar" onlyLocals value={c.value} onChange={(v) => setCol({ value: v })} locals={rowLocals} placeholder="row.name" />
                   </Field>
                   <Field label="Align">
                     <Segmented value={c.align} options={ALIGN_OPTIONS} onChange={(v) => setCol({ align: v })} />
+                  </Field>
+                  <Field label="Width" hint="auto, 1fr, 30mm or 20%">
+                    <TextInput value={c.width} onChange={(v) => setCol({ width: v })} code />
                   </Field>
                 </div>
               )
             })}
           </Group>
-          <Group title="Options">
+          <Disclosure title="More">
+            <Field label="Row tint" stack hint="Optional: an expression giving PASS/FAIL/WARN or a colour per row.">
+              <ExprInput value={block.rowTone ?? ''} onChange={(v) => set('rowTone', v.trim() ? v : undefined)} locals={rowLocals} placeholder="row.status" />
+            </Field>
             <Toggle label="Zebra stripes" checked={block.zebra} onChange={(v) => set('zebra', v)} />
             <Toggle label="Repeat header on each page" checked={block.repeatHeader} onChange={(v) => set('repeatHeader', v)} />
             <Field label="Font size">
@@ -311,7 +323,7 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
             <Field label="When empty">
               <TextInput value={block.emptyText} onChange={(v) => set('emptyText', v)} />
             </Field>
-          </Group>
+          </Disclosure>
         </>
       )
     }
@@ -330,10 +342,25 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
         <>
           <Group title="Data">
             <Field label="Rows from" stack hint="Each row needs a value and optional low/high limits. PASS/FAIL is computed when there is no status field.">
-              <ExprInput value={block.source} onChange={(v) => set('source', v)} locals={locals} placeholder="measurements" />
+              <BindingInput accept="list" value={block.source} onChange={(v) => set('source', v)} locals={locals} placeholder="measurements" />
             </Field>
           </Group>
-          <Group title="Field mapping">
+          <Group title="Display">
+            <Field label="Decimals">
+              <NumberInput value={block.decimals} min={0} max={12} onChange={(v) => set('decimals', Math.round(v))} />
+            </Field>
+            <Toggle label="Highlight failures" checked={block.highlightFailures} onChange={(v) => set('highlightFailures', v)} />
+            <Toggle label="Limit columns" checked={block.showLimits} onChange={(v) => set('showLimits', v)} />
+            <Toggle label="Result column" checked={block.showStatus} onChange={(v) => set('showStatus', v)} />
+          </Group>
+          <Disclosure title="More columns and options">
+            <Toggle label="Row numbers" checked={block.showIndex} onChange={(v) => set('showIndex', v)} />
+            <Toggle label="Nominal column" checked={block.showNominal} onChange={(v) => set('showNominal', v)} />
+            <Toggle label="Unit column" checked={block.showUnit} onChange={(v) => set('showUnit', v)} />
+            <Toggle label="Only list failures" checked={block.failuresOnly} onChange={(v) => set('failuresOnly', v)} />
+            <Toggle label="Repeat header on each page" checked={block.repeatHeader} onChange={(v) => set('repeatHeader', v)} />
+          </Disclosure>
+          <Disclosure title="Which fields are which" note="matched automatically">
             {fieldSel('name', 'Name')}
             {fieldSel('value', 'Measured')}
             {fieldSel('low', 'Low limit')}
@@ -341,20 +368,7 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
             {fieldSel('nominal', 'Nominal')}
             {fieldSel('unit', 'Unit')}
             {fieldSel('status', 'Status')}
-          </Group>
-          <Group title="Display">
-            <Field label="Decimals">
-              <NumberInput value={block.decimals} min={0} max={12} onChange={(v) => set('decimals', Math.round(v))} />
-            </Field>
-            <Toggle label="Row numbers" checked={block.showIndex} onChange={(v) => set('showIndex', v)} />
-            <Toggle label="Nominal column" checked={block.showNominal} onChange={(v) => set('showNominal', v)} />
-            <Toggle label="Limit columns" checked={block.showLimits} onChange={(v) => set('showLimits', v)} />
-            <Toggle label="Unit column" checked={block.showUnit} onChange={(v) => set('showUnit', v)} />
-            <Toggle label="Result column" checked={block.showStatus} onChange={(v) => set('showStatus', v)} />
-            <Toggle label="Highlight failures" checked={block.highlightFailures} onChange={(v) => set('highlightFailures', v)} />
-            <Toggle label="Only list failures" checked={block.failuresOnly} onChange={(v) => set('failuresOnly', v)} />
-            <Toggle label="Repeat header on each page" checked={block.repeatHeader} onChange={(v) => set('repeatHeader', v)} />
-          </Group>
+          </Disclosure>
         </>
       )
     }
@@ -363,7 +377,7 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
         <>
           <Group title="Info grid">
             <Field label="Title">
-              <ExprInput template value={block.title} onChange={(v) => set('title', v)} locals={locals} />
+              <TemplateEditor value={block.title} onChange={(v) => set('title', v)} locals={locals} />
             </Field>
             <Field label="Per row">
               <Segmented value={String(block.columns)} options={['1', '2', '3', '4'].map((n) => ({ value: n, label: n }))} onChange={(v) => set('columns', Number(v))} />
@@ -381,7 +395,7 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
                   <TextInput value={it.label} onChange={(v) => set('items', block.items.map((x, j) => (j === i ? { ...x, label: v } : x)))} />
                 </Field>
                 <Field label="Value">
-                  <ExprInput template value={it.value} onChange={(v) => set('items', block.items.map((x, j) => (j === i ? { ...x, value: v } : x)))} locals={locals} placeholder="{{ dut.serial }}" />
+                  <TemplateEditor value={it.value} onChange={(v) => set('items', block.items.map((x, j) => (j === i ? { ...x, value: v } : x)))} locals={locals} placeholder="{{ dut.serial }}" />
                 </Field>
               </div>
             ))}
@@ -392,10 +406,10 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
       return (
         <Group title="Verdict">
           <Field label="Title">
-            <ExprInput template value={block.title} onChange={(v) => set('title', v)} locals={locals} />
+            <TemplateEditor value={block.title} onChange={(v) => set('title', v)} locals={locals} />
           </Field>
           <Field label="Results" stack hint="List of results; each row's status (or value vs low/high) is counted.">
-            <ExprInput value={block.source} onChange={(v) => set('source', v)} locals={locals} placeholder="measurements" />
+            <BindingInput accept="list" value={block.source} onChange={(v) => set('source', v)} locals={locals} placeholder="measurements" />
           </Field>
           <Field label="Status field">
             <TextInput value={block.statusField} onChange={(v) => set('statusField', v)} code />
@@ -411,10 +425,10 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
       return (
         <Group title="Status">
           <Field label="Label">
-            <ExprInput template value={block.label} onChange={(v) => set('label', v)} locals={locals} />
+            <TemplateEditor value={block.label} onChange={(v) => set('label', v)} locals={locals} />
           </Field>
           <Field label="Value" stack hint="Anything like PASS/FAIL, true/false, OK/NG.">
-            <ExprInput value={block.value} onChange={(v) => set('value', v)} locals={locals} placeholder="result" />
+            <BindingInput accept="scalar" value={block.value} onChange={(v) => set('value', v)} locals={locals} placeholder="result" />
           </Field>
           <Field label="Style">
             <Segmented value={block.style} options={[{ value: 'badge', label: 'Badge' }, { value: 'banner', label: 'Banner' }]} onChange={(v) => set('style', v)} />
@@ -427,11 +441,11 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
       return (
         <Group title="Gauge">
           <Field label="Label">
-            <ExprInput template value={block.label} onChange={(v) => set('label', v)} locals={locals} />
+            <TemplateEditor value={block.label} onChange={(v) => set('label', v)} locals={locals} />
           </Field>
           {(['value', 'min', 'max', 'low', 'high'] as const).map((k) => (
             <Field key={k} label={{ value: 'Value', min: 'Minimum', max: 'Maximum', low: 'Low limit', high: 'High limit' }[k]}>
-              <ExprInput value={block[k]} onChange={(v) => set(k, v)} locals={locals} />
+              <BindingInput accept="scalar" value={block[k]} onChange={(v) => set(k, v)} locals={locals} placeholder={k === 'value' ? 'result' : 'a number'} />
             </Field>
           ))}
           <Field label="Unit">
@@ -449,13 +463,13 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
       return (
         <Group title="Progress">
           <Field label="Label">
-            <ExprInput template value={block.label} onChange={(v) => set('label', v)} locals={locals} />
+            <TemplateEditor value={block.label} onChange={(v) => set('label', v)} locals={locals} />
           </Field>
           <Field label="Value">
-            <ExprInput value={block.value} onChange={(v) => set('value', v)} locals={locals} />
+            <BindingInput accept="scalar" value={block.value} onChange={(v) => set('value', v)} locals={locals} />
           </Field>
           <Field label="Maximum">
-            <ExprInput value={block.max} onChange={(v) => set('max', v)} locals={locals} />
+            <BindingInput accept="scalar" value={block.max} onChange={(v) => set('max', v)} locals={locals} />
           </Field>
           <Field label="Colour">
             <ColorInput value={block.color} onChange={(v) => set('color', v)} placeholder="accent" />
@@ -467,13 +481,13 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
       return (
         <Group title="QR code">
           <Field label="Content" stack hint="Text or URL; use {{ field }} for data.">
-            <ExprInput template value={block.value} onChange={(v) => set('value', v)} locals={locals} />
+            <TemplateEditor value={block.value} onChange={(v) => set('value', v)} locals={locals} />
           </Field>
           <Field label="Size">
             <NumberInput value={block.sizeMm} unit="mm" min={8} max={120} onChange={(v) => set('sizeMm', v)} />
           </Field>
           <Field label="Caption">
-            <ExprInput template value={block.caption} onChange={(v) => set('caption', v)} locals={locals} />
+            <TemplateEditor value={block.caption} onChange={(v) => set('caption', v)} locals={locals} />
           </Field>
           <Field label="Align">
             <Segmented value={block.align} options={ALIGN_OPTIONS} onChange={(v) => set('align', v)} />
@@ -484,7 +498,7 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
       return (
         <Group title="Barcode">
           <Field label="Content" stack>
-            <ExprInput template value={block.value} onChange={(v) => set('value', v)} locals={locals} />
+            <TemplateEditor value={block.value} onChange={(v) => set('value', v)} locals={locals} />
           </Field>
           <Field label="Format">
             <Select value={block.format} options={[{ value: 'code128', label: 'Code 128' }, { value: 'code39', label: 'Code 39' }, { value: 'ean13', label: 'EAN-13' }]} onChange={(v) => set('format', v)} />
@@ -512,10 +526,10 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
                 <ListControls onUp={i > 0 ? () => set('entries', swap(block.entries, i, i - 1)) : undefined} onDown={i < block.entries.length - 1 ? () => set('entries', swap(block.entries, i, i + 1)) : undefined} onRemove={() => set('entries', block.entries.filter((_, j) => j !== i))} />
               </div>
               <Field label="Role">
-                <ExprInput template value={e.role} onChange={(v) => set('entries', block.entries.map((x, j) => (j === i ? { ...x, role: v } : x)))} locals={locals} />
+                <TemplateEditor value={e.role} onChange={(v) => set('entries', block.entries.map((x, j) => (j === i ? { ...x, role: v } : x)))} locals={locals} />
               </Field>
               <Field label="Name">
-                <ExprInput template value={e.name} onChange={(v) => set('entries', block.entries.map((x, j) => (j === i ? { ...x, name: v } : x)))} locals={locals} placeholder="{{ station.operator }}" />
+                <TemplateEditor value={e.name} onChange={(v) => set('entries', block.entries.map((x, j) => (j === i ? { ...x, name: v } : x)))} locals={locals} placeholder="{{ station.operator }}" />
               </Field>
             </div>
           ))}
@@ -549,6 +563,27 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
     case 'columns':
       return (
         <Group title="Columns" action={block.columns.length < 4 ? <AddButton onClick={() => set('columns', [...block.columns, { width: 1, blocks: [] }])}>Column</AddButton> : undefined}>
+          <div className="presets" role="group" aria-label="Column layout">
+            {COLUMN_PRESETS.map((w) => {
+              const applicable = w.length >= block.columns.length || block.columns.slice(w.length).every((c) => c.blocks.length === 0)
+              const on = w.length === block.columns.length && w.every((x, i) => x === block.columns[i].width)
+              const total = w.reduce((a, b) => a + b, 0)
+              return (
+                <button
+                  key={w.join(':')}
+                  className={`preset${on ? ' on' : ''}`}
+                  title={`Widths ${w.join(' : ')}`}
+                  disabled={!applicable}
+                  style={{ width: 22 + w.length * 14, opacity: applicable ? 1 : 0.35 }}
+                  onClick={() => set('columns', w.map((width, i) => ({ width, blocks: block.columns[i]?.blocks ?? [] })))}
+                >
+                  {w.map((x, i) => (
+                    <i key={i} style={{ flex: x / total }} />
+                  ))}
+                </button>
+              )
+            })}
+          </div>
           <Field label="Gap">
             <NumberInput value={block.gapMm} unit="mm" min={0} max={50} onChange={(v) => set('gapMm', v)} />
           </Field>
@@ -567,17 +602,17 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
               </div>
             </Field>
           ))}
-          <div className="hint">Drag blocks onto “Column N” in the outline to place them.</div>
+          <div className="hint">Tip: drag a block onto the left or right edge of another block to put them side by side. You never need to add columns first.</div>
         </Group>
       )
     case 'section':
       return (
-        <Group title="Section">
+        <Group title="Group / Repeat">
           <Field label="Title" stack>
-            <ExprInput template value={block.title} onChange={(v) => set('title', v)} locals={block.repeat ? [...locals, { name: block.as || 'item', fields: itemFields(paths, block.repeat), doc: 'current item' }] : locals} placeholder="optional" />
+            <TemplateEditor value={block.title} onChange={(v) => set('title', v)} locals={block.repeat ? [...locals, { name: block.as || 'item', fields: itemFields(paths, block.repeat), doc: 'current item' }] : locals} placeholder="optional" />
           </Field>
-          <Field label="Repeat for" stack hint="A list: the section is drawn once per item. Leave empty to show once.">
-            <ExprInput value={block.repeat ?? ''} onChange={(v) => set('repeat', v.trim() ? v : undefined)} locals={locals} placeholder="channels" />
+          <Field label="Repeat for" stack hint="Pick a list and the group is drawn once per item, e.g. one block per channel. Leave empty to show it once.">
+            <BindingInput accept="list" value={block.repeat ?? ''} onChange={(v) => set('repeat', v.trim() ? v : undefined)} locals={locals} placeholder="channels" />
           </Field>
           {block.repeat && (
             <Field label="Item name" hint={`Use {{ ${block.as || 'item'}.field }} inside the section.`}>
@@ -608,11 +643,13 @@ function ChartFields({ block, set, locals }: { block: BlockOf<'chart'>; set: (f:
           <Select value={block.kind} options={[...kinds]} onChange={(v) => set('kind', v)} />
         </Field>
         <Field label="Title">
-          <ExprInput template value={block.title} onChange={(v) => set('title', v)} locals={locals} />
+          <TemplateEditor value={block.title} onChange={(v) => set('title', v)} locals={locals} />
         </Field>
         <Field label="Height">
           <NumberInput value={block.heightMm} unit="mm" min={20} max={250} onChange={(v) => set('heightMm', v)} />
         </Field>
+      </Group>
+      <Disclosure title="Axes and appearance">
         {block.kind !== 'pie' && (
           <>
             <Field label="X axis">
@@ -630,7 +667,7 @@ function ChartFields({ block, set, locals }: { block: BlockOf<'chart'>; set: (f:
         )}
         <Toggle label="Legend" checked={block.legend} onChange={(v) => set('legend', v)} />
         <Toggle label="Grid lines" checked={block.grid} onChange={(v) => set('grid', v)} />
-      </Group>
+      </Disclosure>
       <Group title="Series" action={<AddButton onClick={() => set('series', [...block.series, { label: `Series ${block.series.length + 1}`, source: '', x: '', y: '' }])}>Series</AddButton>}>
         {block.series.map((s, i) => {
           const setS = (patch: Partial<typeof s>) => set('series', block.series.map((x, j) => (j === i ? { ...x, ...patch } : x)))
@@ -645,15 +682,15 @@ function ChartFields({ block, set, locals }: { block: BlockOf<'chart'>; set: (f:
                 <TextInput value={s.label} onChange={(v) => setS({ label: v })} />
               </Field>
               <Field label="Data from">
-                <ExprInput value={s.source} onChange={(v) => setS({ source: v })} locals={locals} placeholder="results" />
+                <BindingInput accept="list" value={s.source} onChange={(v) => setS({ source: v })} locals={locals} placeholder="results" />
               </Field>
               {block.kind !== 'histogram' && (
                 <Field label={block.kind === 'bar' || block.kind === 'pie' ? 'Category' : 'X value'} hint="Empty = position">
-                  <ExprInput value={s.x} onChange={(v) => setS({ x: v })} locals={itemLocals} placeholder="item.name" />
+                  <BindingInput accept="scalar" onlyLocals value={s.x} onChange={(v) => setS({ x: v })} locals={itemLocals} placeholder="item.name" />
                 </Field>
               )}
               <Field label="Value" hint="Empty = the item itself">
-                <ExprInput value={s.y} onChange={(v) => setS({ y: v })} locals={itemLocals} placeholder="item.value" />
+                <BindingInput accept="scalar" onlyLocals value={s.y} onChange={(v) => setS({ y: v })} locals={itemLocals} placeholder="item.value" />
               </Field>
               <Field label="Colour">
                 <ColorInput value={s.color} onChange={(v) => setS({ color: v })} placeholder="palette" />

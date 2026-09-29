@@ -1,14 +1,17 @@
-import { CircleAlert, CircleCheck, Database, Info, LayoutGrid, ListTree } from 'lucide-react'
+import { CircleAlert, CircleCheck, Database, Info, ListTree } from 'lucide-react'
 import { useEffect } from 'react'
+import { AddMenu } from './components/AddMenu'
 import { Canvas } from './components/Canvas'
+import { DragLayer } from './components/DragLayer'
 import { CommandPalette } from './components/CommandPalette'
 import { DataPanel } from './components/DataPanel'
 import { Inspector } from './components/Inspector'
-import { Library } from './components/Library'
 import { Outline } from './components/Outline'
 import { Toolbar } from './components/Toolbar'
+import { UsePanel } from './components/UsePanel'
 import { Welcome } from './components/Welcome'
 import { exportPdf, newDocument, openPath, openTemplate, saveTemplate } from './lib/actions'
+import { isDragging } from './lib/dnd'
 import * as engine from './lib/engine'
 import { usePreviewSync } from './lib/preview'
 import { useStore } from './lib/store'
@@ -66,6 +69,12 @@ function useShortcuts() {
         return
       }
       if (isTyping(e)) return
+      if (isDragging()) return
+      if (e.key === '/' && !mod) {
+        e.preventDefault()
+        s.openAddMenu(null, window.innerWidth / 2 - 160, 140)
+        return
+      }
       if (mod && k === 'z') {
         e.preventDefault()
         if (e.shiftKey) s.redo()
@@ -92,6 +101,18 @@ function useShortcuts() {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+}
+
+/** Desktop: once a template has a file, keep it saved as you work. */
+function useAutosave() {
+  const dirty = useStore((s) => s.dirty)
+  const filePath = useStore((s) => s.filePath)
+  const doc = useStore((s) => s.doc)
+  useEffect(() => {
+    if (!engine.isTauri || !dirty || !filePath) return
+    const t = setTimeout(() => void saveTemplate(false, true), 1500)
+    return () => clearTimeout(t)
+  }, [dirty, filePath, doc])
 }
 
 function useUnsavedGuard() {
@@ -136,19 +157,15 @@ function LeftSidebar() {
     <aside className="sidebar" aria-label="Structure">
       <div className="sidebar-head">
         <div className="segmented full" role="tablist">
-          <button role="tab" aria-pressed={panel === 'outline'} onClick={() => setPanel('outline')}>
-            <ListTree size={13} /> Outline
-          </button>
-          <button role="tab" aria-pressed={panel === 'library'} onClick={() => setPanel('library')}>
-            <LayoutGrid size={13} /> Insert
-          </button>
           <button role="tab" aria-pressed={panel === 'data'} onClick={() => setPanel('data')}>
             <Database size={13} /> Data
           </button>
+          <button role="tab" aria-pressed={panel === 'layers'} onClick={() => setPanel('layers')}>
+            <ListTree size={13} /> Layers
+          </button>
         </div>
       </div>
-      {panel === 'outline' && <Outline />}
-      {panel === 'library' && <Library />}
+      {panel === 'layers' && <Outline />}
       {panel === 'data' && <DataPanel />}
     </aside>
   )
@@ -174,6 +191,7 @@ export default function App() {
   usePreviewSync()
   useShortcuts()
   useUnsavedGuard()
+  useAutosave()
 
   return (
     <>
@@ -194,6 +212,9 @@ export default function App() {
         </div>
       )}
       <CommandPalette />
+      <AddMenu />
+      <UsePanel />
+      <DragLayer />
       <Toasts />
     </>
   )
