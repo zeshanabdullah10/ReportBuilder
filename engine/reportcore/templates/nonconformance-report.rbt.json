@@ -1,0 +1,360 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "name": "Nonconformance Report (NCR)",
+    "description": "Record a nonconformance: what was found, containment, root cause, disposition and sign-off.",
+    "author": "Test Engineering",
+    "revision": "A",
+    "tags": [
+      "quality",
+      "ncr",
+      "nonconformance",
+      "form"
+    ]
+  },
+  "page": {
+    "size": "a4",
+    "margins": {
+      "top": 24,
+      "right": 16,
+      "bottom": 20,
+      "left": 16
+    }
+  },
+  "theme": {
+    "company": "Acme Instruments"
+  },
+  "header": [
+    {
+      "id": "hdr",
+      "type": "columns",
+      "gapMm": 4,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "hdr-l",
+              "type": "text",
+              "text": "**{{ theme.company }}** · Nonconformance report",
+              "style": {
+                "size": 8.5
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "hdr-r",
+              "type": "text",
+              "text": "{{ ncr.number }}",
+              "style": {
+                "size": 8.5,
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hdr-rule",
+      "type": "divider",
+      "thickness": 0.5
+    }
+  ],
+  "footer": [
+    {
+      "id": "ftr",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "ftr-l",
+              "type": "text",
+              "text": "{{ report.name }} rev {{ report.revision }} · Generated {{ date(report.generatedAt, 'YYYY-MM-DD HH:mm') }}",
+              "style": {
+                "color": "muted"
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "ftr-p",
+              "type": "text",
+              "text": "Page {{ page }} of {{ pages }}",
+              "style": {
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "body": [
+    {
+      "id": "title",
+      "type": "heading",
+      "level": 1,
+      "text": "Nonconformance Report"
+    },
+    {
+      "id": "sub",
+      "type": "text",
+      "text": "**{{ ncr.number }}** · Raised {{ date(ncr.date, 'D MMM YYYY') }} by {{ ncr.raisedBy }}",
+      "style": {
+        "color": "muted",
+        "size": 10.5
+      }
+    },
+    {
+      "id": "crit",
+      "type": "callout",
+      "tone": "fail",
+      "title": "Critical nonconformance",
+      "text": "Stop shipment of the affected lot until disposition is approved.",
+      "visibleIf": "ncr.severity == 'Critical'"
+    },
+    {
+      "id": "maj",
+      "type": "callout",
+      "tone": "warn",
+      "title": "Major nonconformance",
+      "text": "Affected units are quarantined pending review.",
+      "visibleIf": "ncr.severity == 'Major'"
+    },
+    {
+      "id": "top",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "part",
+              "type": "keyValue",
+              "title": "Part",
+              "columns": 1,
+              "boxed": true,
+              "items": [
+                {
+                  "label": "Part number",
+                  "value": "{{ part.number }}"
+                },
+                {
+                  "label": "Description",
+                  "value": "{{ part.description }}"
+                },
+                {
+                  "label": "Lot",
+                  "value": "{{ part.lot }}"
+                },
+                {
+                  "label": "Quantity affected",
+                  "value": "{{ part.qty }} of {{ part.lotQty }}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "det",
+              "type": "keyValue",
+              "title": "Detection",
+              "columns": 1,
+              "boxed": true,
+              "items": [
+                {
+                  "label": "Severity",
+                  "value": "{{ ncr.severity }}"
+                },
+                {
+                  "label": "Found at",
+                  "value": "{{ detection.stage }}"
+                },
+                {
+                  "label": "Found by",
+                  "value": "{{ detection.by }}"
+                },
+                {
+                  "label": "Status",
+                  "value": "{{ ncr.status }}"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "desc-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Description"
+    },
+    {
+      "id": "desc",
+      "type": "text",
+      "text": "{{ description }}"
+    },
+    {
+      "id": "def-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Nonconforming characteristics"
+    },
+    {
+      "id": "def",
+      "type": "table",
+      "source": "defects",
+      "columns": [
+        {
+          "header": "Characteristic",
+          "value": "row.characteristic",
+          "width": "1fr"
+        },
+        {
+          "header": "Specification",
+          "value": "row.spec"
+        },
+        {
+          "header": "Found",
+          "value": "row.actual",
+          "width": "auto",
+          "align": "right"
+        },
+        {
+          "header": "Qty",
+          "value": "row.qty",
+          "width": "auto",
+          "align": "right"
+        }
+      ],
+      "emptyText": "None recorded"
+    },
+    {
+      "id": "cont-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Containment actions"
+    },
+    {
+      "id": "cont",
+      "type": "table",
+      "source": "containment",
+      "columns": [
+        {
+          "header": "Action",
+          "value": "row.action",
+          "width": "1fr"
+        },
+        {
+          "header": "Owner",
+          "value": "row.owner"
+        },
+        {
+          "header": "Due",
+          "value": "date(row.due, 'D MMM')",
+          "width": "auto",
+          "align": "right"
+        },
+        {
+          "header": "Done",
+          "value": "row.done ? 'PASS' : 'WARN'",
+          "width": "auto",
+          "align": "center"
+        }
+      ],
+      "rowTone": "row.done ? 'PASS' : 'WARN'"
+    },
+    {
+      "id": "rc-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Root cause"
+    },
+    {
+      "id": "rc",
+      "type": "keyValue",
+      "title": "",
+      "columns": 1,
+      "boxed": false,
+      "items": [
+        {
+          "label": "Category",
+          "value": "{{ rootCause.category }}"
+        },
+        {
+          "label": "Cause",
+          "value": "{{ rootCause.description }}"
+        }
+      ]
+    },
+    {
+      "id": "disp-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Disposition"
+    },
+    {
+      "id": "disp",
+      "type": "keyValue",
+      "title": "",
+      "columns": 1,
+      "boxed": false,
+      "items": [
+        {
+          "label": "Decision",
+          "value": "{{ disposition.decision }}"
+        },
+        {
+          "label": "Rationale",
+          "value": "{{ disposition.rationale }}"
+        },
+        {
+          "label": "Corrective action",
+          "value": "{{ disposition.corrective }}"
+        }
+      ]
+    },
+    {
+      "id": "sig",
+      "type": "signatures",
+      "showDate": true,
+      "entries": [
+        {
+          "role": "Raised by",
+          "name": "{{ ncr.raisedBy }}"
+        },
+        {
+          "role": "Quality engineer",
+          "name": ""
+        },
+        {
+          "role": "Approved by",
+          "name": ""
+        }
+      ]
+    }
+  ],
+  "watermark": {
+    "text": "OPEN",
+    "visibleIf": "ncr.status != 'Closed'",
+    "opacity": 0.08
+  }
+}

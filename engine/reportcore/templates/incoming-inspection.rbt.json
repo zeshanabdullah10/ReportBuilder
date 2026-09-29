@@ -1,0 +1,308 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "name": "Incoming Inspection",
+    "description": "Receiving inspection against a sampling plan: dimensional and electrical checks, visual checklist and accept/reject decision.",
+    "author": "Test Engineering",
+    "revision": "A",
+    "tags": [
+      "incoming",
+      "inspection",
+      "quality",
+      "aql"
+    ]
+  },
+  "page": {
+    "size": "a4",
+    "margins": {
+      "top": 24,
+      "right": 16,
+      "bottom": 20,
+      "left": 16
+    }
+  },
+  "theme": {
+    "company": "Acme Instruments"
+  },
+  "header": [
+    {
+      "id": "hdr",
+      "type": "columns",
+      "gapMm": 4,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "hdr-l",
+              "type": "text",
+              "text": "**{{ theme.company }}** · Incoming inspection",
+              "style": {
+                "size": 8.5
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "hdr-r",
+              "type": "text",
+              "text": "Lot {{ receipt.lot }}",
+              "style": {
+                "size": 8.5,
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hdr-rule",
+      "type": "divider",
+      "thickness": 0.5
+    }
+  ],
+  "footer": [
+    {
+      "id": "ftr",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "ftr-l",
+              "type": "text",
+              "text": "{{ report.name }} rev {{ report.revision }} · Generated {{ date(report.generatedAt, 'YYYY-MM-DD HH:mm') }}",
+              "style": {
+                "color": "muted"
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "ftr-p",
+              "type": "text",
+              "text": "Page {{ page }} of {{ pages }}",
+              "style": {
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "body": [
+    {
+      "id": "title",
+      "type": "heading",
+      "level": 1,
+      "text": "Incoming Inspection Report"
+    },
+    {
+      "id": "sub",
+      "type": "text",
+      "text": "{{ part.description }} · {{ part.number }} · PO {{ receipt.po }}",
+      "style": {
+        "color": "muted",
+        "size": 10.5
+      }
+    },
+    {
+      "id": "decision",
+      "type": "status",
+      "label": "Lot decision",
+      "value": "all(checks, 'in_range(min(it.samples), it.low, it.high) && in_range(max(it.samples), it.low, it.high)') && count(visual, \"it.result == 'FAIL'\") <= sampling.accept ? 'PASS' : 'FAIL'",
+      "style": "banner"
+    },
+    {
+      "id": "top",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "rec",
+              "type": "keyValue",
+              "title": "Receipt",
+              "columns": 1,
+              "boxed": true,
+              "items": [
+                {
+                  "label": "Supplier",
+                  "value": "{{ receipt.supplier }}"
+                },
+                {
+                  "label": "PO",
+                  "value": "{{ receipt.po }}"
+                },
+                {
+                  "label": "Lot",
+                  "value": "{{ receipt.lot }}"
+                },
+                {
+                  "label": "Received",
+                  "value": "{{ date(receipt.receivedAt, 'D MMM YYYY') }}"
+                },
+                {
+                  "label": "Lot size",
+                  "value": "{{ receipt.qty }}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "plan",
+              "type": "keyValue",
+              "title": "Sampling plan",
+              "columns": 1,
+              "boxed": true,
+              "items": [
+                {
+                  "label": "Plan",
+                  "value": "{{ sampling.plan }}"
+                },
+                {
+                  "label": "AQL",
+                  "value": "{{ sampling.aql }}"
+                },
+                {
+                  "label": "Sample size",
+                  "value": "{{ sampling.sampleSize }}"
+                },
+                {
+                  "label": "Accept / reject",
+                  "value": "{{ sampling.accept }} / {{ sampling.accept + 1 }}"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "meas-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Measured characteristics"
+    },
+    {
+      "id": "meas",
+      "type": "table",
+      "source": "checks",
+      "columns": [
+        {
+          "header": "Characteristic",
+          "value": "row.characteristic",
+          "width": "1fr"
+        },
+        {
+          "header": "Method",
+          "value": "row.method"
+        },
+        {
+          "header": "Specification",
+          "value": "row.spec",
+          "width": "auto",
+          "align": "right"
+        },
+        {
+          "header": "Min",
+          "value": "fixed(min(row.samples), 2)",
+          "width": "auto",
+          "align": "right"
+        },
+        {
+          "header": "Max",
+          "value": "fixed(max(row.samples), 2)",
+          "width": "auto",
+          "align": "right"
+        },
+        {
+          "header": "",
+          "value": "in_range(min(row.samples), row.low, row.high) && in_range(max(row.samples), row.low, row.high) ? 'PASS' : 'FAIL'",
+          "width": "auto",
+          "align": "center"
+        }
+      ],
+      "rowTone": "in_range(min(row.samples), row.low, row.high) && in_range(max(row.samples), row.low, row.high) ? 'PASS' : 'FAIL'"
+    },
+    {
+      "id": "vis-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Visual and documentation checks"
+    },
+    {
+      "id": "vis",
+      "type": "table",
+      "source": "visual",
+      "columns": [
+        {
+          "header": "Check",
+          "value": "row.item",
+          "width": "1fr"
+        },
+        {
+          "header": "Result",
+          "value": "row.result",
+          "width": "auto",
+          "align": "center"
+        },
+        {
+          "header": "Note",
+          "value": "row.note",
+          "width": "1fr"
+        }
+      ],
+      "rowTone": "row.result",
+      "zebra": true
+    },
+    {
+      "id": "cmt-h",
+      "type": "heading",
+      "level": 3,
+      "text": "Comments",
+      "visibleIf": "comments"
+    },
+    {
+      "id": "cmt",
+      "type": "text",
+      "text": "{{ comments }}",
+      "style": {
+        "visibleIf": "comments"
+      }
+    },
+    {
+      "id": "sig",
+      "type": "signatures",
+      "showDate": true,
+      "entries": [
+        {
+          "role": "Inspector",
+          "name": "{{ inspector }}"
+        },
+        {
+          "role": "Quality",
+          "name": ""
+        }
+      ]
+    }
+  ]
+}

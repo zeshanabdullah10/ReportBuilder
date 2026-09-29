@@ -30,6 +30,11 @@ All notable changes to this project are documented here. The format follows
 
 ### Added
 
+- **Twelve new starter templates** and gallery categories: test summary, panel / multi-DUT, lot yield,
+  station daily summary, burn-in / environmental soak, process capability (Cpk), raw data log,
+  incoming inspection, nonconformance report, failure analysis (RMA), certificate of test and a
+  serial / pass label. See `docs/starter-templates.md`. A test renders every starter with its own
+  data and fails on any validation or render issue.
 - **Use panel**: save the template, check it against another data file, see the data it needs, and
   copy the LabVIEW, command-line, Python or C# call.
 

@@ -1,0 +1,52 @@
+{
+  "ncr": {
+    "number": "NCR-2026-0142",
+    "date": "2026-03-06",
+    "raisedBy": "A. Novak",
+    "severity": "Major",
+    "status": "Open"
+  },
+  "part": {
+    "number": "900-0240-01",
+    "description": "PSU-240 Power Supply",
+    "lot": "L2409-17",
+    "qty": 14,
+    "lotQty": 250
+  },
+  "detection": {
+    "stage": "Final test, ATE-07",
+    "by": "J. Rivera"
+  },
+  "description": "Ripple at 1 A load exceeded the 30 mV limit on 14 units from one reel of output capacitors. Units otherwise pass all functional tests.",
+  "defects": [
+    {
+      "characteristic": "Ripple @ 1 A",
+      "spec": "≤ 30 mV",
+      "actual": "31.7 – 36.4 mV",
+      "qty": 14
+    }
+  ],
+  "containment": [
+    {
+      "action": "Quarantine remaining stock of capacitor reel R-88213",
+      "owner": "Stores",
+      "due": "2026-03-06",
+      "done": true
+    },
+    {
+      "action": "100 % ripple retest of lot L2409-17",
+      "owner": "Test engineering",
+      "due": "2026-03-08",
+      "done": false
+    }
+  ],
+  "rootCause": {
+    "category": "Supplier",
+    "description": "Capacitor ESR out of tolerance on reel R-88213."
+  },
+  "disposition": {
+    "decision": "Scrap 14 units; return reel to supplier",
+    "rationale": "Rework cost exceeds unit value.",
+    "corrective": "Add ESR check to incoming inspection."
+  }
+}

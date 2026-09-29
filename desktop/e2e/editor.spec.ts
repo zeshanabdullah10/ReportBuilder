@@ -155,8 +155,15 @@ test('welcome gallery shows starters with live thumbnails', async ({ page }) => 
   const errors = watchErrors(page)
   await page.goto('/')
   await expect(page.getByRole('heading', { name: 'Create a report' })).toBeVisible()
-  await expect(page.locator('.starter')).toHaveCount(6)
-  await expect(page.locator('.starter .thumb svg')).toHaveCount(6, { timeout: 20_000 })
+  await expect(page.locator('.starter').nth(17)).toBeVisible()
+  const total = await page.locator('.starter').count()
+  expect(total).toBeGreaterThanOrEqual(18)
+  await expect(page.locator('.starter .thumb svg')).toHaveCount(total, { timeout: 30_000 })
+  // Categories filter the gallery.
+  await page.getByRole('tab', { name: 'Certificates and labels' }).click()
+  await expect(page.locator('.starter')).toHaveCount(3)
+  await page.getByRole('tab', { name: 'All' }).click()
+  await expect(page.locator('.starter')).toHaveCount(total)
   expect(errors).toEqual([])
 })
 

@@ -1,0 +1,229 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "name": "Raw Data Log (Landscape)",
+    "description": "Dense, wide log of every measurement in order: timestamps, values against limits and status. For audits and debugging.",
+    "author": "Test Engineering",
+    "revision": "A",
+    "tags": [
+      "log",
+      "audit",
+      "landscape",
+      "raw-data"
+    ]
+  },
+  "page": {
+    "size": "a4",
+    "orientation": "landscape",
+    "margins": {
+      "top": 22,
+      "right": 12,
+      "bottom": 16,
+      "left": 12
+    }
+  },
+  "theme": {
+    "company": "Acme Instruments"
+  },
+  "header": [
+    {
+      "id": "hdr",
+      "type": "columns",
+      "gapMm": 4,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "hdr-l",
+              "type": "text",
+              "text": "**{{ theme.company }}** · Measurement log",
+              "style": {
+                "size": 8.5
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "hdr-r",
+              "type": "text",
+              "text": "S/N {{ dut.serial }}",
+              "style": {
+                "size": 8.5,
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hdr-rule",
+      "type": "divider",
+      "thickness": 0.5
+    }
+  ],
+  "footer": [
+    {
+      "id": "ftr",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "ftr-l",
+              "type": "text",
+              "text": "{{ report.name }} rev {{ report.revision }} · Generated {{ date(report.generatedAt, 'YYYY-MM-DD HH:mm') }}",
+              "style": {
+                "color": "muted"
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "ftr-p",
+              "type": "text",
+              "text": "Page {{ page }} of {{ pages }}",
+              "style": {
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "body": [
+    {
+      "id": "title",
+      "type": "heading",
+      "level": 1,
+      "text": "Measurement Log"
+    },
+    {
+      "id": "sub",
+      "type": "text",
+      "text": "{{ test.name }} · S/N {{ dut.serial }} · {{ station.id }} · {{ date(test.start, 'D MMM YYYY') }}",
+      "style": {
+        "color": "muted",
+        "size": 10.5
+      }
+    },
+    {
+      "id": "top",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "verdict",
+              "type": "summary",
+              "title": "Result",
+              "source": "log",
+              "statusField": "status",
+              "showCounts": true,
+              "showRate": true
+            }
+          ]
+        },
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "run",
+              "type": "keyValue",
+              "title": "Run",
+              "columns": 2,
+              "boxed": true,
+              "items": [
+                {
+                  "label": "Procedure",
+                  "value": "{{ test.procedure }}"
+                },
+                {
+                  "label": "Operator",
+                  "value": "{{ station.operator }}"
+                },
+                {
+                  "label": "Software",
+                  "value": "{{ station.software }}"
+                },
+                {
+                  "label": "Records",
+                  "value": "{{ len(log) }}"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "log",
+      "type": "table",
+      "source": "log",
+      "columns": [
+        {
+          "header": "Time",
+          "value": "date(row.time, 'HH:mm:ss')",
+          "width": "auto"
+        },
+        {
+          "header": "Step",
+          "value": "row.step",
+          "width": "auto"
+        },
+        {
+          "header": "Measurement",
+          "value": "row.name",
+          "width": "1fr"
+        },
+        {
+          "header": "Value",
+          "value": "row.value != null ? fixed(row.value, 4) : ''",
+          "width": "auto",
+          "align": "right"
+        },
+        {
+          "header": "Unit",
+          "value": "row.unit",
+          "width": "auto"
+        },
+        {
+          "header": "Low",
+          "value": "row.low != null ? fixed(row.low, 3) : ''",
+          "width": "auto",
+          "align": "right"
+        },
+        {
+          "header": "High",
+          "value": "row.high != null ? fixed(row.high, 3) : ''",
+          "width": "auto",
+          "align": "right"
+        },
+        {
+          "header": "Status",
+          "value": "row.status",
+          "width": "auto",
+          "align": "center"
+        }
+      ],
+      "rowTone": "row.status == 'FAIL' ? 'FAIL' : ''",
+      "fontSize": 8,
+      "zebra": true,
+      "repeatHeader": true
+    }
+  ]
+}

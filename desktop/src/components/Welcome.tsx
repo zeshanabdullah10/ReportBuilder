@@ -121,6 +121,7 @@ export function Welcome() {
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<UserData | null>(null)
   const [fits, setFits] = useState<Fit[] | null>(null)
+  const [category, setCategory] = useState('All')
   const [mapping, setMapping] = useState<{ starter: Starter; tpl: ReportDocument; rows: MappingRow[] } | null>(null)
   const newFromStarter = useStore((s) => s.newFromStarter)
   const newFromData = useStore((s) => s.newFromData)
@@ -187,6 +188,8 @@ export function Welcome() {
   }
 
   const best = fits?.slice(0, 3) ?? []
+  const categories = useMemo(() => ['All', ...new Set(starters.map((s) => s.category))], [starters])
+  const shown = category === 'All' ? starters : starters.filter((s) => s.category === category)
   const previewData = (s: Starter): unknown => (user ? user.data : JSON.parse(s.data))
 
   return (
@@ -259,8 +262,15 @@ export function Welcome() {
         )}
 
         <h2 className="welcome-h2">{user ? 'All templates' : 'Start from a template'}</h2>
+        <div className="chips" role="tablist" aria-label="Template category">
+          {categories.map((c) => (
+            <button key={c} role="tab" className={`chip-btn${c === category ? ' on' : ''}`} aria-pressed={c === category} onClick={() => setCategory(c)}>
+              {c}
+            </button>
+          ))}
+        </div>
         <div className="starter-grid">
-          {starters.map((s) => (
+          {shown.map((s) => (
             <button key={s.id} className="starter" onClick={() => choose(s)} aria-label={`New ${s.name}`}>
               <Thumb template={s.template} data={previewData(s)} />
               <div className="name">{s.name}</div>

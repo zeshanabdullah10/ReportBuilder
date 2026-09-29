@@ -1,0 +1,213 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "name": "Panel / Multi-DUT Test",
+    "description": "A panel tested in parallel: verdict per site at a glance, then measurement details only for the sites that failed.",
+    "author": "Test Engineering",
+    "revision": "A",
+    "tags": [
+      "panel",
+      "multi-dut",
+      "parallel",
+      "production"
+    ]
+  },
+  "page": {
+    "size": "a4",
+    "margins": {
+      "top": 24,
+      "right": 16,
+      "bottom": 20,
+      "left": 16
+    }
+  },
+  "theme": {
+    "company": "Acme Instruments"
+  },
+  "header": [
+    {
+      "id": "hdr",
+      "type": "columns",
+      "gapMm": 4,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "hdr-l",
+              "type": "text",
+              "text": "**{{ theme.company }}** · Panel test",
+              "style": {
+                "size": 8.5
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "hdr-r",
+              "type": "text",
+              "text": "Panel {{ panel.id }}",
+              "style": {
+                "size": 8.5,
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hdr-rule",
+      "type": "divider",
+      "thickness": 0.5
+    }
+  ],
+  "footer": [
+    {
+      "id": "ftr",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "ftr-l",
+              "type": "text",
+              "text": "{{ report.name }} rev {{ report.revision }} · Generated {{ date(report.generatedAt, 'YYYY-MM-DD HH:mm') }}",
+              "style": {
+                "color": "muted"
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "ftr-p",
+              "type": "text",
+              "text": "Page {{ page }} of {{ pages }}",
+              "style": {
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "body": [
+    {
+      "id": "title",
+      "type": "heading",
+      "level": 1,
+      "text": "Panel Test Report"
+    },
+    {
+      "id": "sub",
+      "type": "text",
+      "text": "Panel {{ panel.id }} · {{ panel.product }} · {{ date(panel.start, 'D MMM YYYY, HH:mm') }} · {{ panel.station }}",
+      "style": {
+        "color": "muted",
+        "size": 10.5
+      }
+    },
+    {
+      "id": "verdict",
+      "type": "summary",
+      "title": "Panel result",
+      "source": "sites",
+      "statusField": "result",
+      "showCounts": true,
+      "showRate": true
+    },
+    {
+      "id": "grid-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Sites"
+    },
+    {
+      "id": "grid",
+      "type": "table",
+      "source": "sites",
+      "columns": [
+        {
+          "header": "Site",
+          "value": "row.site",
+          "width": "auto",
+          "align": "right"
+        },
+        {
+          "header": "Serial number",
+          "value": "row.serial",
+          "width": "1fr"
+        },
+        {
+          "header": "Result",
+          "value": "row.result",
+          "width": "auto",
+          "align": "center"
+        },
+        {
+          "header": "Failed measurements",
+          "value": "join(pluck(select(row.measurements, \"status(it.value, it.low, it.high) == 'FAIL'\"), 'name'), ', ')",
+          "width": "2fr"
+        }
+      ],
+      "rowTone": "row.result",
+      "zebra": false
+    },
+    {
+      "id": "fail-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Failed sites: detail",
+      "visibleIf": "count_if(sites, 'result', 'FAIL') > 0"
+    },
+    {
+      "id": "sec",
+      "type": "section",
+      "repeat": "where(sites, 'result', 'FAIL')",
+      "as": "s",
+      "title": "Site {{ s.site }} · {{ s.serial }}",
+      "keepTogether": true,
+      "boxed": true,
+      "blocks": [
+        {
+          "id": "sec-m",
+          "type": "measurementTable",
+          "source": "s.measurements",
+          "decimals": 3,
+          "showLimits": true,
+          "showUnit": true,
+          "showStatus": true,
+          "highlightFailures": true,
+          "fields": {
+            "name": "name",
+            "value": "value",
+            "low": "low",
+            "high": "high",
+            "nominal": "nominal",
+            "unit": "unit",
+            "status": ""
+          }
+        }
+      ]
+    },
+    {
+      "id": "all-pass",
+      "type": "callout",
+      "tone": "pass",
+      "title": "All sites passed",
+      "text": "The panel can proceed to depanelling.",
+      "visibleIf": "count_if(sites, 'result', 'FAIL') == 0"
+    }
+  ]
+}

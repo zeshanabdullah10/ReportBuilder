@@ -1,0 +1,322 @@
+{
+  "panel": {
+    "id": "PNL-2611",
+    "product": "Sensor board rev B",
+    "start": "2026-03-06T13:25:00+01:00",
+    "station": "ATE-09"
+  },
+  "sites": [
+    {
+      "site": 1,
+      "serial": "PNL-009002",
+      "measurements": [
+        {
+          "name": "VBUS",
+          "value": 4.914,
+          "low": 4.75,
+          "high": 5.25,
+          "nominal": 5.0,
+          "unit": "V"
+        },
+        {
+          "name": "3V3 rail",
+          "value": 3.279,
+          "low": 3.2,
+          "high": 3.4,
+          "nominal": 3.3,
+          "unit": "V"
+        },
+        {
+          "name": "Ripple",
+          "value": 24.1,
+          "low": null,
+          "high": 30,
+          "nominal": 22,
+          "unit": "mV"
+        },
+        {
+          "name": "Startup",
+          "value": 3.59,
+          "low": null,
+          "high": 5.0,
+          "nominal": 4.2,
+          "unit": "ms"
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "site": 2,
+      "serial": "PNL-009003",
+      "measurements": [
+        {
+          "name": "VBUS",
+          "value": 5.121,
+          "low": 4.75,
+          "high": 5.25,
+          "nominal": 5.0,
+          "unit": "V"
+        },
+        {
+          "name": "3V3 rail",
+          "value": 3.307,
+          "low": 3.2,
+          "high": 3.4,
+          "nominal": 3.3,
+          "unit": "V"
+        },
+        {
+          "name": "Ripple",
+          "value": 24.9,
+          "low": null,
+          "high": 30,
+          "nominal": 22,
+          "unit": "mV"
+        },
+        {
+          "name": "Startup",
+          "value": 4.4,
+          "low": null,
+          "high": 5.0,
+          "nominal": 4.2,
+          "unit": "ms"
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "site": 3,
+      "serial": "PNL-009004",
+      "measurements": [
+        {
+          "name": "VBUS",
+          "value": 4.943,
+          "low": 4.75,
+          "high": 5.25,
+          "nominal": 5.0,
+          "unit": "V"
+        },
+        {
+          "name": "3V3 rail",
+          "value": 3.296,
+          "low": 3.2,
+          "high": 3.4,
+          "nominal": 3.3,
+          "unit": "V"
+        },
+        {
+          "name": "Ripple",
+          "value": 33.5,
+          "low": null,
+          "high": 30,
+          "nominal": 22,
+          "unit": "mV"
+        },
+        {
+          "name": "Startup",
+          "value": 4.02,
+          "low": null,
+          "high": 5.0,
+          "nominal": 4.2,
+          "unit": "ms"
+        }
+      ],
+      "result": "FAIL"
+    },
+    {
+      "site": 4,
+      "serial": "PNL-009005",
+      "measurements": [
+        {
+          "name": "VBUS",
+          "value": 5.006,
+          "low": 4.75,
+          "high": 5.25,
+          "nominal": 5.0,
+          "unit": "V"
+        },
+        {
+          "name": "3V3 rail",
+          "value": 3.256,
+          "low": 3.2,
+          "high": 3.4,
+          "nominal": 3.3,
+          "unit": "V"
+        },
+        {
+          "name": "Ripple",
+          "value": 26.4,
+          "low": null,
+          "high": 30,
+          "nominal": 22,
+          "unit": "mV"
+        },
+        {
+          "name": "Startup",
+          "value": 4.6,
+          "low": null,
+          "high": 5.0,
+          "nominal": 4.2,
+          "unit": "ms"
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "site": 5,
+      "serial": "PNL-009006",
+      "measurements": [
+        {
+          "name": "VBUS",
+          "value": 4.967,
+          "low": 4.75,
+          "high": 5.25,
+          "nominal": 5.0,
+          "unit": "V"
+        },
+        {
+          "name": "3V3 rail",
+          "value": 3.325,
+          "low": 3.2,
+          "high": 3.4,
+          "nominal": 3.3,
+          "unit": "V"
+        },
+        {
+          "name": "Ripple",
+          "value": 17.4,
+          "low": null,
+          "high": 30,
+          "nominal": 22,
+          "unit": "mV"
+        },
+        {
+          "name": "Startup",
+          "value": 5.33,
+          "low": null,
+          "high": 5.0,
+          "nominal": 4.2,
+          "unit": "ms"
+        }
+      ],
+      "result": "FAIL"
+    },
+    {
+      "site": 6,
+      "serial": "PNL-009007",
+      "measurements": [
+        {
+          "name": "VBUS",
+          "value": 4.948,
+          "low": 4.75,
+          "high": 5.25,
+          "nominal": 5.0,
+          "unit": "V"
+        },
+        {
+          "name": "3V3 rail",
+          "value": 3.313,
+          "low": 3.2,
+          "high": 3.4,
+          "nominal": 3.3,
+          "unit": "V"
+        },
+        {
+          "name": "Ripple",
+          "value": 31.2,
+          "low": null,
+          "high": 30,
+          "nominal": 22,
+          "unit": "mV"
+        },
+        {
+          "name": "Startup",
+          "value": 5.4,
+          "low": null,
+          "high": 5.0,
+          "nominal": 4.2,
+          "unit": "ms"
+        }
+      ],
+      "result": "FAIL"
+    },
+    {
+      "site": 7,
+      "serial": "PNL-009008",
+      "measurements": [
+        {
+          "name": "VBUS",
+          "value": 5.002,
+          "low": 4.75,
+          "high": 5.25,
+          "nominal": 5.0,
+          "unit": "V"
+        },
+        {
+          "name": "3V3 rail",
+          "value": 3.335,
+          "low": 3.2,
+          "high": 3.4,
+          "nominal": 3.3,
+          "unit": "V"
+        },
+        {
+          "name": "Ripple",
+          "value": 20.4,
+          "low": null,
+          "high": 30,
+          "nominal": 22,
+          "unit": "mV"
+        },
+        {
+          "name": "Startup",
+          "value": 4.4,
+          "low": null,
+          "high": 5.0,
+          "nominal": 4.2,
+          "unit": "ms"
+        }
+      ],
+      "result": "PASS"
+    },
+    {
+      "site": 8,
+      "serial": "PNL-009009",
+      "measurements": [
+        {
+          "name": "VBUS",
+          "value": 5.062,
+          "low": 4.75,
+          "high": 5.25,
+          "nominal": 5.0,
+          "unit": "V"
+        },
+        {
+          "name": "3V3 rail",
+          "value": 3.26,
+          "low": 3.2,
+          "high": 3.4,
+          "nominal": 3.3,
+          "unit": "V"
+        },
+        {
+          "name": "Ripple",
+          "value": 20.4,
+          "low": null,
+          "high": 30,
+          "nominal": 22,
+          "unit": "mV"
+        },
+        {
+          "name": "Startup",
+          "value": 4.31,
+          "low": null,
+          "high": 5.0,
+          "nominal": 4.2,
+          "unit": "ms"
+        }
+      ],
+      "result": "PASS"
+    }
+  ]
+}

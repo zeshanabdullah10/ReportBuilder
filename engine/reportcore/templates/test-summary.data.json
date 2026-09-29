@@ -1,0 +1,101 @@
+{
+  "dut": {
+    "serial": "PSU-24-0012901",
+    "model": "PSU-240 Power Supply",
+    "partNumber": "900-0240-01",
+    "revision": "C",
+    "lot": "L2409-17"
+  },
+  "station": {
+    "id": "ATE-07",
+    "operator": "J. Rivera",
+    "fixture": "FX-221 rev C"
+  },
+  "test": {
+    "name": "Final Functional Test",
+    "start": "2026-03-01T09:14:05+01:00",
+    "durationSeconds": 184.6
+  },
+  "measurements": [
+    {
+      "name": "VBUS output voltage",
+      "value": 4.9951,
+      "low": 4.75,
+      "high": 5.25,
+      "nominal": 5.0,
+      "unit": "V"
+    },
+    {
+      "name": "3V3 rail",
+      "value": 3.3049,
+      "low": 3.2,
+      "high": 3.4,
+      "nominal": 3.3,
+      "unit": "V"
+    },
+    {
+      "name": "1V8 rail",
+      "value": 1.7991,
+      "low": 1.746,
+      "high": 1.854,
+      "nominal": 1.8,
+      "unit": "V"
+    },
+    {
+      "name": "Quiescent current",
+      "value": 11.83,
+      "low": null,
+      "high": 15,
+      "nominal": 12,
+      "unit": "mA"
+    },
+    {
+      "name": "Ripple @ 1 A",
+      "value": 34.2,
+      "low": null,
+      "high": 30,
+      "nominal": 25,
+      "unit": "mV"
+    },
+    {
+      "name": "Load regulation",
+      "value": 0.41,
+      "low": null,
+      "high": 1.0,
+      "nominal": 0.5,
+      "unit": "%"
+    },
+    {
+      "name": "Oscillator frequency",
+      "value": 25.0012,
+      "low": 24.997,
+      "high": 25.003,
+      "nominal": 25,
+      "unit": "MHz"
+    },
+    {
+      "name": "Efficiency @ 2 A",
+      "value": 91.2,
+      "low": 88,
+      "high": null,
+      "nominal": 90,
+      "unit": "%"
+    },
+    {
+      "name": "Thermal rise",
+      "value": 26.4,
+      "low": null,
+      "high": 35,
+      "nominal": 25,
+      "unit": "°C"
+    },
+    {
+      "name": "Startup time",
+      "value": 5.42,
+      "low": null,
+      "high": 5.0,
+      "nominal": 4.5,
+      "unit": "ms"
+    }
+  ]
+}

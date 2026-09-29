@@ -1,0 +1,313 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "name": "Failure Analysis (RMA)",
+    "description": "Returned-unit analysis: symptoms, step-by-step findings with photos, root cause and corrective actions.",
+    "author": "Test Engineering",
+    "revision": "A",
+    "tags": [
+      "rma",
+      "failure-analysis",
+      "quality",
+      "field-return"
+    ]
+  },
+  "page": {
+    "size": "a4",
+    "margins": {
+      "top": 24,
+      "right": 16,
+      "bottom": 20,
+      "left": 16
+    }
+  },
+  "theme": {
+    "company": "Acme Instruments"
+  },
+  "header": [
+    {
+      "id": "hdr",
+      "type": "columns",
+      "gapMm": 4,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "hdr-l",
+              "type": "text",
+              "text": "**{{ theme.company }}** · Failure analysis",
+              "style": {
+                "size": 8.5
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "hdr-r",
+              "type": "text",
+              "text": "{{ rma.number }}",
+              "style": {
+                "size": 8.5,
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hdr-rule",
+      "type": "divider",
+      "thickness": 0.5
+    }
+  ],
+  "footer": [
+    {
+      "id": "ftr",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "ftr-l",
+              "type": "text",
+              "text": "{{ report.name }} rev {{ report.revision }} · Generated {{ date(report.generatedAt, 'YYYY-MM-DD HH:mm') }}",
+              "style": {
+                "color": "muted"
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "ftr-p",
+              "type": "text",
+              "text": "Page {{ page }} of {{ pages }}",
+              "style": {
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "body": [
+    {
+      "id": "title",
+      "type": "heading",
+      "level": 1,
+      "text": "Failure Analysis Report"
+    },
+    {
+      "id": "sub",
+      "type": "text",
+      "text": "**{{ rma.number }}** · {{ unit.model }} · S/N {{ unit.serial }}",
+      "style": {
+        "color": "muted",
+        "size": 10.5
+      }
+    },
+    {
+      "id": "conclusion",
+      "type": "status",
+      "label": "Confirmed failure",
+      "value": "rma.confirmed ? 'FAIL' : 'PASS'",
+      "style": "badge"
+    },
+    {
+      "id": "top",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "rma",
+              "type": "keyValue",
+              "title": "Return",
+              "columns": 1,
+              "boxed": true,
+              "items": [
+                {
+                  "label": "RMA",
+                  "value": "{{ rma.number }}"
+                },
+                {
+                  "label": "Received",
+                  "value": "{{ date(rma.received, 'D MMM YYYY') }}"
+                },
+                {
+                  "label": "Customer",
+                  "value": "{{ rma.customer }}"
+                },
+                {
+                  "label": "Reported issue",
+                  "value": "{{ rma.reason }}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "unit",
+              "type": "keyValue",
+              "title": "Unit",
+              "columns": 1,
+              "boxed": true,
+              "items": [
+                {
+                  "label": "Model",
+                  "value": "{{ unit.model }}"
+                },
+                {
+                  "label": "Serial number",
+                  "value": "{{ unit.serial }}"
+                },
+                {
+                  "label": "Manufactured",
+                  "value": "{{ date(unit.built, 'MMM YYYY') }}"
+                },
+                {
+                  "label": "Time in service",
+                  "value": "{{ unit.hours }} h"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "find-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Findings"
+    },
+    {
+      "id": "find",
+      "type": "table",
+      "source": "findings",
+      "columns": [
+        {
+          "header": "Step",
+          "value": "number",
+          "width": "auto",
+          "align": "right"
+        },
+        {
+          "header": "Test / inspection",
+          "value": "row.step",
+          "width": "1fr"
+        },
+        {
+          "header": "Observation",
+          "value": "row.observation",
+          "width": "2fr"
+        },
+        {
+          "header": "",
+          "value": "row.result",
+          "width": "auto",
+          "align": "center"
+        }
+      ],
+      "rowTone": "row.result"
+    },
+    {
+      "id": "ph-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Photos",
+      "visibleIf": "photos"
+    },
+    {
+      "id": "ph",
+      "type": "section",
+      "repeat": "photos",
+      "as": "ph",
+      "title": "",
+      "keepTogether": true,
+      "blocks": [
+        {
+          "id": "ph-img",
+          "type": "image",
+          "src": "{{ ph.src }}",
+          "width": 42,
+          "align": "left",
+          "caption": "{{ ph.caption }}"
+        }
+      ]
+    },
+    {
+      "id": "rc-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Root cause"
+    },
+    {
+      "id": "rc",
+      "type": "callout",
+      "tone": "warn",
+      "title": "{{ rootCause.category }}",
+      "text": "{{ rootCause.description }}"
+    },
+    {
+      "id": "ca-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Corrective actions"
+    },
+    {
+      "id": "ca",
+      "type": "table",
+      "source": "actions",
+      "columns": [
+        {
+          "header": "Action",
+          "value": "row.action",
+          "width": "1fr"
+        },
+        {
+          "header": "Owner",
+          "value": "row.owner"
+        },
+        {
+          "header": "Due",
+          "value": "date(row.due, 'D MMM YYYY')",
+          "width": "auto",
+          "align": "right"
+        }
+      ]
+    },
+    {
+      "id": "sig",
+      "type": "signatures",
+      "showDate": true,
+      "entries": [
+        {
+          "role": "Analyst",
+          "name": "{{ analyst }}"
+        },
+        {
+          "role": "Quality",
+          "name": ""
+        }
+      ]
+    }
+  ]
+}

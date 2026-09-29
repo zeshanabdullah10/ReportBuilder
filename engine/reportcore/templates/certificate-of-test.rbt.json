@@ -1,0 +1,247 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "name": "Certificate of Test",
+    "description": "Customer-facing one-page certificate: verdict, key results against tolerance, QR for verification.",
+    "author": "Quality",
+    "revision": "A",
+    "tags": [
+      "certificate",
+      "customer",
+      "one-page"
+    ]
+  },
+  "page": {
+    "size": "a4",
+    "margins": {
+      "top": 20,
+      "right": 16,
+      "bottom": 20,
+      "left": 16
+    }
+  },
+  "theme": {
+    "company": "Acme Instruments",
+    "font": "serif",
+    "accentColor": "#1f4e79"
+  },
+  "footer": [
+    {
+      "id": "ftr",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "ftr-l",
+              "type": "text",
+              "text": "{{ report.name }} rev {{ report.revision }} · {{ certificate.number }} · Generated {{ date(report.generatedAt, 'YYYY-MM-DD HH:mm') }}",
+              "style": {
+                "color": "muted"
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "ftr-p",
+              "type": "text",
+              "text": "Page {{ page }} of {{ pages }}",
+              "style": {
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "body": [
+    {
+      "id": "logo",
+      "type": "logo",
+      "heightMm": 14,
+      "align": "center"
+    },
+    {
+      "id": "title",
+      "type": "heading",
+      "level": 1,
+      "text": "Certificate of Test",
+      "align": "center"
+    },
+    {
+      "id": "cert-no",
+      "type": "text",
+      "text": "No. **{{ certificate.number }}** · Issued {{ date(certificate.issued, 'D MMMM YYYY') }}",
+      "style": {
+        "align": "center",
+        "color": "muted",
+        "size": 10.5
+      }
+    },
+    {
+      "id": "sp1",
+      "type": "spacer",
+      "heightMm": 3
+    },
+    {
+      "id": "statement",
+      "type": "text",
+      "text": "This is to certify that the unit identified below was tested in accordance with **{{ test.procedure }}** on {{ date(test.date, 'D MMMM YYYY') }} and {{ verdict(results) == 'PASS' ? 'met' : 'did not meet' }} the specified requirements."
+    },
+    {
+      "id": "result",
+      "type": "status",
+      "label": "Result",
+      "value": "verdict(results)",
+      "style": "banner"
+    },
+    {
+      "id": "ids",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "unit",
+              "type": "keyValue",
+              "title": "Unit",
+              "columns": 1,
+              "boxed": true,
+              "items": [
+                {
+                  "label": "Model",
+                  "value": "{{ unit.model }}"
+                },
+                {
+                  "label": "Serial number",
+                  "value": "{{ unit.serial }}"
+                },
+                {
+                  "label": "Part number",
+                  "value": "{{ unit.partNumber }}"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "cust",
+              "type": "keyValue",
+              "title": "Customer",
+              "columns": 1,
+              "boxed": true,
+              "items": [
+                {
+                  "label": "Customer",
+                  "value": "{{ customer.name }}"
+                },
+                {
+                  "label": "Order",
+                  "value": "{{ customer.order }}"
+                },
+                {
+                  "label": "Ship-to",
+                  "value": "{{ customer.city }}"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "res-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Key results"
+    },
+    {
+      "id": "res",
+      "type": "table",
+      "source": "results",
+      "columns": [
+        {
+          "header": "Parameter",
+          "value": "row.name",
+          "width": "1fr"
+        },
+        {
+          "header": "Requirement",
+          "value": "(row.low != null && row.high != null ? fixed(row.low, 2) + ' … ' + fixed(row.high, 2) : row.low != null ? '≥ ' + fixed(row.low, 2) : '≤ ' + fixed(row.high, 2)) + ' ' + row.unit",
+          "width": "auto",
+          "align": "center"
+        },
+        {
+          "header": "Measured",
+          "value": "fixed(row.value, 3) + ' ' + row.unit",
+          "width": "auto",
+          "align": "right"
+        },
+        {
+          "header": "",
+          "value": "status(row.value, row.low, row.high)",
+          "width": "auto",
+          "align": "center"
+        }
+      ],
+      "rowTone": "status(row.value, row.low, row.high)",
+      "zebra": true
+    },
+    {
+      "id": "sp2",
+      "type": "spacer",
+      "heightMm": 4
+    },
+    {
+      "id": "foot",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "qr",
+              "type": "qrCode",
+              "value": "https://verify.example.com/{{ certificate.number }}",
+              "sizeMm": 24,
+              "caption": "Verify online"
+            }
+          ]
+        },
+        {
+          "width": 3,
+          "blocks": [
+            {
+              "id": "sig",
+              "type": "signatures",
+              "showDate": true,
+              "entries": [
+                {
+                  "role": "Test engineer",
+                  "name": "{{ signatory.name }}"
+                },
+                {
+                  "role": "Quality",
+                  "name": ""
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

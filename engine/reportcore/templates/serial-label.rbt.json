@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "name": "Serial / Pass Label",
+    "description": "A 100 × 60 mm traveller or pass label: verdict, serial as barcode and QR, model and date.",
+    "author": "Test Engineering",
+    "revision": "A",
+    "tags": [
+      "label",
+      "sticker",
+      "serial",
+      "barcode"
+    ]
+  },
+  "page": {
+    "size": "custom",
+    "widthMm": 100,
+    "heightMm": 60,
+    "margins": {
+      "top": 5,
+      "right": 5,
+      "bottom": 4,
+      "left": 5
+    }
+  },
+  "theme": {
+    "company": "Acme Instruments"
+  },
+  "footer": [],
+  "body": [
+    {
+      "id": "top",
+      "type": "columns",
+      "gapMm": 3,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "model",
+              "type": "text",
+              "text": "**{{ model }}**",
+              "style": {
+                "size": 11
+              }
+            },
+            {
+              "id": "pn",
+              "type": "text",
+              "text": "P/N {{ partNumber }} rev {{ revision }}",
+              "style": {
+                "size": 8,
+                "color": "muted"
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "res",
+              "type": "status",
+              "label": "Test",
+              "value": "verdict(result)",
+              "style": "badge"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "bc",
+      "type": "barcode",
+      "value": "{{ serial }}",
+      "format": "code128",
+      "heightMm": 14,
+      "widthMm": 62,
+      "showText": true,
+      "align": "left"
+    },
+    {
+      "id": "bot",
+      "type": "columns",
+      "gapMm": 3,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "meta",
+              "type": "text",
+              "text": "Tested {{ date(testedAt, 'D MMM YYYY') }}\nStation {{ station }} · {{ operator }}",
+              "style": {
+                "size": 8,
+                "color": "muted"
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "qr",
+              "type": "qrCode",
+              "value": "https://mes.example.com/unit/{{ serial }}",
+              "sizeMm": 16,
+              "caption": "",
+              "align": "right"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

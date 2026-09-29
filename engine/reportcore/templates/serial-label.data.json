@@ -1,0 +1,10 @@
+{
+  "serial": "PSU-24-0012873",
+  "model": "PSU-240 Power Supply",
+  "partNumber": "900-0240-01",
+  "revision": "C",
+  "result": "PASS",
+  "testedAt": "2026-03-01T09:14:00+01:00",
+  "station": "ATE-07",
+  "operator": "JR"
+}

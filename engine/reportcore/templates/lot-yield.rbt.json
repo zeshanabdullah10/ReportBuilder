@@ -1,0 +1,276 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "name": "Production Lot Yield",
+    "description": "Lot or shift yield: pass rate, first-pass yield, failure Pareto, cycle-time spread and the failed units.",
+    "author": "Test Engineering",
+    "revision": "A",
+    "tags": [
+      "production",
+      "yield",
+      "lot",
+      "quality"
+    ]
+  },
+  "page": {
+    "size": "a4",
+    "margins": {
+      "top": 24,
+      "right": 16,
+      "bottom": 20,
+      "left": 16
+    }
+  },
+  "theme": {
+    "company": "Acme Instruments"
+  },
+  "header": [
+    {
+      "id": "hdr",
+      "type": "columns",
+      "gapMm": 4,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "hdr-l",
+              "type": "text",
+              "text": "**{{ theme.company }}** · Lot yield",
+              "style": {
+                "size": 8.5
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "hdr-r",
+              "type": "text",
+              "text": "Lot {{ lot.id }}",
+              "style": {
+                "size": 8.5,
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hdr-rule",
+      "type": "divider",
+      "thickness": 0.5
+    }
+  ],
+  "footer": [
+    {
+      "id": "ftr",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "ftr-l",
+              "type": "text",
+              "text": "{{ report.name }} rev {{ report.revision }} · Generated {{ date(report.generatedAt, 'YYYY-MM-DD HH:mm') }}",
+              "style": {
+                "color": "muted"
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "ftr-p",
+              "type": "text",
+              "text": "Page {{ page }} of {{ pages }}",
+              "style": {
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "body": [
+    {
+      "id": "title",
+      "type": "heading",
+      "level": 1,
+      "text": "Lot Yield Report"
+    },
+    {
+      "id": "sub",
+      "type": "text",
+      "text": "{{ lot.product }} · Lot {{ lot.id }} · {{ lot.line }} · {{ lot.shift }} shift",
+      "style": {
+        "color": "muted",
+        "size": 10.5
+      }
+    },
+    {
+      "id": "verdict",
+      "type": "summary",
+      "title": "Lot result",
+      "source": "units",
+      "statusField": "result",
+      "showCounts": true,
+      "showRate": true
+    },
+    {
+      "id": "kpi",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "yield",
+              "type": "progress",
+              "label": "Final yield",
+              "value": "pass_rate(units, 'result') * 100",
+              "max": "100",
+              "showValue": true
+            },
+            {
+              "id": "fpy",
+              "type": "progress",
+              "label": "First-pass yield",
+              "value": "count_if(units, 'firstPass', true) / len(units) * 100",
+              "max": "100",
+              "showValue": true
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "lot",
+              "type": "keyValue",
+              "title": "Lot",
+              "columns": 1,
+              "boxed": true,
+              "items": [
+                {
+                  "label": "Lot",
+                  "value": "{{ lot.id }}"
+                },
+                {
+                  "label": "Line",
+                  "value": "{{ lot.line }}"
+                },
+                {
+                  "label": "Started",
+                  "value": "{{ date(lot.start, 'D MMM YYYY, HH:mm') }}"
+                },
+                {
+                  "label": "Units tested",
+                  "value": "{{ len(units) }}"
+                },
+                {
+                  "label": "Mean cycle time",
+                  "value": "{{ fixed(avg(pluck(units, 'cycleSeconds')), 1) }} s"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "pareto-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Failures by test step"
+    },
+    {
+      "id": "pareto",
+      "type": "chart",
+      "kind": "bar",
+      "title": "",
+      "series": [
+        {
+          "label": "Failures",
+          "source": "failures",
+          "x": "item.step",
+          "y": "item.count"
+        }
+      ],
+      "yLabel": "Units",
+      "heightMm": 38,
+      "legend": false
+    },
+    {
+      "id": "cycle-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Cycle time"
+    },
+    {
+      "id": "cycle",
+      "type": "chart",
+      "kind": "histogram",
+      "title": "",
+      "series": [
+        {
+          "label": "Cycle time",
+          "source": "pluck(units, 'cycleSeconds')"
+        }
+      ],
+      "xLabel": "Seconds",
+      "yLabel": "Units",
+      "bins": 14,
+      "heightMm": 36,
+      "legend": false,
+      "limits": [
+        {
+          "label": "Target 180 s",
+          "value": "180"
+        }
+      ]
+    },
+    {
+      "id": "fail-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Failed units",
+      "visibleIf": "count_if(units, 'result', 'FAIL') > 0"
+    },
+    {
+      "id": "fails",
+      "type": "table",
+      "source": "where(units, 'result', 'FAIL')",
+      "columns": [
+        {
+          "header": "Serial number",
+          "value": "row.serial",
+          "width": "1fr"
+        },
+        {
+          "header": "Failed step",
+          "value": "row.failStep"
+        },
+        {
+          "header": "Tested",
+          "value": "date(row.testedAt, 'HH:mm')",
+          "width": "auto",
+          "align": "right"
+        }
+      ],
+      "emptyText": "No failed units",
+      "zebra": true
+    }
+  ]
+}

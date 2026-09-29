@@ -1,0 +1,262 @@
+{
+  "schemaVersion": 1,
+  "meta": {
+    "name": "Process Capability (Cpk)",
+    "description": "Per-characteristic capability: Cpk against a target, mean, spread, and a histogram with spec limits.",
+    "author": "Test Engineering",
+    "revision": "A",
+    "tags": [
+      "spc",
+      "cpk",
+      "capability",
+      "quality"
+    ]
+  },
+  "page": {
+    "size": "a4",
+    "margins": {
+      "top": 24,
+      "right": 16,
+      "bottom": 20,
+      "left": 16
+    }
+  },
+  "theme": {
+    "company": "Acme Instruments"
+  },
+  "header": [
+    {
+      "id": "hdr",
+      "type": "columns",
+      "gapMm": 4,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "hdr-l",
+              "type": "text",
+              "text": "**{{ theme.company }}** · Capability study",
+              "style": {
+                "size": 8.5
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "hdr-r",
+              "type": "text",
+              "text": "{{ study.product }}",
+              "style": {
+                "size": 8.5,
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "hdr-rule",
+      "type": "divider",
+      "thickness": 0.5
+    }
+  ],
+  "footer": [
+    {
+      "id": "ftr",
+      "type": "columns",
+      "gapMm": 5,
+      "columns": [
+        {
+          "width": 2,
+          "blocks": [
+            {
+              "id": "ftr-l",
+              "type": "text",
+              "text": "{{ report.name }} rev {{ report.revision }} · Generated {{ date(report.generatedAt, 'YYYY-MM-DD HH:mm') }}",
+              "style": {
+                "color": "muted"
+              }
+            }
+          ]
+        },
+        {
+          "width": 1,
+          "blocks": [
+            {
+              "id": "ftr-p",
+              "type": "text",
+              "text": "Page {{ page }} of {{ pages }}",
+              "style": {
+                "align": "right",
+                "color": "muted"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "body": [
+    {
+      "id": "title",
+      "type": "heading",
+      "level": 1,
+      "text": "Process Capability Study"
+    },
+    {
+      "id": "sub",
+      "type": "text",
+      "text": "{{ study.product }} · {{ study.process }} · {{ date(study.date, 'D MMM YYYY') }} · {{ study.operator }}",
+      "style": {
+        "color": "muted",
+        "size": 10.5
+      }
+    },
+    {
+      "id": "verdict",
+      "type": "status",
+      "label": "Capability",
+      "value": "min(each(characteristics, 'cpk(it.values, it.low, it.high)')) >= study.targetCpk ? 'PASS' : 'FAIL'",
+      "style": "banner"
+    },
+    {
+      "id": "note",
+      "type": "text",
+      "text": "Target Cpk **{{ study.targetCpk }}** · {{ len(characteristics) }} characteristics · {{ len(characteristics[0].values) }} samples each."
+    },
+    {
+      "id": "sum-h",
+      "type": "heading",
+      "level": 2,
+      "text": "Summary"
+    },
+    {
+      "id": "sum",
+      "type": "table",
+      "source": "characteristics",
+      "columns": [
+        {
+          "header": "Characteristic",
+          "value": "row.name + ' (' + row.unit + ')'",
+          "width": "1fr"
+        },
+        {
+          "header": "n",
+          "value": "len(row.values)",
+          "width": "auto",
+          "align": "right"
+        },
+        {
+          "header": "Mean",
+          "value": "fixed(avg(row.values), 3)",
+          "width": "auto",
+          "align": "right"
+        },
+        {
+          "header": "Std dev",
+          "value": "fixed(stdev(row.values), 3)",
+          "width": "auto",
+          "align": "right"
+        },
+        {
+          "header": "Cpk",
+          "value": "fixed(cpk(row.values, row.low, row.high), 2)",
+          "width": "auto",
+          "align": "right"
+        },
+        {
+          "header": "",
+          "value": "cpk(row.values, row.low, row.high) >= study.targetCpk ? 'PASS' : 'FAIL'",
+          "width": "auto",
+          "align": "center"
+        }
+      ],
+      "rowTone": "cpk(row.values, row.low, row.high) >= study.targetCpk ? 'PASS' : 'FAIL'"
+    },
+    {
+      "id": "sec",
+      "type": "section",
+      "repeat": "characteristics",
+      "as": "ch",
+      "title": "{{ ch.name }}",
+      "keepTogether": true,
+      "blocks": [
+        {
+          "id": "sec-cols",
+          "type": "columns",
+          "gapMm": 5,
+          "columns": [
+            {
+              "width": 3,
+              "blocks": [
+                {
+                  "id": "hist",
+                  "type": "chart",
+                  "kind": "histogram",
+                  "title": "",
+                  "series": [
+                    {
+                      "label": "{{ ch.name }}",
+                      "source": "ch.values"
+                    }
+                  ],
+                  "bins": 12,
+                  "heightMm": 42,
+                  "xLabel": "{{ ch.unit }}",
+                  "yLabel": "Count",
+                  "legend": false,
+                  "limits": [
+                    {
+                      "label": "LSL",
+                      "value": "ch.low"
+                    },
+                    {
+                      "label": "USL",
+                      "value": "ch.high"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "width": 2,
+              "blocks": [
+                {
+                  "id": "sec-kv",
+                  "type": "keyValue",
+                  "title": "",
+                  "columns": 1,
+                  "boxed": true,
+                  "items": [
+                    {
+                      "label": "Mean",
+                      "value": "{{ fixed(avg(ch.values), 3) }} {{ ch.unit }}"
+                    },
+                    {
+                      "label": "Std dev",
+                      "value": "{{ fixed(stdev(ch.values), 3) }}"
+                    },
+                    {
+                      "label": "Min / Max",
+                      "value": "{{ fixed(min(ch.values), 3) }} / {{ fixed(max(ch.values), 3) }}"
+                    },
+                    {
+                      "label": "Cpk",
+                      "value": "{{ fixed(cpk(ch.values, ch.low, ch.high), 2) }}"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
