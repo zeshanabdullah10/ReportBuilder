@@ -151,7 +151,7 @@ test('use panel shows the data contract and call snippets', async ({ page }) => 
   await expect(dialog.locator('.snippet.call')).toContainText('report-cli render')
   // Typed structures generated from the contract.
   await expect(dialog.locator('.snippet.types')).toContainText('Cluster')
-  await dialog.getByRole('tab', { name: 'C#' }).click()
+  await dialog.locator('section', { hasText: 'Typed data structures' }).getByRole('tab', { name: 'C#' }).click()
   await expect(dialog.locator('.snippet.types')).toContainText('public class')
 })
 
