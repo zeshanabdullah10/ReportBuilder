@@ -4,6 +4,8 @@ import { EMPTY_ID, SAMPLE_ID, STRESS_ID, dataSets, isGeneratedSet, newDocument, 
 import { duplicateBlock, findBlock, flatIds, insertBlock, type Location, newId, updateBlock } from './doc-ops'
 import { setDropHandler } from './dnd'
 import { type FieldNode } from './data-model'
+import { pasteBlocks } from './clipboard'
+import { applyBrandKit, defaultBrandKit } from './library'
 import { applyDrop, bindField, type DropTarget, moveBlockTidy, type Payload, removeBlockTidy } from './drop'
 import type { Block, BlockType, DataSet, ReportDocument } from './types'
 
@@ -42,9 +44,10 @@ interface State {
   addMenu: { loc: Location | null; x: number; y: number } | null
 
   load: (doc: ReportDocument, path: string | null) => void
-  newFromStarter: (template: string, data: string) => void
+  /** A new unsaved document from a starter; the default brand kit replaces its brand unless `brand` is false. */
+  newFromStarter: (template: string, data: string, opts?: { brand?: boolean }) => void
   /** A new unsaved document from a template and the user's own data. */
-  newFromData: (doc: ReportDocument, data: unknown, dataName: string) => void
+  newFromData: (doc: ReportDocument, data: unknown, dataName: string, opts?: { brand?: boolean }) => void
   closeWelcome: () => void
   showWelcome: () => void
   markSaved: (path: string) => void
@@ -56,6 +59,8 @@ interface State {
   hover: (id: string | null) => void
   selectRelative: (delta: number) => void
   insert: (type: BlockType, at?: Location) => void
+  /** Insert fresh-id copies of blocks (paste, saved blocks); selects the last one. */
+  insertBlocks: (blocks: Block[], at?: Location) => void
   /** Apply a drag-and-drop or add-menu result. */
   drop: (payload: Payload, target: DropTarget) => void
   /** Bind a field to the selected block, or add a block for it. */
@@ -81,6 +86,21 @@ interface State {
 }
 
 let toastId = 0
+
+/** Where a new block goes: into an empty selected group, else right after the selection, else at the end. */
+function insertionPoint(doc: ReportDocument, selectedId: string | null): Location {
+  const found = selectedId ? findBlock(doc, selectedId) : null
+  if (!found) return { region: 'body', index: doc.body.length }
+  const b = found.block
+  if (b.type === 'section' && b.blocks.length === 0) return { region: found.loc.region, parentId: b.id, index: 0 }
+  return { ...found.loc, index: found.loc.index + 1 }
+}
+
+/** New documents wear the user's default brand kit when they saved one. */
+function withDefaultBrand(doc: ReportDocument): ReportDocument {
+  const kit = defaultBrandKit()
+  return applyBrandKit(doc, kit)
+}
 
 export const useStore = create<State>((set, get) => ({
   doc: newDocument(),
@@ -115,15 +135,17 @@ export const useStore = create<State>((set, get) => ({
       activeDataSet: doc.editor?.activeDataSet ?? SAMPLE_ID,
     }),
 
-  newFromStarter: (template, data) => {
-    const raw = JSON.parse(template) as ReportDocument
+  newFromStarter: (template, data, opts) => {
+    let raw = JSON.parse(template) as ReportDocument
     raw.sampleData = JSON.parse(data)
+    if (opts?.brand !== false) raw = withDefaultBrand(raw)
     get().load(raw, null)
     set({ dirty: true })
   },
 
-  newFromData: (doc, data, dataName) => {
-    get().load({ ...doc, sampleData: data, editor: { ...doc.editor, activeDataSet: SAMPLE_ID } }, null)
+  newFromData: (doc, data, dataName, opts) => {
+    const branded = opts?.brand === false ? doc : withDefaultBrand(doc)
+    get().load({ ...branded, sampleData: data, editor: { ...branded.editor, activeDataSet: SAMPLE_ID } }, null)
     set({ dirty: true, leftPanel: 'data' })
     get().toast('info', `Using “${dataName}” as the sample data`)
   },
@@ -190,18 +212,17 @@ export const useStore = create<State>((set, get) => ({
   insert: (type, at) => {
     const { doc, selectedId } = get()
     const block = { ...blockInfo(type).create(), id: newId() } as Block
-    let loc: Location = at ?? { region: 'body', index: doc.body.length }
-    if (!at && selectedId) {
-      const found = findBlock(doc, selectedId)
-      if (found) {
-        // Insert into an empty selected container, else right after the selection.
-        const b = found.block
-        if (b.type === 'section' && b.blocks.length === 0) loc = { region: found.loc.region, parentId: b.id, index: 0 }
-        else loc = { ...found.loc, index: found.loc.index + 1 }
-      }
-    }
+    const loc = at ?? insertionPoint(doc, selectedId)
     get().change((d) => insertBlock(d, block, loc))
     set({ selectedId: block.id })
+  },
+
+  insertBlocks: (blocks, at) => {
+    if (blocks.length === 0) return
+    const { doc, selectedId } = get()
+    const r = pasteBlocks(doc, blocks, at ?? insertionPoint(doc, selectedId))
+    get().change(() => r.doc)
+    set({ selectedId: r.ids.at(-1) ?? null })
   },
 
   drop: (payload, target) => {

@@ -140,31 +140,94 @@ function bestKey(want: string, keys: string[]): string | null {
   return best?.k ?? null
 }
 
+/** One item field a block reads that the list's items don't have, and what it was matched to. */
+export interface ItemFieldChange {
+  /** Stable key for overrides: `<blockId>:<slot>`. */
+  key: string
+  blockId: string
+  /** The list the block reads (after mapping), e.g. `results`. */
+  list: string
+  /** What reads the field, for display: "Measurements · low limit", "Table · column Reading". */
+  label: string
+  /** The item field the template reads, e.g. `low`. */
+  need: string
+  /** The item field it now reads, or null when nothing matched (it stays empty). */
+  chosen: string | null
+  /** The fields the list's items have. */
+  options: string[]
+}
+
+export interface RemapResult {
+  doc: ReportDocument
+  changes: ItemFieldChange[]
+}
+
+const MEASUREMENT_SLOTS: Record<string, string> = {
+  name: 'name',
+  value: 'value',
+  low: 'low limit',
+  high: 'high limit',
+  nominal: 'nominal',
+  unit: 'unit',
+  status: 'status',
+}
+
 /**
  * After the lists are pointed at the user's data, bring the item fields along: a measurement
- * table's columns, a table's `row.x` cells, the verdict's status field.
+ * table's columns, a table's `row.x` cells, a chart's `item.x`, the verdict's status field.
+ * Returns what was rematched and what couldn't be (`chosen: null`). `overrides` (by change key)
+ * replace the automatic choice; an empty override leaves the field unmatched.
  */
-export function remapItemFields(doc: ReportDocument, tree: FieldNode[]): ReportDocument {
+export function remapItemFields(doc: ReportDocument, tree: FieldNode[], overrides: Record<string, string> = {}): RemapResult {
+  const changes: ItemFieldChange[] = []
+  /** Record a missing field and return the field to use (null: none). */
+  const decide = (blockId: string, slot: string, list: string, label: string, need: string, auto: string | null, options: string[]): string | null => {
+    const key = `${blockId}:${slot}`
+    const o = overrides[key]
+    const chosen = o === undefined ? auto : o && options.includes(o) ? o : null
+    changes.push({ key, blockId, list, label, need, chosen, options })
+    return chosen
+  }
+
   const fix = (b: Block): Block => {
     let nb: Block = b
     if (b.type === 'measurementTable') {
       const keys = itemKeys(tree, b.source)
-      if (keys) {
-        const present = (f: string) => !f || keys.includes(f)
-        if (!Object.values(b.fields ?? {}).every(present)) nb = { ...b, fields: mapMeasurementFields(keys) }
+      const fields = (b.fields ?? {}) as Record<string, string>
+      const present = (f: string | undefined) => !f || (keys ?? []).includes(f)
+      if (keys && !Object.values(fields).every(present)) {
+        const auto = mapMeasurementFields(keys) as Record<string, string>
+        const next: Record<string, string> = { ...fields }
+        // Fields the items already have stay; the rest take the best match.
+        const kept = new Set(Object.values(fields).filter((f) => f && keys.includes(f)))
+        for (const slot of Object.keys(MEASUREMENT_SLOTS)) {
+          const old = fields[slot] ?? ''
+          if (old && keys.includes(old)) continue
+          const guess = auto[slot] && !kept.has(auto[slot]) ? auto[slot] : ''
+          if (!old) {
+            next[slot] = guess
+            continue
+          }
+          next[slot] = decide(b.id, `fields.${slot}`, b.source, `Measurements · ${MEASUREMENT_SLOTS[slot]}`, old, guess || null, keys) ?? ''
+        }
+        nb = { ...b, fields: next as typeof b.fields }
       }
     } else if (b.type === 'summary') {
       const keys = itemKeys(tree, b.source)
-      if (keys && !keys.includes(b.statusField)) nb = { ...b, statusField: bestKey('status', keys) ?? b.statusField }
+      if (keys && b.statusField && !keys.includes(b.statusField)) {
+        const chosen = decide(b.id, 'statusField', b.source, 'Summary · status', b.statusField, bestKey('status', keys), keys)
+        // Unmatched keeps the original name: the summary then reports no verdicts.
+        nb = { ...b, statusField: chosen ?? b.statusField }
+      }
     } else if (b.type === 'table') {
       const keys = itemKeys(tree, b.source)
       if (keys) {
         nb = {
           ...b,
-          columns: b.columns.map((c) => {
+          columns: b.columns.map((c, i) => {
             const m = /^row\.(\w+)$/.exec(c.value)
             if (!m || keys.includes(m[1])) return c
-            const k = bestKey(m[1], keys)
+            const k = decide(b.id, `columns.${i}`, b.source, `Table · column ${c.header || i + 1}`, m[1], bestKey(m[1], keys), keys)
             return k ? { ...c, value: `row.${k}` } : c
           }),
         }
@@ -172,16 +235,17 @@ export function remapItemFields(doc: ReportDocument, tree: FieldNode[]): ReportD
     } else if (b.type === 'chart') {
       nb = {
         ...b,
-        series: b.series.map((s) => {
+        series: b.series.map((s, i) => {
           const keys = itemKeys(tree, s.source)
           if (!keys) return s
-          const fixField = (expr: string) => {
+          const fixField = (axis: 'x' | 'y') => {
+            const expr = s[axis]
             const m = /^item\.(\w+)$/.exec(expr)
             if (!m || keys.includes(m[1])) return expr
-            const k = bestKey(m[1], keys)
+            const k = decide(b.id, `series.${i}.${axis}`, s.source, `Chart · ${s.label || `series ${i + 1}`} ${axis.toUpperCase()}`, m[1], bestKey(m[1], keys), keys)
             return k ? `item.${k}` : expr
           }
-          return { ...s, x: fixField(s.x), y: fixField(s.y) }
+          return { ...s, x: fixField('x'), y: fixField('y') }
         }),
       }
     }
@@ -189,7 +253,15 @@ export function remapItemFields(doc: ReportDocument, tree: FieldNode[]): ReportD
     if (nb.type === 'columns') nb = { ...nb, columns: nb.columns.map((c) => ({ ...c, blocks: c.blocks.map(fix) })) }
     return nb
   }
-  return { ...doc, header: doc.header.map(fix), body: doc.body.map(fix), footer: doc.footer.map(fix) }
+  const out = { ...doc, header: doc.header.map(fix), body: doc.body.map(fix), footer: doc.footer.map(fix) }
+  return { doc: out, changes }
+}
+
+/** Group item-field changes by the list they read, in first-seen order. */
+export function groupChanges(changes: ItemFieldChange[]): { list: string; changes: ItemFieldChange[] }[] {
+  const groups = new Map<string, ItemFieldChange[]>()
+  for (const c of changes) groups.set(c.list, [...(groups.get(c.list) ?? []), c])
+  return [...groups].map(([list, cs]) => ({ list, changes: cs }))
 }
 
 export { isList }

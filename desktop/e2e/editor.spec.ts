@@ -55,6 +55,10 @@ test('a template that reads other field names offers to match them', async ({ pa
   await expect(dialog).toBeVisible()
   await expect(dialog.getByLabel('Field for dut.serial')).toHaveValue('unit.SN')
   await expect(dialog.getByLabel('Field for measurements')).toHaveValue('results')
+  // The list's item fields are matched too, grouped under the list.
+  const items = dialog.getByRole('group', { name: 'results → each row' })
+  await expect(items).toBeVisible()
+  await expect(items.getByLabel('results item low (Measurements · low limit)')).toHaveValue('lsl')
   await dialog.getByRole('button', { name: 'Create report' }).click()
   await expect(page.locator('.page .svg svg').first()).toBeVisible()
   // What could be matched is matched; only fields the data really lacks are reported.
@@ -269,4 +273,30 @@ test('export downloads a real PDF', async ({ page }) => {
   const path = await d.path()
   const fs = await import('node:fs')
   expect(fs.readFileSync(path!).subarray(0, 4).toString()).toBe('%PDF')
+})
+
+test('blocks copy and paste with the keyboard, and save to the library', async ({ page }) => {
+  const errors = watchErrors(page)
+  await openStarter(page)
+  const rows = page.locator('.tree .tree-row')
+  const before = await rows.count()
+  await rows.first().click()
+  await page.keyboard.press(`${mod}+c`)
+  await page.keyboard.press(`${mod}+v`)
+  // The copy carries the block's children with it.
+  await expect.poll(() => rows.count()).toBeGreaterThan(before)
+  // Right-click → Save block to library, then it is offered in the add menu.
+  await rows.first().click({ button: 'right' })
+  await page.getByRole('menuitem', { name: 'Save block to library…' }).click()
+  const dlg = page.getByRole('dialog', { name: 'Save block to library' })
+  await dlg.getByLabel('Name').fill('Standard header')
+  await dlg.getByRole('button', { name: 'Save' }).click()
+  await page.keyboard.press('Escape')
+  await page.keyboard.press('/')
+  const menu = page.getByRole('dialog', { name: 'Add a block' })
+  await expect(menu.locator('.palette-group', { hasText: 'Saved blocks' })).toBeVisible()
+  const now = await rows.count()
+  await menu.locator('.add-item', { hasText: 'Standard header' }).click()
+  await expect.poll(() => rows.count()).toBeGreaterThan(now)
+  expect(errors).toEqual([])
 })

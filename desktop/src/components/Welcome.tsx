@@ -1,11 +1,14 @@
-import { CircleAlert, FileJson, FolderOpen, Import, Sparkles, X } from 'lucide-react'
+import { CircleAlert, Clock, FileJson, FolderOpen, Import, Sparkles, Trash2, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { importLegacy, openTemplate, parseJson, pickJsonFile } from '../lib/actions'
+import { importLegacy, openRecent, openTemplate, pickJsonFile } from '../lib/actions'
+import { dataSetName, parseDataFile } from '../lib/csv'
 import { buildFieldTree, type FieldNode } from '../lib/data-model'
 import { newDocument, normalizeDocument } from '../lib/defaults'
 import * as engine from '../lib/engine'
+import { asStarter, deleteMyTemplate, isMyTemplate } from '../lib/library'
 import { applyMapping, type MappingRow, missingPaths, remapItemFields, suggestMapping } from '../lib/mapping'
 import { draftBody } from '../lib/drop'
+import { MY_TEMPLATES, removeRecent, usePref } from '../lib/prefs'
 import { useStore } from '../lib/store'
 import type { ReportDocument, Starter } from '../lib/types'
 import { MappingDialog } from './MappingDialog'
@@ -48,12 +51,13 @@ function DropZone({ onData }: { onData: (d: UserData) => void }) {
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
 
-  const accept = (name: string, raw: string) => {
+  /** `fileName` with its extension: `.csv` goes through the engine's CSV importer. */
+  const accept = async (fileName: string, raw: string) => {
     try {
-      const data = parseJson(raw)
+      const data = await parseDataFile(fileName, raw)
       if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('Expected a JSON object at the top level')
       setError(null)
-      onData({ name, data })
+      onData({ name: dataSetName(fileName), data })
     } catch (e) {
       setError(String((e as Error).message ?? e))
     }
@@ -73,13 +77,13 @@ function DropZone({ onData }: { onData: (d: UserData) => void }) {
         e.preventDefault()
         setOver(false)
         const f = e.dataTransfer.files[0]
-        if (f) accept(f.name.replace(/\.json$/i, ''), await f.text())
+        if (f) await accept(f.name, await f.text())
       }}
     >
       <FileJson size={26} strokeWidth={1.5} />
       <div className="dz-text">
         <strong>Start from your test data</strong>
-        <span>Drop the JSON file your test system produces. We’ll build the report around it.</span>
+        <span>Drop the JSON or CSV file your test system produces. We’ll build the report around it.</span>
       </div>
       <div className="dz-actions">
         <button
@@ -102,7 +106,7 @@ function DropZone({ onData }: { onData: (d: UserData) => void }) {
       {paste && (
         <div className="dz-paste">
           <textarea className="textarea code" rows={6} placeholder='{ "dut": { "serial": "…" }, "measurements": [ … ] }' value={text} onChange={(e) => setText(e.target.value)} autoFocus />
-          <button className="btn primary" disabled={!text.trim()} onClick={() => accept('Pasted data', text)}>
+          <button className="btn primary" disabled={!text.trim()} onClick={() => accept('Pasted data.json', text)}>
             Use this data
           </button>
         </div>
@@ -117,7 +121,7 @@ function DropZone({ onData }: { onData: (d: UserData) => void }) {
 }
 
 export function Welcome() {
-  const [starters, setStarters] = useState<Starter[]>([])
+  const [builtIn, setBuiltIn] = useState<Starter[]>([])
   const [error, setError] = useState<string | null>(null)
   const [user, setUser] = useState<UserData | null>(null)
   const [fits, setFits] = useState<Fit[] | null>(null)
@@ -128,11 +132,16 @@ export function Welcome() {
   const hasDoc = useStore((s) => s.filePath !== null || s.dirty)
   const close = useStore((s) => s.closeWelcome)
   const tree: FieldNode[] = useMemo(() => (user ? buildFieldTree(user.data) : []), [user])
+  const recent = usePref('recent')
+  const savedTemplates = usePref('templates')
+  const mine = useMemo(() => savedTemplates.map(asStarter), [savedTemplates])
+  /** The user's own templates come first. */
+  const starters = useMemo(() => [...mine, ...builtIn], [mine, builtIn])
 
   useEffect(() => {
     engine
       .starters()
-      .then(setStarters)
+      .then(setBuiltIn)
       .catch((e) => setError(String(e)))
   }, [])
 
@@ -160,23 +169,29 @@ export function Welcome() {
     }
   }, [user, starters])
 
-  const finish = (tpl: ReportDocument, map: Record<string, string>) => {
+  const finish = (s: Starter, tpl: ReportDocument, map: Record<string, string>, itemOverrides: Record<string, string> = {}) => {
     if (!user) return
-    const doc = remapItemFields(applyMapping(normalizeDocument(tpl), map), tree)
-    newFromData(doc, user.data, user.name)
+    const doc = remapItemFields(applyMapping(normalizeDocument(tpl), map), tree, itemOverrides).doc
+    // The user's own templates keep their own brand; starters take the default brand kit.
+    newFromData(doc, user.data, user.name, { brand: !isMyTemplate(s) })
   }
 
   const choose = async (s: Starter) => {
-    if (!user) return newFromStarter(s.template, s.data)
-    const tpl = JSON.parse(s.template) as ReportDocument
+    if (!user) return newFromStarter(s.template, s.data, { brand: !isMyTemplate(s) })
+    const tpl = normalizeDocument(JSON.parse(s.template) as ReportDocument)
     try {
       const rep = await engine.validate(tpl, user.data)
       const miss = missingPaths(rep.referencedPaths, user.data)
-      if (miss.length === 0) return finish(tpl, {})
+      // Lists that match by name may still have items with other field names: confirm those too.
+      if (miss.length === 0 && remapItemFields(tpl, tree).changes.length === 0) return finish(s, tpl, {})
       setMapping({ starter: s, tpl, rows: suggestMapping(miss, tree) })
     } catch {
-      finish(tpl, {})
+      finish(s, tpl, {})
     }
+  }
+
+  const removeMine = async (s: Starter) => {
+    if (await engine.confirmAsync(`Delete “${s.name}” from My templates?`, 'Delete')) deleteMyTemplate(s.id)
   }
 
   const draft = () => {
@@ -189,7 +204,8 @@ export function Welcome() {
 
   const best = fits?.slice(0, 3) ?? []
   const categories = useMemo(() => ['All', ...new Set(starters.map((s) => s.category))], [starters])
-  const shown = category === 'All' ? starters : starters.filter((s) => s.category === category)
+  const shownCategory = categories.includes(category) ? category : 'All'
+  const shown = shownCategory === 'All' ? starters : starters.filter((s) => s.category === shownCategory)
   const previewData = (s: Starter): unknown => (user ? user.data : JSON.parse(s.data))
 
   return (
@@ -225,6 +241,25 @@ export function Welcome() {
             </button>
           )}
         </div>
+        {recent.length > 0 && (
+          <div className="recent">
+            <h2 className="welcome-h2">Recent</h2>
+            <ul className="recent-list" aria-label="Recent templates">
+              {recent.map((r) => (
+                <li key={r.path}>
+                  <button className="recent-open" onClick={() => openRecent(r.path)} title={r.path} aria-label={`Open ${r.name}`}>
+                    <Clock size={13} />
+                    <span className="recent-name">{r.name}</span>
+                    <span className="recent-path">{r.path}</span>
+                  </button>
+                  <button className="btn icon small" title="Remove from recent" aria-label={`Remove ${r.name} from recent`} onClick={() => removeRecent(r.path)}>
+                    <X size={12} />
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
         {error && (
           <div className="render-error" style={{ margin: '0 0 24px' }}>
             <strong>The report engine is not reachable.</strong>
@@ -264,30 +299,45 @@ export function Welcome() {
         <h2 className="welcome-h2">{user ? 'All templates' : 'Start from a template'}</h2>
         <div className="chips" role="tablist" aria-label="Template category">
           {categories.map((c) => (
-            <button key={c} role="tab" className={`chip-btn${c === category ? ' on' : ''}`} aria-pressed={c === category} onClick={() => setCategory(c)}>
+            <button key={c} role="tab" className={`chip-btn${c === shownCategory ? ' on' : ''}`} aria-pressed={c === shownCategory} onClick={() => setCategory(c)}>
               {c}
             </button>
           ))}
         </div>
         <div className="starter-grid">
-          {shown.map((s) => (
-            <button key={s.id} className="starter" onClick={() => choose(s)} aria-label={`New ${s.name}`}>
-              <Thumb template={s.template} data={previewData(s)} />
-              <div className="name">{s.name}</div>
-              <div className="desc">{s.description}</div>
-            </button>
-          ))}
+          {shown.map((s) => {
+            const card = (
+              <button key={s.id} className="starter" onClick={() => choose(s)} aria-label={`New ${s.name}`}>
+                <Thumb template={s.template} data={previewData(s)} />
+                <div className="name">
+                  {s.name}
+                  {isMyTemplate(s) && shownCategory === 'All' && <span className="fit mine">{MY_TEMPLATES}</span>}
+                </div>
+                <div className="desc">{s.description}</div>
+              </button>
+            )
+            if (!isMyTemplate(s)) return card
+            return (
+              <div key={s.id} className="starter-wrap">
+                {card}
+                <button className="btn icon starter-delete" title={`Delete ${s.name}`} aria-label={`Delete ${s.name}`} onClick={() => removeMine(s)}>
+                  <Trash2 size={13} />
+                </button>
+              </div>
+            )
+          })}
         </div>
       </div>
       {mapping && user && (
         <MappingDialog
           title={mapping.starter.name}
+          template={mapping.tpl}
           rows={mapping.rows}
           tree={tree}
           onCancel={() => setMapping(null)}
-          onApply={(m) => {
+          onApply={(m, items) => {
             setMapping(null)
-            finish(mapping.tpl, m)
+            finish(mapping.starter, mapping.tpl, m, items)
           }}
         />
       )}

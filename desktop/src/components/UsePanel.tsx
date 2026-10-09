@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { exportPdf, pickJsonFile, saveTemplate } from '../lib/actions'
 import * as engine from '../lib/engine'
 import { buildFieldTree } from '../lib/data-model'
-import { type MappingRow, missingPaths, suggestMapping } from '../lib/mapping'
+import { applyMapping, type MappingRow, missingPaths, remapItemFields, suggestMapping } from '../lib/mapping'
 import { activeData, useStore } from '../lib/store'
 import type { ContractResult } from '../lib/types'
 import { MappingDialog } from './MappingDialog'
@@ -287,12 +287,20 @@ export function UsePanel() {
       {mapping && tested && (
         <MappingDialog
           title={doc.meta.name || 'this template'}
+          template={doc}
           rows={mapping}
           tree={buildFieldTree(tested.data)}
           onCancel={() => setMapping(null)}
-          onApply={(m) => {
+          onApply={(m, overrides) => {
             setMapping(null)
-            const add = Object.fromEntries(Object.entries(m).filter(([need, have]) => have && need !== have))
+            const add: Record<string, string> = Object.fromEntries(Object.entries(m).filter(([need, have]) => have && need !== have))
+            // Item fields the chosen lists lack become `list[].field` entries, in the template's list names.
+            const tree = buildFieldTree(tested.data)
+            for (const c of remapItemFields(applyMapping(doc, add), tree, overrides).changes) {
+              if (!c.chosen || c.chosen === c.need) continue
+              const templateList = Object.entries(add).find(([, have]) => have === c.list)?.[0] ?? c.list
+              add[`${templateList}[].${c.need}`] = c.chosen
+            }
             if (Object.keys(add).length === 0) return
             change((d) => ({ ...d, dataMap: { ...(d.dataMap ?? {}), ...add } }), 'doc:dataMap')
             toast('success', `Mapped ${Object.keys(add).length} field${Object.keys(add).length === 1 ? '' : 's'}. The template now reads this data as-is.`)

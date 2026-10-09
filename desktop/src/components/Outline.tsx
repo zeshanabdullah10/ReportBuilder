@@ -7,6 +7,7 @@ import { bindField } from '../lib/drop'
 import { usePreview } from '../lib/preview'
 import { useStore } from '../lib/store'
 import type { Block, Region } from '../lib/types'
+import { openBlockMenu } from './BlockMenu'
 import { BlockIcon } from './Icon'
 
 type DropMode = 'before' | 'after' | 'inside'
@@ -149,6 +150,7 @@ function Row({ block, loc, depth }: { block: Block; loc: Location; depth: number
         role="treeitem"
         aria-selected={selected}
         onClick={() => select(block.id)}
+        onContextMenu={(e) => openBlockMenu(e, block.id)}
         onMouseEnter={() => hover(block.id)}
         onMouseLeave={() => hover(null)}
         onPointerDown={(e) => beginDrag(e, { kind: 'move', id: block.id }, info.label)}

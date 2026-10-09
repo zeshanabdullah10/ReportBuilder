@@ -592,3 +592,50 @@ body.dragging, body.dragging * { cursor: grabbing !important; user-select: none 
 .chip-btn { border: 0; border-radius: 14px; padding: 4px 12px; background: var(--bg-active); color: var(--text-2); font-size: 12.5px; font-weight: 500; }
 .chip-btn:hover { background: var(--bg-hover); color: var(--text); }
 .chip-btn.on { background: var(--accent); color: #fff; }
+
+/* Prompt dialog (names for my templates and saved blocks) */
+.prompt-dialog { width: 420px; }
+.prompt-field { display: flex; flex-direction: column; gap: 6px; padding: 0 16px 12px; font-size: 12px; color: var(--text-2); }
+.prompt-field .input { width: 100%; }
+
+/* Brand kit defaults */
+.brand-default { display: flex; flex-wrap: wrap; gap: 6px; padding-top: 6px; }
+
+/* Block context menu */
+.block-menu { position: fixed; background: var(--bg-elevated); border-radius: 9px; box-shadow: var(--shadow-pop); padding: 4px; display: flex; flex-direction: column; animation: pop 0.1s; }
+.block-menu-item { display: flex; align-items: center; gap: 9px; height: 30px; padding: 0 9px; border: 0; border-radius: 6px; background: transparent; color: var(--text); text-align: left; font-size: 13px; }
+.block-menu-item .grow { flex: 1; }
+.block-menu-item:hover, .block-menu-item:focus-visible { background: var(--accent); color: #fff; outline: none; }
+.block-menu-item:hover kbd { color: rgba(255, 255, 255, 0.85); }
+.block-menu-item.danger { color: var(--fail); }
+.block-menu-item.danger:hover { background: var(--fail); color: #fff; }
+
+/* Saved blocks in the add menu */
+.add-item .add-item-delete { opacity: 0; flex: none; }
+.add-item:hover .add-item-delete, .add-item.active .add-item-delete { opacity: 1; color: inherit; }
+.add-item.saved { cursor: pointer; }
+.add-item.saved .grow { flex: 1; }
+
+/* Welcome: recent files and my templates */
+.recent { margin: -8px 0 30px; }
+.recent-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; max-width: 720px; }
+.recent-list li { display: flex; align-items: center; gap: 4px; }
+.recent-open { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 6px 10px; border: 0; border-radius: 7px; background: transparent; color: var(--text); text-align: left; }
+.recent-open:hover { background: var(--bg-hover); }
+.recent-open svg { color: var(--text-3); flex: none; }
+.recent-name { font-weight: 500; white-space: nowrap; }
+.recent-path { color: var(--text-3); font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; direction: rtl; text-align: left; }
+.starter-wrap { position: relative; }
+.starter-wrap .starter { width: 100%; }
+.starter-delete { position: absolute; top: 8px; right: 8px; background: var(--bg-elevated); box-shadow: var(--shadow-pop); opacity: 0; transition: opacity 0.12s; }
+.starter-wrap:hover .starter-delete, .starter-delete:focus-visible { opacity: 1; }
+.starter-delete:hover:not(:disabled) { color: var(--fail); background: var(--bg-elevated); }
+.fit.mine { background: var(--accent-soft); color: var(--accent); }
+
+/* Mapping dialog: item fields grouped under their list */
+.mapping-group { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; padding-top: 10px; border-top: 1px solid var(--hairline); }
+.mapping-group-title { font-size: 12px; font-weight: 600; color: var(--text-2); }
+.mapping-group-title code { font: 12px var(--font-mono); }
+.mapping-row.item .need-wrap { display: flex; flex-direction: column; min-width: 0; padding-left: 12px; }
+.mapping-row.item .need { align-self: flex-start; max-width: 100%; }
+.mapping-row.item .where { font-size: 11px; color: var(--text-3); margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

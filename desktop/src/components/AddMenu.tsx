@@ -1,17 +1,27 @@
-import { Search } from 'lucide-react'
+import { Search, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { CATALOG, CATEGORIES, type BlockInfo } from '../lib/blocks'
+import { CATALOG, CATEGORIES, type BlockInfo, blockInfo, blockSummary } from '../lib/blocks'
 import { beginDrag, useDrag } from '../lib/dnd'
+import { deleteSavedBlock } from '../lib/library'
+import { type SavedBlock, usePref } from '../lib/prefs'
 import { useStore } from '../lib/store'
 import { BlockIcon } from './Icon'
 
-interface Row { info: BlockInfo; group: string }
+type Row = { kind: 'type'; info: BlockInfo; group: string } | { kind: 'saved'; saved: SavedBlock; group: string }
+
+const SAVED = 'Saved blocks'
+
+function rowKey(r: Row) {
+  return r.kind === 'type' ? r.info.type : r.saved.id
+}
 
 /** Pick a block to add. Opened by the ⊕ on the page, "/" or the Layers header. Click inserts; drag places. */
 export function AddMenu() {
   const menu = useStore((s) => s.addMenu)
   const close = useStore((s) => s.closeAddMenu)
   const insert = useStore((s) => s.insert)
+  const insertBlocks = useStore((s) => s.insertBlocks)
+  const saved = usePref('blocks')
   const dragging = useDrag((s) => s.drag !== null)
   const [q, setQ] = useState('')
   const [active, setActive] = useState(0)
@@ -33,14 +43,20 @@ export function AddMenu() {
 
   const rows = useMemo<Row[]>(() => {
     const t = q.trim().toLowerCase()
+    const type = (info: BlockInfo, group: string): Row => ({ kind: 'type', info, group })
+    const mine = (group: string) =>
+      saved
+        .filter((b) => !t || `${b.name} ${blockInfo(b.block.type).label}`.toLowerCase().includes(t))
+        .map((b): Row => ({ kind: 'saved', saved: b, group }))
     if (t) {
-      return CATALOG.filter((b) => `${b.label} ${b.keywords} ${b.description}`.toLowerCase().includes(t)).map((info) => ({ info, group: 'Results' }))
+      return [...mine(SAVED), ...CATALOG.filter((b) => `${b.label} ${b.keywords} ${b.description}`.toLowerCase().includes(t)).map((info) => type(info, 'Results'))]
     }
     return [
-      ...CATALOG.filter((b) => b.common).map((info) => ({ info, group: 'Common' })),
-      ...CATEGORIES.flatMap((cat) => CATALOG.filter((b) => !b.common && b.category === cat).map((info) => ({ info, group: cat }))),
+      ...CATALOG.filter((b) => b.common).map((info) => type(info, 'Common')),
+      ...mine(SAVED),
+      ...CATEGORIES.flatMap((cat) => CATALOG.filter((b) => !b.common && b.category === cat).map((info) => type(info, cat))),
     ]
-  }, [q])
+  }, [q, saved])
 
   useEffect(() => setActive(0), [q])
   useEffect(() => {
@@ -49,9 +65,10 @@ export function AddMenu() {
 
   if (!menu) return null
 
-  const choose = (info: BlockInfo) => {
+  const choose = (r: Row) => {
     close()
-    insert(info.type, menu.loc ?? undefined)
+    if (r.kind === 'type') insert(r.info.type, menu.loc ?? undefined)
+    else insertBlocks([r.saved.block], menu.loc ?? undefined)
   }
 
   const W = 320
@@ -80,7 +97,7 @@ export function AddMenu() {
                 setActive((a) => Math.max(0, a - 1))
               } else if (e.key === 'Enter') {
                 e.preventDefault()
-                if (rows[active]) choose(rows[active].info)
+                if (rows[active]) choose(rows[active])
               } else if (e.key === 'Escape') {
                 close()
               }
@@ -92,14 +109,43 @@ export function AddMenu() {
           {rows.map((r, n) => {
             const head = r.group !== last ? <div className="palette-group">{r.group}</div> : null
             last = r.group
+            if (r.kind === 'saved') {
+              const info = blockInfo(r.saved.block.type)
+              return (
+                <div key={rowKey(r)}>
+                  {head}
+                  <div className={`add-item saved${n === active ? ' active' : ''}`} onMouseEnter={() => setActive(n)} onClick={() => choose(r)}>
+                    <BlockIcon type={r.saved.block.type} size={16} />
+                    <span className="grow">
+                      <span className="t">{r.saved.name}</span>
+                      <span className="d">
+                        {info.label}
+                        {blockSummary(r.saved.block) ? ` · ${blockSummary(r.saved.block)}` : ''}
+                      </span>
+                    </span>
+                    <button
+                      className="btn icon small add-item-delete"
+                      title="Remove from saved blocks"
+                      aria-label={`Remove ${r.saved.name} from saved blocks`}
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        deleteSavedBlock(r.saved.id)
+                      }}
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                </div>
+              )
+            }
             return (
-              <div key={r.info.type}>
+              <div key={rowKey(r)}>
                 {head}
                 <div
                   className={`add-item${n === active ? ' active' : ''}`}
                   onMouseEnter={() => setActive(n)}
                   onPointerDown={(e) => beginDrag(e, { kind: 'new', type: r.info.type }, r.info.label)}
-                  onClick={() => choose(r.info)}
+                  onClick={() => choose(r)}
                 >
                   <BlockIcon type={r.info.type} size={16} />
                   <span className="grow">

@@ -1,6 +1,9 @@
 import { FileText, ImagePlus, Plus, X } from 'lucide-react'
 import { useState } from 'react'
+import { saveBrandKitAsDefault } from '../lib/actions'
 import { DEFAULT_THEME } from '../lib/defaults'
+import { applyBrandKit } from '../lib/library'
+import { usePref } from '../lib/prefs'
 import { useStore } from '../lib/store'
 import { LABEL_KEYS, type PaperSize, type ReportDocument, type Theme, type Variable } from '../lib/types'
 import { ColorInput, Disclosure, ExprInput, Field, Group, NumberInput, Segmented, Select, TextInput, Toggle } from './fields'
@@ -32,6 +35,7 @@ export function DocumentInspector() {
   const edit = (key: string, fn: (d: ReportDocument) => ReportDocument) => change(fn, `doc:${key}`)
   const theme = (patch: Partial<Theme>, key: string) => edit(`theme.${key}`, (d) => ({ ...d, theme: { ...d.theme, ...patch } }))
   const margins = doc.page.margins
+  const defaultKit = usePref('brandKit')
 
   return (
     <>
@@ -131,6 +135,19 @@ export function DocumentInspector() {
               <ColorInput value={doc.theme[c.key] as string} onChange={(v) => theme({ [c.key]: v ?? DEFAULT_THEME[c.key] } as Partial<Theme>, c.key)} />
             </Field>
           ))}
+          <div className="brand-default">
+            <button className="btn small bordered" onClick={saveBrandKitAsDefault} title="Company, logo, typeface, size and colours for every new report">
+              Save as default for new reports
+            </button>
+            <button
+              className="btn small"
+              disabled={!defaultKit}
+              title={defaultKit ? 'Use your default brand kit in this report' : 'No default brand kit saved yet'}
+              onClick={() => change((d) => applyBrandKit(d, defaultKit), 'doc:theme.applyDefault')}
+            >
+              Apply default
+            </button>
+          </div>
         </Group>
 
         <Group title="Watermark">

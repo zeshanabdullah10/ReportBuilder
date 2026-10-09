@@ -1,6 +1,7 @@
 import { ChevronDown, ChevronUp, CircleAlert, Copy, CornerLeftUp, GripVertical, Maximize2, Minus, Plus, Trash2 } from 'lucide-react'
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { blockInfo } from '../lib/blocks'
+import { useClipboardShortcuts } from '../lib/clipboard-keys'
 import { beginDrag, registerZone, type Resolver, useDrag } from '../lib/dnd'
 import { findBlock, isWithin, type Location } from '../lib/doc-ops'
 import { bindField } from '../lib/drop'
@@ -8,6 +9,7 @@ import { usePreview } from '../lib/preview'
 import { useStore } from '../lib/store'
 import { dataSets } from '../lib/defaults'
 import type { BlockRegion, Block } from '../lib/types'
+import { openBlockMenu } from './BlockMenu'
 import { InlineEditor, isInlineEditable } from './InlineEditor'
 
 const PX_PER_PT = 96 / 72
@@ -87,6 +89,7 @@ export function Canvas() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const pageEls = useRef<(HTMLDivElement | null)[]>([])
   const [editingId, setEditingId] = useState<string | null>(null)
+  useClipboardShortcuts()
 
   const boxes = useMemo(() => {
     if (!result) return []
@@ -346,6 +349,10 @@ export function Canvas() {
                 if ((e.target as HTMLElement).closest('.add-dot, .hit-toolbar, .inline-editor')) return
                 const b = locate(e, p)
                 select(b?.id ?? null)
+              }}
+              onContextMenu={(e) => {
+                const b = locate(e, p)
+                if (b) openBlockMenu(e, b.id)
               }}
               onDoubleClick={(e) => {
                 const b = locate(e, p)
