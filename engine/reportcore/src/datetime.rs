@@ -1,7 +1,8 @@
 //! Date parsing and formatting for the `date()` expression function.
 //!
-//! Accepts RFC 3339 / ISO 8601 strings, `YYYY-MM-DD[ HH:MM[:SS]]`, and Unix
-//! timestamps (seconds, or milliseconds when larger than 1e11). The original
+//! Accepts RFC 3339 / ISO 8601 strings, `YYYY-MM-DD[ HH:MM[:SS]]`, Unix
+//! timestamps (seconds, or milliseconds when larger than 1e11) and LabVIEW
+//! timestamps (seconds since 1904, numbers from 2.9e9 up to 1e11). The original
 //! UTC offset is preserved so reports show the station's local time.
 
 use chrono::{DateTime, FixedOffset, NaiveDate, NaiveDateTime, TimeZone, Utc};
@@ -23,10 +24,20 @@ const MONTHS: [&str; 12] = [
 ];
 const DAYS: [&str; 7] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
+/// Seconds between the LabVIEW epoch (1904-01-01 UTC) and the Unix epoch.
+pub const LABVIEW_EPOCH_OFFSET: f64 = 2_082_844_800.0;
+/// Smallest number read as a LabVIEW timestamp (1999-01-25 in LabVIEW time).
+const LABVIEW_MIN: f64 = 2.9e9;
+
 pub fn parse(v: &Value) -> Option<DateTime<FixedOffset>> {
     match v {
         Value::Number(n) => {
-            let f = n.as_f64()?;
+            let mut f = n.as_f64()?;
+            // LabVIEW timestamps count seconds from 1904-01-01. Values in this band are
+            // 1999–2068 as LabVIEW time but 2062+ as Unix seconds, so read them as LabVIEW.
+            if (LABVIEW_MIN..1e11).contains(&f) {
+                f -= LABVIEW_EPOCH_OFFSET;
+            }
             let (secs, nanos) = if f.abs() > 1e11 {
                 ((f / 1000.0).floor() as i64, ((f % 1000.0) * 1e6) as u32)
             } else {
@@ -131,6 +142,14 @@ pub fn format_dt(d: &DateTime<FixedOffset>, fmt: &str) -> String {
 mod tests {
     use super::*;
     use serde_json::json;
+
+    #[test]
+    fn labview_timestamps() {
+        // 2026-03-01T10:20:30Z as LabVIEW seconds since 1904.
+        let lv = 1_772_360_430.0 + LABVIEW_EPOCH_OFFSET;
+        assert_eq!(format(&serde_json::json!(lv), "YYYY-MM-DD HH:mm:ss").unwrap(), "2026-03-01 10:20:30");
+        assert_eq!(format(&serde_json::json!(1_772_360_430.0), "YYYY-MM-DD").unwrap(), "2026-03-01");
+    }
 
     #[test]
     fn formats() {

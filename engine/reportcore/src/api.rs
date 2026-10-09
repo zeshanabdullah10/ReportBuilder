@@ -76,8 +76,13 @@ pub fn preview(req: &RenderRequest) -> Result<PreviewResponse, ApiError> {
     let compiled = compile(&doc, &data, &options(req, true)).map_err(|e| ApiError::Render(e.to_string()))?;
     let pages = compiled.to_svg_pages();
     let page_sizes = (0..compiled.page_count()).filter_map(|i| compiled.page_size(i)).collect();
-    let mut issues = validate::validate(&doc, None).issues;
-    issues.retain(|i| i.severity == validate::Severity::Error);
+    // Static checks that rendering can't see: parse errors, unknown functions and settings.
+    let mut issues = validate::validate_value(&req.template, &doc, None).issues;
+    issues.retain(|i| {
+        i.severity == validate::Severity::Error
+            || i.message.starts_with("unknown ")
+            || i.message.starts_with("page numbers")
+    });
     for i in compiled.issues.iter() {
         if !issues.contains(i) {
             issues.push(i.clone());
@@ -126,7 +131,7 @@ pub struct ValidateRequest {
 
 pub fn validate(req: &ValidateRequest) -> Result<validate::Report, ApiError> {
     let doc = parse_template(&req.template)?;
-    Ok(validate::validate(&doc, req.data.as_ref()))
+    Ok(validate::validate_value(&req.template, &doc, req.data.as_ref()))
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -230,4 +235,39 @@ mod tests {
         let names: Vec<_> = p.iter().map(|x| x.path.as_str()).collect();
         assert_eq!(names, vec!["dut", "dut.sn", "m", "m[].v"]);
     }
+}
+
+#[derive(Debug, Clone, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ContractRequest {
+    pub template: Value,
+    /// Optional sample data, for field types; defaults to the template's sample data.
+    #[serde(default)]
+    pub data: Option<Value>,
+    /// `schema` (JSON Schema) or a [`crate::codegen::LANGUAGES`] entry.
+    #[serde(default)]
+    pub format: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ContractResponse {
+    pub contract: Vec<validate::ContractField>,
+    pub schema: Value,
+    /// Generated source when `format` names a language.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub code: Option<String>,
+}
+
+/// The data a template needs: typed field list, JSON Schema and optional typed structures.
+pub fn contract(req: &ContractRequest) -> Result<ContractResponse, ApiError> {
+    let doc = parse_template(&req.template)?;
+    let data = req.data.as_ref().filter(|d| !d.is_null()).or(doc.sample_data.as_ref());
+    let report = validate::validate(&doc, data);
+    let schema = validate::contract_schema(&report, &doc.meta.name);
+    let code = match req.format.as_deref() {
+        None | Some("") | Some("schema") => None,
+        Some(lang) => Some(crate::codegen::typedefs(&schema, lang, &doc.meta.name).map_err(ApiError::Render)?),
+    };
+    Ok(ContractResponse { contract: report.contract, schema, code })
 }

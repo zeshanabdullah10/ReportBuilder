@@ -189,7 +189,8 @@ fn diag_text(diags: &[SourceDiagnostic]) -> String {
 /// Lay out a template with data.
 pub fn compile(doc: &Document, data: &Value, opts: &RenderOptions) -> Result<Compiled, RenderError> {
     let gen_opts = GenOptions { base_dir: opts.base_dir.clone(), preview: opts.preview, now: opts.now.clone() };
-    let generated = Generator::new(doc, &gen_opts).generate(data);
+    let data = crate::validate::apply_data_map(&doc.data_map, data);
+    let generated = Generator::new(doc, &gen_opts).generate(&data);
 
     let custom;
     let fonts = if opts.font_dirs.is_empty() {

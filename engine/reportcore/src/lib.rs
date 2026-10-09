@@ -6,6 +6,7 @@
 
 pub mod api;
 pub mod charts;
+pub mod codegen;
 pub mod codes;
 pub mod datetime;
 pub mod encoding;
