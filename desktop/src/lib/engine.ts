@@ -1,7 +1,7 @@
 // Transport to the Rust engine: Tauri commands in the desktop app, or the
 // local HTTP API (`report-cli serve`) when running in a browser.
 
-import type { DataPath, Issue, PreviewResult, ReportDocument, Starter } from './types'
+import type { ContractResult, DataPath, PreviewResult, ReportDocument, Starter, ValidateResult } from './types'
 
 export const isTauri = typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window
 
@@ -47,8 +47,14 @@ export function dataPaths(data: unknown): Promise<DataPath[]> {
   return isTauri ? invoke('data_paths', { data }) : http('data-paths', data ?? {})
 }
 
-export function validate(template: ReportDocument, data?: unknown): Promise<{ issues: Issue[]; referencedPaths: string[] }> {
+export function validate(template: ReportDocument, data?: unknown): Promise<ValidateResult> {
   return isTauri ? invoke('validate', { req: { template, data } }) : http('validate', { template, data })
+}
+
+/** The template's typed data contract, its JSON Schema, and optionally typed structures (`csharp`, `python`, `typescript`, `labview`). */
+export function contract(template: ReportDocument, data?: unknown, format?: string): Promise<ContractResult> {
+  const req = { template, data, format }
+  return isTauri ? invoke('contract', { req }) : http('contract', req)
 }
 
 export function migrate(legacy: unknown): Promise<{ document: ReportDocument; notes: string[] }> {

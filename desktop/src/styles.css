@@ -515,6 +515,8 @@ body.dragging, body.dragging * { cursor: grabbing !important; user-select: none 
 .use-check svg { flex: none; margin-top: 2px; }
 .contract { display: flex; flex-wrap: wrap; gap: 5px; }
 .contract-chip { display: inline-flex; align-items: center; gap: 4px; font: 11.5px var(--font-mono); padding: 2px 8px; border-radius: 10px; background: var(--pass-soft); color: var(--pass); }
+.contract-chip small { color: var(--text-3); font-size: 10px; }
+.contract-chip.optional { opacity: 0.75; border-style: dashed; }
 .contract-chip.miss { background: var(--warn-soft); color: var(--warn); }
 .snippet { margin: 8px 0; padding: 10px 12px; border-radius: 8px; background: var(--bg-code); font: 11.5px/1.5 var(--font-mono); white-space: pre-wrap; user-select: text; overflow: auto; }
 
