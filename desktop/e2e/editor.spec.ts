@@ -146,9 +146,13 @@ test('use panel shows the data contract and call snippets', async ({ page }) => 
   const dialog = page.getByRole('dialog', { name: 'Use this template' })
   await expect(dialog).toBeVisible()
   await expect(dialog.locator('.contract-chip').first()).toBeVisible()
-  await expect(dialog.locator('.snippet')).toContainText('rb_render_file')
+  await expect(dialog.locator('.snippet.call')).toContainText('rb_render_file')
   await dialog.getByRole('tab', { name: 'Command line' }).click()
-  await expect(dialog.locator('.snippet')).toContainText('report-cli render')
+  await expect(dialog.locator('.snippet.call')).toContainText('report-cli render')
+  // Typed structures generated from the contract.
+  await expect(dialog.locator('.snippet.types')).toContainText('Cluster')
+  await dialog.getByRole('tab', { name: 'C#' }).click()
+  await expect(dialog.locator('.snippet.types')).toContainText('public class')
 })
 
 test('welcome gallery shows starters with live thumbnails', async ({ page }) => {

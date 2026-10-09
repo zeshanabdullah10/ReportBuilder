@@ -253,7 +253,7 @@ export function UsePanel() {
                 </button>
               ))}
             </div>
-            <pre className="snippet">{code || 'Generating…'}</pre>
+            <pre className="snippet types">{code || 'Generating…'}</pre>
             <div className="use-row">
               <button className="btn small bordered" onClick={() => copy('code', code)}>
                 <Copy size={12} /> {copied === 'code' ? 'Copied' : 'Copy'}
@@ -274,7 +274,7 @@ export function UsePanel() {
                 </button>
               ))}
             </div>
-            <pre className="snippet">{snippet(lang, path)}</pre>
+            <pre className="snippet call">{snippet(lang, path)}</pre>
             <div className="use-row">
               <button className="btn small bordered" onClick={() => copy('snippet', snippet(lang, path))}>
                 <Copy size={12} /> {copied === 'snippet' ? 'Copied' : 'Copy'}
