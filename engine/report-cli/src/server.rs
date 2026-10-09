@@ -5,7 +5,7 @@
 //! local (DNS-rebinding protection).
 
 use anyhow::Result;
-use reportcore::api;
+use reportcore::{api, Severity};
 use serde_json::{json, Value};
 use std::io::Read;
 use std::path::{Path, PathBuf};
@@ -101,7 +101,12 @@ fn handle(mut req: Request, static_dir: Option<&Path>) {
                 return json_resp(req, 400, &json!({"error": "cannot read request body"}), cors);
             }
         }
-        let parsed: Result<Value, _> = if body.is_empty() { Ok(Value::Null) } else { serde_json::from_slice(&body) };
+        // Bare NaN/Infinity (as LabVIEW writes them) are accepted, like in data files.
+        let parsed: Result<Value, _> = if body.is_empty() {
+            Ok(Value::Null)
+        } else {
+            reportcore::encoding::parse_json_lenient(&reportcore::encoding::decode_text(&body))
+        };
         let Ok(input) = parsed else {
             return json_resp(req, 400, &json!({"error": "body is not valid JSON"}), cors);
         };
@@ -128,13 +133,29 @@ fn route(req: Request, method: &Method, url: &str, input: Value, cors: Option<St
             },
             Err(e) => bad(req, e.to_string(), cors),
         },
-        (Method::Post, "/api/pdf") => match serde_json::from_value::<api::RenderRequest>(input) {
-            Ok(r) => match api::pdf(&r) {
-                Ok(p) => respond(req, 200, "application/pdf", p.pdf, cors),
-                Err(e) => json_resp(req, 422, &json!({"error": e.to_string()}), cors),
-            },
-            Err(e) => bad(req, e.to_string(), cors),
-        },
+        (Method::Post, "/api/pdf") => {
+            // `strict` (like `report-cli render --strict`): any warning or error fails with 422.
+            let strict = input.get("strict").and_then(Value::as_bool).unwrap_or(false);
+            match serde_json::from_value::<api::RenderRequest>(input) {
+                Ok(r) => match api::pdf(&r) {
+                    Ok(p) => {
+                        let flagged: Vec<_> = p.issues.iter().filter(|i| i.severity != Severity::Info).collect();
+                        if strict && !flagged.is_empty() {
+                            let body = json!({
+                                "error": format!("{} issue(s) with strict", flagged.len()),
+                                "stage": "strict",
+                                "issues": flagged,
+                            });
+                            json_resp(req, 422, &body, cors)
+                        } else {
+                            respond(req, 200, "application/pdf", p.pdf, cors)
+                        }
+                    }
+                    Err(e) => json_resp(req, 422, &json!({"error": e.to_string()}), cors),
+                },
+                Err(e) => bad(req, e.to_string(), cors),
+            }
+        }
         (Method::Post, "/api/validate") => match serde_json::from_value::<api::ValidateRequest>(input) {
             Ok(r) => match api::validate(&r) {
                 Ok(rep) => json_resp(req, 200, &serde_json::to_value(rep).unwrap(), cors),
@@ -146,6 +167,16 @@ fn route(req: Request, method: &Method, url: &str, input: Value, cors: Option<St
             json_resp(req, 200, &serde_json::to_value(api::data_paths(&input)).unwrap(), cors)
         }
         (Method::Post, "/api/infer-schema") => json_resp(req, 200, &reportcore::validate::infer_schema(&input), cors),
+        (Method::Post, "/api/import-csv") => {
+            let name = input.get("name").and_then(Value::as_str).unwrap_or("data.csv");
+            match input.get("text").and_then(Value::as_str) {
+                Some(text) => match reportcore::import::csv_to_data(text, name) {
+                    Ok(v) => json_resp(req, 200, &v, cors),
+                    Err(e) => json_resp(req, 422, &json!({"error": format!("{e:#}")}), cors),
+                },
+                None => bad(req, "expected {\"text\": \"<CSV>\", \"name\": \"file.csv\"}".into(), cors),
+            }
+        }
         (Method::Post, "/api/migrate") => match reportcore::migrate::migrate_legacy(&input) {
             Ok(m) => json_resp(req, 200, &json!({"document": m.document, "notes": m.notes}), cors),
             Err(e) => json_resp(req, 422, &json!({"error": e}), cors),
