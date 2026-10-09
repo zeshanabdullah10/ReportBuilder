@@ -179,13 +179,13 @@
         },
         {
           "header": "Requirement",
-          "value": "(row.low != null && row.high != null ? fixed(row.low, 2) + ' … ' + fixed(row.high, 2) : row.low != null ? '≥ ' + fixed(row.low, 2) : '≤ ' + fixed(row.high, 2)) + ' ' + row.unit",
+          "value": "limits(row.low, row.high, row.unit, 2)",
           "width": "auto",
           "align": "center"
         },
         {
           "header": "Measured",
-          "value": "fixed(row.value, 3) + ' ' + row.unit",
+          "value": "with_unit(row.value, row.unit, 3)",
           "width": "auto",
           "align": "right"
         },
@@ -193,10 +193,10 @@
           "header": "",
           "value": "status(row.value, row.low, row.high)",
           "width": "auto",
-          "align": "center"
+          "align": "center",
+          "status": true
         }
       ],
-      "rowTone": "status(row.value, row.low, row.high)",
       "zebra": true
     },
     {

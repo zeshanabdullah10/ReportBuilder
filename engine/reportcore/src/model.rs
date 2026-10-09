@@ -7,6 +7,7 @@
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
+use std::collections::BTreeMap;
 
 /// Current template format version written by this engine.
 pub const SCHEMA_VERSION: u32 = 1;
@@ -34,6 +35,20 @@ pub struct Document {
     pub body: Vec<Block>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub watermark: Option<Watermark>,
+    /// Computed fields, evaluated in order before the report is laid out. Each is
+    /// available to every expression by its name (`cpk1`, `limitsText`, ...).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub vars: Vec<Variable>,
+    /// Field mapping applied to incoming data before rendering: template path →
+    /// data path. Lets one template read data whose field names differ, e.g.
+    /// `{"dut.serial": "uut.sn", "measurements": "results", "measurements[].value": "reading"}`.
+    /// Only fills fields the data lacks.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub data_map: BTreeMap<String, String>,
+    /// Overrides for built-in words (table headers, verdict labels), keyed as in
+    /// [`label_default`], e.g. `{"measured": "Messwert", "passRate": "Ausbeute"}`.
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub labels: BTreeMap<String, String>,
     /// Example data used by the editor preview and by `validate`.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub sample_data: Option<Value>,
@@ -53,6 +68,9 @@ impl Default for Document {
             footer: Vec::new(),
             body: Vec::new(),
             watermark: None,
+            vars: Vec::new(),
+            data_map: BTreeMap::new(),
+            labels: BTreeMap::new(),
             sample_data: None,
             editor: None,
         }
@@ -68,6 +86,56 @@ pub struct Meta {
     /// Free-form template revision, e.g. "B" or "1.4".
     pub revision: String,
     pub tags: Vec<String>,
+    /// Document language (BCP 47, e.g. `en`, `de`) for hyphenation and dates. Empty = `en`.
+    #[serde(skip_serializing_if = "String::is_empty")]
+    pub lang: String,
+}
+
+/// A named, computed value: `{ "name": "cpk", "value": "cpk(values, low, high)" }`.
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct Variable {
+    pub name: String,
+    /// Expression; earlier variables are in scope.
+    pub value: String,
+}
+
+/// Built-in words the renderer prints, with their English defaults.
+pub const LABELS: &[(&str, &str)] = &[
+    ("index", "#"),
+    ("parameter", "Parameter"),
+    ("nominal", "Nominal"),
+    ("low", "Low limit"),
+    ("measured", "Measured"),
+    ("high", "High limit"),
+    ("unit", "Unit"),
+    ("result", "Result"),
+    ("noFailures", "No failures"),
+    ("total", "Total"),
+    ("passed", "Passed"),
+    ("failed", "Failed"),
+    ("passRate", "Pass rate"),
+    ("noResult", "NO RESULT"),
+    ("date", "Date"),
+    ("pass", "PASS"),
+    ("fail", "FAIL"),
+    ("warn", "WARN"),
+    ("skip", "SKIP"),
+];
+
+/// The English default for a built-in label key.
+pub fn label_default(key: &str) -> &'static str {
+    LABELS.iter().find(|(k, _)| *k == key).map(|(_, v)| *v).unwrap_or("")
+}
+
+impl Document {
+    /// A built-in word, honouring the document's `labels` overrides.
+    pub fn label(&self, key: &str) -> String {
+        match self.labels.get(key) {
+            Some(v) if !v.trim().is_empty() => v.clone(),
+            _ => label_default(key).to_string(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -443,11 +511,15 @@ pub struct TableColumn {
     /// `auto`, `1fr`, `2fr`, `30mm`, `20%`.
     pub width: String,
     pub align: Align,
+    /// A verdict column: the value is shown as a coloured PASS/FAIL/WARN, and it
+    /// tints the row unless the table has its own `rowTone`.
+    #[serde(skip_serializing_if = "std::ops::Not::not")]
+    pub status: bool,
 }
 
 impl Default for TableColumn {
     fn default() -> Self {
-        Self { header: "Column".into(), value: "row".into(), width: "auto".into(), align: Align::Left }
+        Self { header: "Column".into(), value: "row".into(), width: "auto".into(), align: Align::Left, status: false }
     }
 }
 
@@ -482,7 +554,8 @@ impl Default for Table {
     }
 }
 
-/// Field names within each measurement row.
+/// Where each measurement row's values come from: a field name (`reading`), or an
+/// expression with `row` in scope (`row.limits.lo`, `row.value * 1000`).
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MeasurementFields {
@@ -526,6 +599,9 @@ pub struct MeasurementTable {
     pub failures_only: bool,
     pub repeat_header: bool,
     pub empty_text: String,
+    /// Column header overrides keyed like the document labels (`parameter`, `measured`, ...).
+    #[serde(skip_serializing_if = "BTreeMap::is_empty")]
+    pub labels: BTreeMap<String, String>,
 }
 
 impl Default for MeasurementTable {
@@ -543,6 +619,7 @@ impl Default for MeasurementTable {
             failures_only: false,
             repeat_header: true,
             empty_text: "No measurements".into(),
+            labels: BTreeMap::new(),
         }
     }
 }
@@ -924,6 +1001,8 @@ pub struct Section {
     pub keep_together: bool,
     pub page_break_before: bool,
     pub boxed: bool,
+    /// Heading level of the title (1–4).
+    pub title_level: u8,
 }
 
 impl Default for Section {
@@ -936,6 +1015,7 @@ impl Default for Section {
             keep_together: false,
             page_break_before: false,
             boxed: false,
+            title_level: 2,
         }
     }
 }

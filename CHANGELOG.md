@@ -4,6 +4,49 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versions follow
 [Semantic Versioning](https://semver.org).
 
+## [Unreleased]
+
+### Added
+
+- **Mistakes are reported instead of rendering blank.** Validation names the block and field for
+  every missing data field and suggests the closest one the data has; checks fields read per row
+  (`row.x`, `item.x`, section aliases, measurement-table fields, `it.x`) against the list's items;
+  and reports unknown functions (`fixd()` → `fixed()`), unknown settings (`sorce`), syntax errors
+  inside `each`/`select` bodies, `{{ page }}` inside larger expressions, and bare paths in text
+  fields.
+- **Typed data contract.** Every field the template reads, with its type and whether it is
+  optional, in the data's own names. `report-cli schema -t T --json-schema` and
+  `--types csharp|python|typescript|labview`; the editor's *Use this template* panel saves the
+  JSON Schema and example data and shows the generated structures.
+- **Computed fields** (`vars`), **field mapping** (`dataMap`: let one template read stations'
+  differently named data, applied at render time), and **wording** (`labels`, `meta.lang`) for the
+  words the engine prints.
+- **Verdict columns** (`"status": true` on a table column) colour the verdict and tint the row,
+  replacing duplicated `rowTone` expressions. Measurement-table fields accept expressions and
+  per-table header labels. Sections get `titleLevel`.
+- **Functions**: `limits()`, `with_unit()`, `count_by()`, `group_by()`, `split()`, `lvtime()`,
+  and a WARN margin for `status()`.
+- **LabVIEW data**: numeric LabVIEW timestamps (1904 epoch) and bare `NaN`/`Infinity` tokens are
+  accepted.
+- **CSV data** everywhere: `render -d x.csv`, `batch`, `rb_render_file`, `report-cli import`, the
+  editor's welcome screen and data panel.
+- **CLI**: `batch --watch --done-dir --recursive --now --fonts`, collision-safe output names,
+  `__file` in `--name`; `report-cli pack` embeds images so a template is one file; JSON results
+  for I/O errors.
+- **C ABI and bindings**: structured `issuesDetail` in every result, a `stage` on every error,
+  `rb_render_to_memory` validates and honours `strict`; C# `RenderFile`/`RenderToMemory`, Python
+  `font_dirs` and `render_file`.
+- **Editor**: a default brand kit applied to new reports, recent files, *My templates*, copy/paste
+  of blocks between documents, a saved-blocks library, and item-field matching in the mapping
+  dialog.
+
+### Changed
+
+- `date()` of a missing value is empty instead of today's date; numeric text compares as numbers
+  (`'10' > '9'`).
+- Starters use verdict columns, `limits()` and `with_unit()`.
+- `batch` no longer overwrites earlier PDFs with the same name (pass `--overwrite`).
+
 ## [1.1.0] - 2026-09-29
 
 ### Changed

@@ -48,8 +48,8 @@ function BlockInspector({ block, ancestors }: { block: Block; ancestors: Block[]
   const issues = usePreview((p) => p.issuesByBlock.get(block.id) ?? NO_ISSUES)
   const info = blockInfo(block.type)
 
-  // Loop variables from enclosing repeated sections are in scope for every field.
-  const scopeLocals: LocalVar[] = []
+  // Computed fields and loop variables from enclosing repeated sections are in scope for every field.
+  const scopeLocals: LocalVar[] = (s.doc.vars ?? []).filter((v) => v.name.trim()).map((v) => ({ name: v.name.trim(), fields: [], doc: 'computed field' }))
   for (const a of ancestors) {
     if (a.type === 'section' && a.repeat) {
       const alias = a.as?.trim() || 'item'
@@ -166,6 +166,7 @@ function AddButton({ onClick, children }: { onClick: () => void; children: React
 
 function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f: string, v: unknown) => void; locals: LocalVar[] }) {
   const paths = usePreview((p) => p.paths)
+  const docLabels = useStore((st) => st.doc.labels)
   switch (block.type) {
     case 'heading':
       return (
@@ -307,12 +308,13 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
                   <Field label="Width" hint="auto, 1fr, 30mm or 20%">
                     <TextInput value={c.width} onChange={(v) => setCol({ width: v })} code />
                   </Field>
+                  <Toggle label="Verdict column (colours PASS/FAIL, tints the row)" checked={!!c.status} onChange={(v) => setCol({ status: v || undefined })} />
                 </div>
               )
             })}
           </Group>
           <Disclosure title="More">
-            <Field label="Row tint" stack hint="Optional: an expression giving PASS/FAIL/WARN or a colour per row.">
+            <Field label="Row tint" stack hint="Optional: an expression giving PASS/FAIL/WARN or a colour per row. Not needed when a column is marked as the verdict column.">
               <ExprInput value={block.rowTone ?? ''} onChange={(v) => set('rowTone', v.trim() ? v : undefined)} locals={rowLocals} placeholder="row.status" />
             </Field>
             <Toggle label="Zebra stripes" checked={block.zebra} onChange={(v) => set('zebra', v)} />
@@ -329,12 +331,38 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
     }
     case 'measurementTable': {
       const fields = itemFields(paths, block.source)
+      const isExpr = (v: string) => !!v.trim() && !/^[A-Za-z_]\w*$/.test(v.trim())
+      const setField = (key: keyof typeof block.fields, v: string) => up<'measurementTable'>(`fields.${key}`)({ fields: { ...block.fields, [key]: v } })
+      const rowLocals: LocalVar[] = [...locals, { name: 'row', fields, doc: 'current measurement' }]
       const fieldSel = (key: keyof typeof block.fields, label: string) => (
-        <Field label={label} key={key}>
-          <Select
-            value={block.fields[key]}
-            options={[...new Set([block.fields[key], '', ...fields])].map((f) => ({ value: f, label: f || '—' }))}
-            onChange={(v) => up<'measurementTable'>(`fields.${key}`)({ fields: { ...block.fields, [key]: v } })}
+        <Field label={label} key={key} stack={isExpr(block.fields[key])}>
+          {isExpr(block.fields[key]) ? (
+            <div className="row">
+              <ExprInput value={block.fields[key]} onChange={(v) => setField(key, v)} locals={rowLocals} placeholder="row.value" ariaLabel={`${label} expression`} />
+              <button className="btn icon small" title="Pick a field instead" onClick={() => setField(key, fields.includes(key) ? key : '')}>
+                <X size={12} />
+              </button>
+            </div>
+          ) : (
+            <Select
+              value={block.fields[key]}
+              options={[...new Set([block.fields[key], '', ...fields]), '__expr'].map((f) => ({ value: f, label: f === '__expr' ? 'Expression…' : f || '—' }))}
+              onChange={(v) => setField(key, v === '__expr' ? `row.${block.fields[key] || key}` : v)}
+            />
+          )}
+        </Field>
+      )
+      const labelInput = (key: string, fallback: string) => (
+        <Field label={fallback} key={key}>
+          <TextInput
+            value={block.labels?.[key] ?? ''}
+            placeholder={docLabels?.[key] || fallback}
+            onChange={(v) => {
+              const next = { ...(block.labels ?? {}) }
+              if (v.trim()) next[key] = v
+              else delete next[key]
+              set('labels', Object.keys(next).length ? next : undefined)
+            }}
           />
         </Field>
       )
@@ -368,6 +396,16 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
             {fieldSel('nominal', 'Nominal')}
             {fieldSel('unit', 'Unit')}
             {fieldSel('status', 'Status')}
+            <div className="hint">Choose “Expression…” to compute a column, e.g. <code>row.limits.lo</code> or <code>row.value * 1000</code>.</div>
+          </Disclosure>
+          <Disclosure title="Column headers" note="for this table">
+            {labelInput('parameter', 'Parameter')}
+            {labelInput('measured', 'Measured')}
+            {labelInput('low', 'Low limit')}
+            {labelInput('high', 'High limit')}
+            {labelInput('nominal', 'Nominal')}
+            {labelInput('unit', 'Unit')}
+            {labelInput('result', 'Result')}
           </Disclosure>
         </>
       )
@@ -614,6 +652,15 @@ function BlockFields({ block, up, set, locals }: { block: Block; up: Up; set: (f
           <Field label="Repeat for" stack hint="Pick a list and the group is drawn once per item, e.g. one block per channel. Leave empty to show it once.">
             <BindingInput accept="list" value={block.repeat ?? ''} onChange={(v) => set('repeat', v.trim() ? v : undefined)} locals={locals} placeholder="channels" />
           </Field>
+          {block.title.trim() && (
+            <Field label="Title size">
+              <Segmented
+                value={String(block.titleLevel ?? 2)}
+                options={[{ value: '1', label: 'H1' }, { value: '2', label: 'H2' }, { value: '3', label: 'H3' }, { value: '4', label: 'H4' }]}
+                onChange={(v) => set('titleLevel', Number(v))}
+              />
+            </Field>
+          )}
           {block.repeat && (
             <Field label="Item name" hint={`Use {{ ${block.as || 'item'}.field }} inside the section.`}>
               <TextInput value={block.as} onChange={(v) => set('as', v.replace(/[^\w]/g, ''))} code />

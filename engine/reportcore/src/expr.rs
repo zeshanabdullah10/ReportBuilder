@@ -486,6 +486,15 @@ impl<'a> Scope<'a> {
         Scope { root: self.root, locals, missing: self.missing, now: self.now }
     }
 
+    /// Missing data paths recorded so far (shared by every scope of one render).
+    pub fn missing_paths(&self) -> BTreeSet<String> {
+        self.missing.borrow().clone()
+    }
+
+    pub fn missing_count(&self) -> usize {
+        self.missing.borrow().len()
+    }
+
     fn lookup(&self, name: &str) -> Option<Value> {
         for (n, v) in self.locals.iter().rev() {
             if n == name {
@@ -744,6 +753,309 @@ pub fn referenced_paths(e: &Expr, locals: &[&str], out: &mut BTreeSet<String>) {
     }
 }
 
+/// Every function the evaluator knows. Calls to anything else evaluate to null,
+/// so the validator reports them.
+pub const FUNCTIONS: &[&str] = &[
+    "len",
+    "length",
+    "count",
+    "sum",
+    "avg",
+    "mean",
+    "average",
+    "min",
+    "max",
+    "stdev",
+    "stddev",
+    "cpk",
+    "abs",
+    "sqrt",
+    "floor",
+    "ceil",
+    "round",
+    "fixed",
+    "decimals",
+    "percent",
+    "si",
+    "eng",
+    "upper",
+    "lower",
+    "trim",
+    "string",
+    "str",
+    "text",
+    "number",
+    "num",
+    "default",
+    "coalesce",
+    "if",
+    "join",
+    "concat",
+    "replace",
+    "pad",
+    "contains",
+    "first",
+    "last",
+    "pluck",
+    "map",
+    "where",
+    "filter",
+    "count_if",
+    "countIf",
+    "pass_rate",
+    "passRate",
+    "verdict",
+    "in_range",
+    "inRange",
+    "status",
+    "judge",
+    "limits",
+    "spec",
+    "with_unit",
+    "withUnit",
+    "measure",
+    "group_by",
+    "groupBy",
+    "count_by",
+    "countBy",
+    "split",
+    "lvtime",
+    "labview_time",
+    "sort",
+    "reverse",
+    "unique",
+    "slice",
+    "range",
+    "keys",
+    "entries",
+    "now",
+    "date",
+    "format_date",
+    "formatDate",
+    "duration",
+    "each",
+    "select",
+    "any",
+    "all",
+];
+
+/// Functions whose second argument is an expression string evaluated per element (`it`, `index`).
+pub const HIGHER_ORDER: &[&str] = &["each", "select", "count", "any", "all"];
+
+/// Functions whose second argument names a field of each list element.
+const FIELD_ARG: &[&str] = &[
+    "sum",
+    "avg",
+    "mean",
+    "average",
+    "min",
+    "max",
+    "stdev",
+    "stddev",
+    "pluck",
+    "map",
+    "where",
+    "filter",
+    "count_if",
+    "countIf",
+    "pass_rate",
+    "passRate",
+    "verdict",
+    "sort",
+    "group_by",
+    "groupBy",
+    "count_by",
+    "countBy",
+];
+
+/// Levenshtein distance, for "did you mean" hints.
+pub fn edit_distance(a: &str, b: &str) -> usize {
+    let a: Vec<char> = a.chars().collect();
+    let b: Vec<char> = b.chars().collect();
+    let mut prev: Vec<usize> = (0..=b.len()).collect();
+    for (i, ca) in a.iter().enumerate() {
+        let mut cur = vec![i + 1; b.len() + 1];
+        for (j, cb) in b.iter().enumerate() {
+            let cost = if ca.eq_ignore_ascii_case(cb) { 0 } else { 1 };
+            cur[j + 1] = (prev[j] + cost).min(prev[j + 1] + 1).min(cur[j] + 1);
+        }
+        prev = cur;
+    }
+    prev[b.len()]
+}
+
+/// The closest candidate to `word`, when it is close enough to be a likely typo.
+pub fn suggest<'c>(word: &str, candidates: impl IntoIterator<Item = &'c str>) -> Option<&'c str> {
+    let limit = (word.chars().count() / 3).clamp(1, 3);
+    let lower = word.to_ascii_lowercase();
+    candidates
+        .into_iter()
+        .filter(|c| *c != word)
+        .map(|c| {
+            // Same letters in another case is the closest possible match.
+            let d = if c.to_ascii_lowercase() == lower { 0 } else { edit_distance(word, c) };
+            (d, c)
+        })
+        .filter(|(d, _)| *d <= limit)
+        .min_by_key(|(d, _)| *d)
+        .map(|(_, c)| c)
+}
+
+/// Names of every function an expression calls, including inside higher-order bodies.
+pub fn function_names(e: &Expr, out: &mut BTreeSet<String>) {
+    match e {
+        Expr::Call(name, args) => {
+            out.insert(name.clone());
+            if HIGHER_ORDER.contains(&name.as_str()) && args.len() == 2 {
+                if let Expr::Lit(Value::String(body)) = &args[1] {
+                    if let Ok(b) = parse(body) {
+                        function_names(&b, out);
+                    }
+                }
+            }
+            for a in args {
+                function_names(a, out);
+            }
+        }
+        Expr::Member(o, _) | Expr::Unary(_, o) => function_names(o, out),
+        Expr::Index(a, b) | Expr::Binary(_, a, b) => {
+            function_names(a, out);
+            function_names(b, out);
+        }
+        Expr::Ternary(a, b, c) => {
+            function_names(a, out);
+            function_names(b, out);
+            function_names(c, out);
+        }
+        Expr::List(items) => items.iter().for_each(|i| function_names(i, out)),
+        Expr::Lit(_) | Expr::Var(_) => {}
+    }
+}
+
+/// Parse errors inside higher-order bodies (`each(list, 'it.value *')`), which are
+/// otherwise only strings to the parser.
+pub fn body_errors(e: &Expr, out: &mut Vec<ExprError>) {
+    match e {
+        Expr::Call(name, args) => {
+            if HIGHER_ORDER.contains(&name.as_str()) && args.len() == 2 {
+                if let Expr::Lit(Value::String(body)) = &args[1] {
+                    match parse(body) {
+                        Ok(b) => body_errors(&b, out),
+                        Err(mut err) => {
+                            err.message = format!("in '{body}': {}", err.message);
+                            out.push(err)
+                        }
+                    }
+                }
+            }
+            args.iter().for_each(|a| body_errors(a, out));
+        }
+        Expr::Member(o, _) | Expr::Unary(_, o) => body_errors(o, out),
+        Expr::Index(a, b) | Expr::Binary(_, a, b) => {
+            body_errors(a, out);
+            body_errors(b, out);
+        }
+        Expr::Ternary(a, b, c) => {
+            body_errors(a, out);
+            body_errors(b, out);
+            body_errors(c, out);
+        }
+        Expr::List(items) => items.iter().for_each(|i| body_errors(i, out)),
+        Expr::Lit(_) | Expr::Var(_) => {}
+    }
+}
+
+/// A path an expression reads, including paths through locals (`row.value`).
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct PathUse {
+    pub path: String,
+    /// Read in a way that tolerates absence: the left of `??`, `default(x, …)`, or a
+    /// field named to a list helper (which falls back when it is missing).
+    pub optional: bool,
+}
+
+/// Collect every path an expression reads. Inside higher-order bodies, `it.x` becomes
+/// `<list>[].x` when the list is a plain path.
+pub fn path_uses(e: &Expr, out: &mut Vec<PathUse>) {
+    fn go(e: &Expr, optional: bool, out: &mut Vec<PathUse>) {
+        match e {
+            Expr::Var(_) | Expr::Member(..) | Expr::Index(..) => {
+                if let Some(p) = path_of(e) {
+                    let p = p.strip_prefix("data.").map(str::to_string).unwrap_or(p);
+                    if p != "data" {
+                        out.push(PathUse { path: p, optional });
+                    }
+                }
+                match e {
+                    Expr::Index(o, i) => {
+                        if path_of(o).is_none() {
+                            go(o, optional, out);
+                        }
+                        go(i, false, out);
+                    }
+                    Expr::Member(o, _) if path_of(o).is_none() => go(o, optional, out),
+                    _ => {}
+                }
+            }
+            Expr::Lit(_) => {}
+            Expr::List(items) => items.iter().for_each(|i| go(i, optional, out)),
+            Expr::Call(name, args) => {
+                let name = name.as_str();
+                let list = args.first().and_then(path_of);
+                if HIGHER_ORDER.contains(&name) && args.len() == 2 {
+                    go(&args[0], optional, out);
+                    if let Expr::Lit(Value::String(body)) = &args[1] {
+                        if let Ok(b) = parse(body) {
+                            let mut inner = Vec::new();
+                            go(&b, optional, &mut inner);
+                            for u in inner {
+                                let head = u.path.split(['.', '[']).next().unwrap_or("");
+                                match head {
+                                    "it" => {
+                                        if let Some(l) = &list {
+                                            let rest = &u.path[2..];
+                                            out.push(PathUse { path: format!("{l}[]{rest}"), optional: u.optional });
+                                        }
+                                    }
+                                    "index" => {}
+                                    _ => out.push(u),
+                                }
+                            }
+                        }
+                    }
+                    return;
+                }
+                if matches!(name, "default" | "coalesce") {
+                    let n = args.len();
+                    for (i, a) in args.iter().enumerate() {
+                        go(a, optional || i + 1 < n, out);
+                    }
+                    return;
+                }
+                if FIELD_ARG.contains(&name) {
+                    if let (Some(l), Some(Expr::Lit(Value::String(f)))) = (&list, args.get(1)) {
+                        if !f.is_empty() && f.chars().all(|c| c.is_alphanumeric() || c == '_') {
+                            out.push(PathUse { path: format!("{l}[].{f}"), optional: true });
+                        }
+                    }
+                }
+                args.iter().for_each(|a| go(a, optional, out));
+            }
+            Expr::Unary(_, a) => go(a, optional, out),
+            Expr::Binary(op, a, b) => {
+                go(a, optional || *op == "??", out);
+                go(b, optional, out);
+            }
+            Expr::Ternary(a, b, c) => {
+                go(a, optional, out);
+                go(b, optional, out);
+                go(c, optional, out);
+            }
+        }
+    }
+    go(e, false, out)
+}
+
 fn member(v: &Value, field: &str) -> Option<Value> {
     match v {
         Value::Object(m) => m.get(field).cloned(),
@@ -803,7 +1115,11 @@ fn binop(op: &str, l: &Value, r: &Value) -> Value {
         "!=" => Value::Bool(!loose_eq(l, r)),
         "<" | "<=" | ">" | ">=" => {
             let ord = match (l, r) {
-                (Value::String(a), Value::String(b)) => Some(a.cmp(b)),
+                // Two numeric strings ("10" vs "9") compare as numbers, other text as text.
+                (Value::String(a), Value::String(b)) => match (a.trim().parse::<f64>(), b.trim().parse::<f64>()) {
+                    (Ok(x), Ok(y)) => x.partial_cmp(&y),
+                    _ => Some(a.cmp(b)),
+                },
                 _ => match (as_num(l), as_num(r)) {
                     (Some(a), Some(b)) => a.partial_cmp(&b),
                     _ => None,
@@ -1141,8 +1457,125 @@ fn call_fn(name: &str, a: &[Value], now: &str) -> Value {
             Value::Bool(limit_verdict(Some(v), lo, hi) == "PASS")
         }
         "status" | "judge" => {
-            let v = limit_verdict(as_num(&first), num_arg(a, 1), num_arg(a, 2));
-            Value::String(v.into())
+            // status(value, low, high[, margin]): margin is a fraction of the limit span;
+            // a passing value that close to a limit is WARN.
+            let (v, lo, hi) = (as_num(&first), num_arg(a, 1), num_arg(a, 2));
+            let verdict = limit_verdict(v, lo, hi);
+            if verdict == "PASS" {
+                if let (Some(m), Some(x)) = (num_arg(a, 3).filter(|m| *m > 0.0), v) {
+                    if near_limit(x, lo, hi, m) {
+                        return Value::String("WARN".into());
+                    }
+                }
+            }
+            Value::String(verdict.into())
+        }
+        "limits" | "spec" => {
+            // limits(low, high, unit, digits) -> "4.75 … 5.25 V", "≥ 4.75 V", "≤ 5.25 V"
+            let unit = str_arg(a, 2).unwrap_or_default();
+            let d = num_arg(a, 3).map(|d| d.clamp(0.0, 12.0) as usize);
+            let f = |x: f64| match d {
+                Some(d) => fixed(x, d),
+                None => format_number(x),
+            };
+            let lo = as_num(&first).filter(|x| x.is_finite());
+            let hi = num_arg(a, 1).filter(|x| x.is_finite());
+            let text = match (lo, hi) {
+                (Some(l), Some(h)) => format!("{} … {}", f(l), f(h)),
+                (Some(l), None) => format!("≥ {}", f(l)),
+                (None, Some(h)) => format!("≤ {}", f(h)),
+                (None, None) => return Value::String(String::new()),
+            };
+            Value::String(if unit.is_empty() { text } else { format!("{text} {unit}") })
+        }
+        "with_unit" | "withUnit" | "measure" => {
+            // with_unit(4.98765, "V", 3) -> "4.988 V"; empty when the value is missing.
+            let unit = str_arg(a, 1).unwrap_or_default();
+            let text = match &first {
+                Value::Null => return Value::String(String::new()),
+                v => match (as_num(v), num_arg(a, 2)) {
+                    (Some(x), Some(d)) => fixed(x, d.clamp(0.0, 12.0) as usize),
+                    (Some(x), None) => format_number(x),
+                    _ => to_text(v),
+                },
+            };
+            if text.is_empty() {
+                return Value::String(text);
+            }
+            Value::String(if unit.is_empty() { text } else { format!("{text} {unit}") })
+        }
+        "group_by" | "groupBy" => {
+            // group_by(list, "field") -> [{key, count, items}], in first-seen order
+            let Value::Array(x) = &first else { return Value::Array(vec![]) };
+            let f = str_arg(a, 1).unwrap_or_default();
+            let mut groups: Vec<(Value, Vec<Value>)> = Vec::new();
+            for i in x {
+                let k = if f.is_empty() { i.clone() } else { member(i, &f).unwrap_or(Value::Null) };
+                match groups.iter_mut().find(|(g, _)| loose_eq(g, &k)) {
+                    Some((_, items)) => items.push(i.clone()),
+                    None => groups.push((k, vec![i.clone()])),
+                }
+            }
+            Value::Array(
+                groups
+                    .into_iter()
+                    .map(|(k, items)| {
+                        let mut o = Map::new();
+                        o.insert("key".into(), k);
+                        o.insert("count".into(), num(items.len() as f64));
+                        o.insert("items".into(), Value::Array(items));
+                        Value::Object(o)
+                    })
+                    .collect(),
+            )
+        }
+        "count_by" | "countBy" => {
+            // count_by(list, "field") -> [{key, count}], most frequent first (a Pareto)
+            let Value::Array(x) = &first else { return Value::Array(vec![]) };
+            let f = str_arg(a, 1).unwrap_or_default();
+            let mut groups: Vec<(Value, usize)> = Vec::new();
+            for i in x {
+                let k = if f.is_empty() { i.clone() } else { member(i, &f).unwrap_or(Value::Null) };
+                if k.is_null() {
+                    continue;
+                }
+                match groups.iter_mut().find(|(g, _)| loose_eq(g, &k)) {
+                    Some((_, n)) => *n += 1,
+                    None => groups.push((k, 1)),
+                }
+            }
+            groups.sort_by_key(|g| std::cmp::Reverse(g.1));
+            Value::Array(
+                groups
+                    .into_iter()
+                    .map(|(k, n)| {
+                        let mut o = Map::new();
+                        o.insert("key".into(), k);
+                        o.insert("count".into(), num(n as f64));
+                        Value::Object(o)
+                    })
+                    .collect(),
+            )
+        }
+        "split" => {
+            let sep = str_arg(a, 1).unwrap_or_else(|| ",".into());
+            let s = to_text(&first);
+            if s.is_empty() {
+                return Value::Array(vec![]);
+            }
+            if sep.is_empty() {
+                return Value::Array(s.chars().map(|c| Value::String(c.to_string())).collect());
+            }
+            Value::Array(s.split(sep.as_str()).map(|p| Value::String(p.trim().to_string())).collect())
+        }
+        "lvtime" | "labview_time" => {
+            // LabVIEW timestamp (seconds since 1904) -> ISO 8601 UTC
+            let Some(x) = as_num(&first) else { return Value::String(String::new()) };
+            let unix = x - crate::datetime::LABVIEW_EPOCH_OFFSET;
+            match chrono::DateTime::from_timestamp(unix.floor() as i64, (unix.fract() * 1e9) as u32) {
+                Some(d) => Value::String(d.to_rfc3339_opts(chrono::SecondsFormat::Secs, true)),
+                None => Value::String(String::new()),
+            }
         }
         "sort" => match &first {
             Value::Array(x) => {
@@ -1220,7 +1653,16 @@ fn call_fn(name: &str, a: &[Value], now: &str) -> Value {
         },
         "now" => Value::String(now.to_string()),
         "date" | "format_date" | "formatDate" => {
-            let src = if first.is_null() { Value::String(now.to_string()) } else { first.clone() };
+            // `date()` is the render time; `date(missing)` stays empty rather than showing today.
+            if a.is_empty() {
+                return Value::String(
+                    crate::datetime::format(&Value::String(now.into()), "YYYY-MM-DD").unwrap_or_default(),
+                );
+            }
+            if first.is_null() || to_text(&first).trim().is_empty() {
+                return Value::String(String::new());
+            }
+            let src = first.clone();
             let fmt = str_arg(a, 1).unwrap_or_else(|| "YYYY-MM-DD".into());
             Value::String(crate::datetime::format(&src, &fmt).unwrap_or_else(|| to_text(&src)))
         }
@@ -1231,6 +1673,19 @@ fn call_fn(name: &str, a: &[Value], now: &str) -> Value {
         }
         _ => Value::Null,
     }
+}
+
+/// Is a passing value within `margin` (a fraction of the limit span, or of the one limit) of a limit?
+fn near_limit(x: f64, lo: Option<f64>, hi: Option<f64>, margin: f64) -> bool {
+    let lo = lo.filter(|l| l.is_finite());
+    let hi = hi.filter(|h| h.is_finite());
+    let band = match (lo, hi) {
+        (Some(l), Some(h)) => (h - l).abs() * margin,
+        (Some(l), None) => l.abs() * margin,
+        (None, Some(h)) => h.abs() * margin,
+        (None, None) => return false,
+    };
+    lo.is_some_and(|l| x - l < band) || hi.is_some_and(|h| h - x < band)
 }
 
 fn row_matches(row: &Value, field: &str, want: &Value) -> bool {
@@ -1437,6 +1892,47 @@ mod tests {
         let mut out = BTreeSet::new();
         referenced_paths(&e, &["row"], &mut out);
         assert_eq!(out.into_iter().collect::<Vec<_>>(), vec!["dut.sn".to_string(), "results".to_string()]);
+    }
+
+    #[test]
+    fn new_helpers() {
+        let d = json!({"m": [
+            {"code": "E1", "v": 1}, {"code": "E2", "v": 2}, {"code": "E1", "v": 3}
+        ]});
+        assert_eq!(ev("limits(4.75, 5.25, 'V')", d.clone()), json!("4.75 … 5.25 V"));
+        assert_eq!(ev("limits(4.75, null, 'V', 1)", d.clone()), json!("≥ 4.8 V"));
+        assert_eq!(ev("limits(null, 'NaN')", d.clone()), json!(""));
+        assert_eq!(ev("limits(null, 5)", d.clone()), json!("≤ 5"));
+        assert_eq!(ev("with_unit(4.98765, 'V', 3)", d.clone()), json!("4.988 V"));
+        assert_eq!(ev("with_unit(null, 'V')", d.clone()), json!(""));
+        assert_eq!(ev("count_by(m, 'code')", d.clone()), json!([{"key": "E1", "count": 2}, {"key": "E2", "count": 1}]));
+        assert_eq!(ev("len(group_by(m, 'code')[0].items)", d.clone()), json!(2));
+        assert_eq!(ev("status(9.9, 0, 10, 0.05)", d.clone()), json!("WARN"));
+        assert_eq!(ev("status(5, 0, 10, 0.05)", d.clone()), json!("PASS"));
+        assert_eq!(ev("split('a, b,c')", d.clone()), json!(["a", "b", "c"]));
+        assert_eq!(ev("lvtime(3855205230)", d.clone()), json!("2026-03-01T10:20:30Z"));
+        // Missing dates stay empty instead of showing the render time.
+        assert_eq!(ev("date(nope)", d.clone()), json!(""));
+        assert_eq!(ev("date()", d.clone()), json!("2026-03-01"));
+        // Numeric strings compare as numbers.
+        assert_eq!(ev("'10' > '9'", d.clone()), json!(true));
+        assert_eq!(ev("'b' > 'a'", d), json!(true));
+    }
+
+    #[test]
+    fn suggestions_and_paths() {
+        assert_eq!(suggest("fixd", FUNCTIONS.iter().copied()), Some("fixed"));
+        assert_eq!(suggest("zzzzzz", FUNCTIONS.iter().copied()), None);
+        let e = parse("count(results, 'it.value > it.high') + default(x.y, 0) + (a ?? b)").unwrap();
+        let mut u = Vec::new();
+        path_uses(&e, &mut u);
+        let got: Vec<_> = u.iter().map(|p| (p.path.as_str(), p.optional)).collect();
+        assert!(got.contains(&("results", false)));
+        assert!(got.contains(&("results[].value", false)));
+        assert!(got.contains(&("results[].high", false)));
+        assert!(got.contains(&("x.y", true)));
+        assert!(got.contains(&("a", true)));
+        assert!(got.contains(&("b", false)));
     }
 
     #[test]

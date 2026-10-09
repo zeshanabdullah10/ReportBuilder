@@ -1,8 +1,12 @@
-import { FileText, ImagePlus, X } from 'lucide-react'
+import { FileText, ImagePlus, Plus, X } from 'lucide-react'
+import { useState } from 'react'
+import { saveBrandKitAsDefault } from '../lib/actions'
 import { DEFAULT_THEME } from '../lib/defaults'
+import { applyBrandKit } from '../lib/library'
+import { usePref } from '../lib/prefs'
 import { useStore } from '../lib/store'
-import type { PaperSize, ReportDocument, Theme } from '../lib/types'
-import { ColorInput, ExprInput, Field, Group, NumberInput, Segmented, Select, TextInput, Toggle } from './fields'
+import { LABEL_KEYS, type PaperSize, type ReportDocument, type Theme, type Variable } from '../lib/types'
+import { ColorInput, Disclosure, ExprInput, Field, Group, NumberInput, Segmented, Select, TextInput, Toggle } from './fields'
 import { readImageFile } from './Inspector'
 
 const SIZES: { value: PaperSize; label: string }[] = [
@@ -31,6 +35,7 @@ export function DocumentInspector() {
   const edit = (key: string, fn: (d: ReportDocument) => ReportDocument) => change(fn, `doc:${key}`)
   const theme = (patch: Partial<Theme>, key: string) => edit(`theme.${key}`, (d) => ({ ...d, theme: { ...d.theme, ...patch } }))
   const margins = doc.page.margins
+  const defaultKit = usePref('brandKit')
 
   return (
     <>
@@ -130,6 +135,19 @@ export function DocumentInspector() {
               <ColorInput value={doc.theme[c.key] as string} onChange={(v) => theme({ [c.key]: v ?? DEFAULT_THEME[c.key] } as Partial<Theme>, c.key)} />
             </Field>
           ))}
+          <div className="brand-default">
+            <button className="btn small bordered" onClick={saveBrandKitAsDefault} title="Company, logo, typeface, size and colours for every new report">
+              Save as default for new reports
+            </button>
+            <button
+              className="btn small"
+              disabled={!defaultKit}
+              title={defaultKit ? 'Use your default brand kit in this report' : 'No default brand kit saved yet'}
+              onClick={() => change((d) => applyBrandKit(d, defaultKit), 'doc:theme.applyDefault')}
+            >
+              Apply default
+            </button>
+          </div>
         </Group>
 
         <Group title="Watermark">
@@ -155,7 +173,155 @@ export function DocumentInspector() {
             </>
           )}
         </Group>
+        <VarsGroup />
+        <LanguageGroup />
+        <DataMapGroup />
       </div>
     </>
+  )
+}
+
+function useEdit() {
+  const change = useStore((s) => s.change)
+  return (key: string, fn: (d: ReportDocument) => ReportDocument) => change(fn, `doc:${key}`)
+}
+
+/** Computed fields: name an expression once, use it everywhere. */
+function VarsGroup() {
+  const vars = useStore((s) => s.doc.vars) ?? []
+  const edit = useEdit()
+  const setVars = (key: string, next: Variable[]) => edit(key, (d) => ({ ...d, vars: next.length ? next : undefined }))
+  return (
+    <Group
+      title="Computed fields"
+      action={
+        <button className="btn small" onClick={() => setVars('vars.add', [...vars, { name: `value${vars.length + 1}`, value: '' }])}>
+          <Plus size={12} /> Field
+        </button>
+      }
+    >
+      {vars.length === 0 && (
+        <div className="hint">
+          Name a calculation once and use it in any block, e.g. <code>failures</code> = <code>count_if(measurements, 'status', 'FAIL')</code>, then <code>{'{{ failures }}'}</code>.
+        </div>
+      )}
+      {vars.map((v, i) => (
+        <div className="list-item" key={i}>
+          <div className="list-item-head">
+            <span className="grow">{v.name || `Field ${i + 1}`}</span>
+            <button className="btn icon small" title="Remove" onClick={() => setVars('vars.remove', vars.filter((_, j) => j !== i))}>
+              <X size={12} />
+            </button>
+          </div>
+          <Field label="Name">
+            <TextInput value={v.name} code onChange={(n) => setVars(`vars.${i}.name`, vars.map((x, j) => (j === i ? { ...x, name: n.replace(/[^\w]/g, '') } : x)))} />
+          </Field>
+          <Field label="Value" stack>
+            <ExprInput
+              value={v.value}
+              onChange={(e) => setVars(`vars.${i}.value`, vars.map((x, j) => (j === i ? { ...x, value: e } : x)))}
+              locals={vars.slice(0, i).map((p) => ({ name: p.name, fields: [], doc: 'computed field' }))}
+              placeholder="count_if(measurements, 'status', 'FAIL')"
+              ariaLabel={`Value of ${v.name}`}
+            />
+          </Field>
+        </div>
+      ))}
+    </Group>
+  )
+}
+
+const LANGS = [
+  { value: '', label: 'English' },
+  { value: 'de', label: 'Deutsch' },
+  { value: 'fr', label: 'Français' },
+  { value: 'es', label: 'Español' },
+  { value: 'it', label: 'Italiano' },
+  { value: 'pt', label: 'Português' },
+  { value: 'nl', label: 'Nederlands' },
+  { value: 'pl', label: 'Polski' },
+  { value: 'sv', label: 'Svenska' },
+  { value: 'tr', label: 'Türkçe' },
+  { value: 'zh', label: '中文' },
+  { value: 'ja', label: '日本語' },
+  { value: 'ko', label: '한국어' },
+]
+
+/** Document language and the words the engine prints in tables and verdicts. */
+function LanguageGroup() {
+  const doc = useStore((s) => s.doc)
+  const edit = useEdit()
+  const labels = doc.labels ?? {}
+  const setLabel = (key: string, v: string) =>
+    edit(`labels.${key}`, (d) => {
+      const next = { ...(d.labels ?? {}) }
+      if (v.trim()) next[key] = v
+      else delete next[key]
+      return { ...d, labels: Object.keys(next).length ? next : undefined }
+    })
+  return (
+    <Disclosure title="Language and wording" note={Object.keys(labels).length ? `${Object.keys(labels).length} changed` : undefined}>
+      <Field label="Language">
+        <Select value={doc.meta.lang ?? ''} options={LANGS} onChange={(v) => edit('meta.lang', (d) => ({ ...d, meta: { ...d.meta, lang: v || undefined } }))} />
+      </Field>
+      <div className="hint" style={{ margin: '4px 0 8px' }}>Words the report prints by itself. Leave a field empty to keep the default.</div>
+      {LABEL_KEYS.map(([key, fallback]) => (
+        <Field label={fallback} key={key}>
+          <TextInput value={labels[key] ?? ''} placeholder={fallback} onChange={(v) => setLabel(key, v)} />
+        </Field>
+      ))}
+    </Disclosure>
+  )
+}
+
+/** Field mapping: let one template read data whose names differ. */
+function DataMapGroup() {
+  const map = useStore((s) => s.doc.dataMap) ?? {}
+  const edit = useEdit()
+  const [draft, setDraft] = useState<[string, string] | null>(null)
+  const entries = Object.entries(map)
+  const setMap = (key: string, next: [string, string][]) =>
+    edit(key, (d) => {
+      const m = Object.fromEntries(next.filter(([k]) => k.trim()))
+      return { ...d, dataMap: Object.keys(m).length ? m : undefined }
+    })
+  return (
+    <Disclosure title="Field mapping" note={entries.length ? `${entries.length}` : undefined}>
+      <div className="hint" style={{ marginBottom: 8 }}>
+        When a station names a field differently, map the template's name to the data's: <code>dut.serial</code> ← <code>uut.sn</code>, or
+        <code> measurements[].value</code> ← <code>reading</code>. Applied when rendering, only where the data lacks the field.
+      </div>
+      {entries.map(([need, have], i) => (
+        <div className="row" key={i} style={{ marginBottom: 6, gap: 6 }}>
+          <TextInput value={need} code placeholder="template field" onChange={(v) => setMap('dataMap.need', entries.map((e, j) => (j === i ? [v, e[1]] : e)))} />
+          <span className="hint">←</span>
+          <TextInput value={have} code placeholder="data field" onChange={(v) => setMap('dataMap.have', entries.map((e, j) => (j === i ? [e[0], v] : e)))} />
+          <button className="btn icon small" title="Remove" onClick={() => setMap('dataMap.remove', entries.filter((_, j) => j !== i))}>
+            <X size={12} />
+          </button>
+        </div>
+      ))}
+      {draft ? (
+        <div className="row" style={{ marginBottom: 6, gap: 6 }}>
+          <TextInput value={draft[0]} code placeholder="template field" onChange={(v) => setDraft([v, draft[1]])} />
+          <span className="hint">←</span>
+          <TextInput value={draft[1]} code placeholder="data field" onChange={(v) => setDraft([draft[0], v])} />
+          <button
+            className="btn small primary"
+            disabled={!draft[0].trim() || !draft[1].trim()}
+            onClick={() => {
+              setMap('dataMap.add', [...entries, [draft[0].trim(), draft[1].trim()]])
+              setDraft(null)
+            }}
+          >
+            Add
+          </button>
+        </div>
+      ) : (
+        <button className="btn small bordered" onClick={() => setDraft(['', ''])}>
+          <Plus size={12} /> Mapping
+        </button>
+      )}
+    </Disclosure>
   )
 }

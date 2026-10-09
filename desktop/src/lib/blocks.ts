@@ -115,7 +115,7 @@ export const CATALOG: BlockInfo[] = [
   {
     type: 'section', label: 'Group / Repeat', category: 'Layout', icon: 'SquareStack', keywords: 'section group repeat loop box per channel',
     description: 'Group blocks, or repeat them for each item in a list',
-    create: () => ({ type: 'section', title: '', blocks: [], as: 'item', keepTogether: false, pageBreakBefore: false, boxed: false }),
+    create: () => ({ type: 'section', title: '', blocks: [], as: 'item', keepTogether: false, pageBreakBefore: false, boxed: false, titleLevel: 2 }),
   },
   {
     type: 'divider', label: 'Divider', category: 'Layout', icon: 'Minus', keywords: 'line rule separator',

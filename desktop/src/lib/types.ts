@@ -14,7 +14,12 @@ export interface Meta {
   author: string
   revision: string
   tags: string[]
+  /** BCP 47 language, e.g. 'de'. Empty = English. */
+  lang?: string
 }
+
+/** A computed field: available to every expression by its name. */
+export interface Variable { name: string; value: string }
 
 export interface PageSetup {
   size: PaperSize
@@ -57,7 +62,7 @@ export interface TextStyle {
   mono?: boolean
 }
 
-export interface TableColumn { header: string; value: string; width: string; align: Align }
+export interface TableColumn { header: string; value: string; width: string; align: Align; /** Verdict column: coloured, and tints its row. */ status?: boolean }
 export interface KeyValueItem { label: string; value: string }
 export interface Series { label: string; source: string; x: string; y: string; color?: string }
 export interface LimitLine { label: string; value: string; color?: string }
@@ -77,6 +82,7 @@ export type Block = Base & (
       fields: { name: string; value: string; low: string; high: string; nominal: string; unit: string; status: string }
       decimals: number; showIndex: boolean; showNominal: boolean; showLimits: boolean; showUnit: boolean; showStatus: boolean
       highlightFailures: boolean; failuresOnly: boolean; repeatHeader: boolean; emptyText: string
+      labels?: Record<string, string>
     }
   | { type: 'keyValue'; title: string; items: KeyValueItem[]; columns: number; boxed: boolean }
   | { type: 'summary'; title: string; source: string; statusField: string; verdict?: string; showCounts: boolean; showRate: boolean }
@@ -92,7 +98,7 @@ export type Block = Base & (
   | { type: 'spacer'; heightMm: number }
   | { type: 'pageBreak' }
   | { type: 'columns'; columns: Column[]; gapMm: number }
-  | { type: 'section'; title: string; blocks: Block[]; repeat?: string; as: string; keepTogether: boolean; pageBreakBefore: boolean; boxed: boolean }
+  | { type: 'section'; title: string; blocks: Block[]; repeat?: string; as: string; keepTogether: boolean; pageBreakBefore: boolean; boxed: boolean; titleLevel?: number }
 )
 
 export type BlockType = Block['type']
@@ -109,11 +115,28 @@ export interface ReportDocument {
   footer: Block[]
   body: Block[]
   watermark?: Watermark
+  vars?: Variable[]
+  /** Template path → data path: lets the template read data with other field names. */
+  dataMap?: Record<string, string>
+  /** Overrides for built-in words, keyed as in LABEL_KEYS. */
+  labels?: Record<string, string>
   sampleData?: unknown
   editor?: { dataSets?: DataSet[]; activeDataSet?: string }
 }
 
 export type Region = 'header' | 'body' | 'footer'
+
+export interface ContractField { path: string; optional: boolean; kind: 'string' | 'number' | 'boolean' | 'array' | 'object' | 'any'; blockId: string; field: string }
+export interface ValidateResult { issues: Issue[]; referencedPaths: string[]; contract: ContractField[] }
+export interface ContractResult { contract: ContractField[]; schema: unknown; code?: string }
+
+/** Built-in words the engine prints (model.rs LABELS), with English defaults. */
+export const LABEL_KEYS: [string, string][] = [
+  ['parameter', 'Parameter'], ['measured', 'Measured'], ['low', 'Low limit'], ['high', 'High limit'], ['nominal', 'Nominal'],
+  ['unit', 'Unit'], ['result', 'Result'], ['index', '#'], ['pass', 'PASS'], ['fail', 'FAIL'], ['warn', 'WARN'], ['skip', 'SKIP'],
+  ['noResult', 'NO RESULT'], ['noFailures', 'No failures'], ['total', 'Total'], ['passed', 'Passed'], ['failed', 'Failed'],
+  ['passRate', 'Pass rate'], ['date', 'Date'],
+]
 
 export interface Issue { severity: 'error' | 'warning' | 'info'; blockId: string; field: string; message: string }
 export interface BlockRegion { id: string; page: number; top: number; bottom: number; left: number }

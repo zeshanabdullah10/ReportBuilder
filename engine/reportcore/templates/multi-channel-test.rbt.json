@@ -140,7 +140,6 @@
                   "id": "sec-tbl",
                   "type": "table",
                   "source": "ch.results",
-                  "rowTone": "status(row.value, row.low, row.high)",
                   "columns": [
                     {
                       "header": "Test",
@@ -155,7 +154,8 @@
                     {
                       "header": "",
                       "value": "status(row.value, row.low, row.high)",
-                      "align": "center"
+                      "align": "center",
+                      "status": true
                     }
                   ]
                 }

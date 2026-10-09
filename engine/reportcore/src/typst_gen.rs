@@ -59,6 +59,22 @@ fn named_color(s: &str) -> Option<&'static str> {
     })
 }
 
+/// A safe Typst language code: two or three ASCII letters, else `en`.
+fn lang_code(lang: &str) -> String {
+    let l = lang.trim().split(['-', '_']).next().unwrap_or("").to_ascii_lowercase();
+    if (2..=3).contains(&l.len()) && l.chars().all(|c| c.is_ascii_lowercase()) {
+        l
+    } else {
+        "en".into()
+    }
+}
+
+/// Field names are plain identifiers; anything else in a measurement field is an expression.
+fn is_field_name(s: &str) -> bool {
+    let mut c = s.chars();
+    c.next().is_some_and(|f| f.is_alphabetic() || f == '_') && c.all(|x| x.is_alphanumeric() || x == '_')
+}
+
 fn num_lit(n: f64) -> String {
     let s = format!("{n:.3}");
     let s = s.trim_end_matches('0').trim_end_matches('.');
@@ -93,6 +109,8 @@ pub struct Generator<'a> {
     counter: usize,
     avail_pt: f64,
     in_container: usize,
+    /// Where each missing data path was first read: (block id, field).
+    missing_at: BTreeMap<String, (String, String)>,
 }
 
 /// Inline tokens for rich text.
@@ -119,6 +137,7 @@ impl<'a> Generator<'a> {
             counter: 0,
             avail_pt: (w - m.left - m.right).max(20.0) * PT_PER_MM,
             in_container: 0,
+            missing_at: BTreeMap::new(),
         }
     }
 
@@ -161,6 +180,16 @@ impl<'a> Generator<'a> {
         }
     }
 
+    /// Attribute data paths that went missing since `before` to a block and field.
+    fn note_missing(&mut self, scope: &Scope, before: usize, id: &str, field: &str) {
+        if scope.missing_count() == before {
+            return;
+        }
+        for p in scope.missing_paths() {
+            self.missing_at.entry(p).or_insert_with(|| (id.to_string(), field.to_string()));
+        }
+    }
+
     fn file(&mut self, prefix: &str, ext: &str, bytes: Vec<u8>) -> String {
         self.counter += 1;
         let name = format!("{prefix}-{}.{ext}", self.counter);
@@ -176,26 +205,32 @@ impl<'a> Generator<'a> {
         if src.trim().is_empty() {
             return Value::Null;
         }
-        match scope.eval_binding(src) {
+        let before = scope.missing_count();
+        let v = match scope.eval_binding(src) {
             Ok(v) => v,
             Err(e) => {
                 self.issue(Severity::Error, id, field, e.to_string());
                 Value::Null
             }
-        }
+        };
+        self.note_missing(scope, before, id, field);
+        v
     }
 
     fn text(&mut self, scope: &Scope, src: &str, id: &str, field: &str) -> String {
         if !expr::has_template(src) {
             return src.to_string();
         }
-        match scope.render_template(src) {
+        let before = scope.missing_count();
+        let out = match scope.render_template(src) {
             Ok(s) => s,
             Err(e) => {
                 self.issue(Severity::Error, id, field, e.to_string());
                 src.to_string()
             }
-        }
+        };
+        self.note_missing(scope, before, id, field);
+        out
     }
 
     fn num(&mut self, scope: &Scope, src: &str, id: &str, field: &str) -> Option<f64> {
@@ -205,6 +240,7 @@ impl<'a> Generator<'a> {
 
     /// Rich text → Typst content expression.
     fn rich(&mut self, scope: &Scope, src: &str, id: &str, field: &str) -> String {
+        let before = scope.missing_count();
         let segs = match expr::parse_template(src) {
             Ok(s) => s,
             Err(e) => {
@@ -232,6 +268,7 @@ impl<'a> Generator<'a> {
                 }
             }
         }
+        self.note_missing(scope, before, id, field);
         let mut toks = Vec::new();
         lex_markdown(&flat, &mut toks, &mut values.into_iter());
         build_inline(toks, self.t.font)
@@ -252,7 +289,16 @@ impl<'a> Generator<'a> {
             "generatedAt": now,
         });
         let theme = json!({"company": self.t.company});
-        let scope = base.with_many(vec![("report", report), ("theme", theme)]);
+        let mut scope = base.with_many(vec![("report", report), ("theme", theme)]);
+        // Computed fields, in order: each sees the data and the ones before it.
+        for (i, v) in self.doc.vars.iter().enumerate() {
+            let name = v.name.trim();
+            if name.is_empty() {
+                continue;
+            }
+            let value = self.eval(&scope, &v.value, "", &format!("vars[{i}].value"));
+            scope = scope.with(name, value);
+        }
 
         let d = self.doc;
         let t = self.t;
@@ -307,10 +353,11 @@ impl<'a> Generator<'a> {
         );
         let _ = writeln!(
             src,
-            "#set text(font: ({}, \"Inter\", \"DejaVu Sans Mono\"), size: {}pt, fill: {}, lang: \"en\")",
+            "#set text(font: ({}, \"Inter\", \"DejaVu Sans Mono\"), size: {}pt, fill: {}, lang: {})",
             lit(t.font.typst_name()),
             num_lit(t.font_size.clamp(5.0, 24.0)),
-            self.color(&t.text_color, "#1d1d1f")
+            self.color(&t.text_color, "#1d1d1f"),
+            lit(&lang_code(&d.meta.lang))
         );
         src.push_str("#set par(leading: 0.62em, spacing: 0.95em, justify: false)\n");
         src.push_str("#set block(spacing: 10pt)\n");
@@ -325,11 +372,14 @@ impl<'a> Generator<'a> {
         src.push_str(&body);
         src.push_str("}\n");
 
+        let known = crate::validate::data_path_list(data);
         for p in missing.into_inner() {
             if matches!(p.as_str(), "page" | "pages") {
                 continue;
             }
-            self.issue(Severity::Warning, "", "", format!("data field '{p}' is missing"));
+            let (id, field) = self.missing_at.get(&p).cloned().unwrap_or_default();
+            let msg = crate::validate::missing_message(&p, &known);
+            self.issue(Severity::Warning, &id, &field, msg);
         }
         Generated { source: src, files: self.files, issues: self.issues }
     }
@@ -363,6 +413,13 @@ impl<'a> Generator<'a> {
     }
 
     fn block(&mut self, b: &Block, scope: &Scope) -> String {
+        let before = scope.missing_count();
+        let out = self.block_inner(b, scope);
+        self.note_missing(scope, before, &b.id, "");
+        out
+    }
+
+    fn block_inner(&mut self, b: &Block, scope: &Scope) -> String {
         if let Some(cond) = &b.visible_if {
             if !cond.trim().is_empty() {
                 let v = self.eval(scope, cond, &b.id, "visibleIf");
@@ -579,7 +636,7 @@ impl<'a> Generator<'a> {
                         parts.push(format!("text(size: 0.85em, fill: {muted}, {})", lit(&name)));
                     }
                     if sg.show_date {
-                        parts.push(format!("text(size: 0.8em, fill: {muted}, \"Date\")"));
+                        parts.push(format!("text(size: 0.8em, fill: {muted}, {})", lit(&self.doc.label("date"))));
                     }
                     cells.push(format!("stack(spacing: 4pt, {})", parts.join(", ")));
                 }
@@ -841,6 +898,12 @@ impl<'a> Generator<'a> {
             }
         }
         let tone = tb.row_tone.as_ref().filter(|t| !t.trim().is_empty()).map(|t| expr::parse(t));
+        // Without an explicit row tone, verdict columns tint their row.
+        let status_cols: Vec<usize> = if tone.is_none() {
+            columns.iter().enumerate().filter(|(_, c)| c.status).map(|(i, _)| i).collect()
+        } else {
+            Vec::new()
+        };
         if let Some(Err(e)) = &tone {
             self.issue(Severity::Error, id, "rowTone", e.to_string());
         }
@@ -856,11 +919,30 @@ impl<'a> Generator<'a> {
                 ("index", expr::num(i as f64)),
                 ("number", expr::num(i as f64 + 1.0)),
             ]);
+            let mut row_verdicts: Vec<&'static str> = Vec::new();
             let cells = parsed
                 .iter()
-                .map(|p| match p {
+                .enumerate()
+                .map(|(ci, p)| match p {
                     Ok(e) => {
-                        let text = to_text(&rs.eval(e));
+                        let v = rs.eval(e);
+                        if columns[ci].status {
+                            let verdict = verdict_of(&v);
+                            if status_cols.contains(&ci) {
+                                row_verdicts.push(verdict);
+                            }
+                            let label = if verdict.is_empty() {
+                                to_text(&v)
+                            } else {
+                                self.doc.label(&verdict.to_ascii_lowercase())
+                            };
+                            return format!(
+                                "text(weight: \"bold\", size: 0.9em, fill: {}, {})",
+                                self.verdict_color(verdict),
+                                lit(&label)
+                            );
+                        }
+                        let text = to_text(&v);
                         // Verdict words get the same treatment as measurement tables.
                         match text.trim().to_ascii_uppercase().as_str() {
                             v @ ("PASS" | "FAIL" | "WARN" | "PASSED" | "FAILED") => format!(
@@ -876,6 +958,7 @@ impl<'a> Generator<'a> {
                 .collect();
             let fill = match &tone {
                 Some(Ok(e)) => self.tint_for(&rs.eval(e)),
+                _ if !row_verdicts.is_empty() => self.tint_for(&json!(expr::rollup(row_verdicts.iter().copied()))),
                 _ => None,
             };
             out_rows.push((cells, fill));
@@ -894,30 +977,37 @@ impl<'a> Generator<'a> {
         let mut widths = Vec::new();
         let mut aligns = Vec::new();
         let mut header = Vec::new();
-        let mut push = |w: &str, a: Align, h: &str| {
+        let doc = self.doc;
+        let label = |key: &str| -> String {
+            match mt.labels.get(key) {
+                Some(v) if !v.trim().is_empty() => v.clone(),
+                _ => doc.label(key),
+            }
+        };
+        let mut push = |w: &str, a: Align, key: &str| {
             widths.push(w.to_string());
             aligns.push(a);
-            header.push(h.to_string());
+            header.push(label(key));
         };
         if mt.show_index {
-            push("auto", Align::Right, "#");
+            push("auto", Align::Right, "index");
         }
-        push("1fr", Align::Left, "Parameter");
+        push("1fr", Align::Left, "parameter");
         if mt.show_nominal {
-            push("auto", Align::Right, "Nominal");
+            push("auto", Align::Right, "nominal");
         }
         if mt.show_limits {
-            push("auto", Align::Right, "Low limit");
+            push("auto", Align::Right, "low");
         }
-        push("auto", Align::Right, "Measured");
+        push("auto", Align::Right, "measured");
         if mt.show_limits {
-            push("auto", Align::Right, "High limit");
+            push("auto", Align::Right, "high");
         }
         if mt.show_unit {
-            push("auto", Align::Left, "Unit");
+            push("auto", Align::Left, "unit");
         }
         if mt.show_status {
-            push("auto", Align::Center, "Result");
+            push("auto", Align::Center, "result");
         }
         let fmt = |v: &Value| -> String {
             match v {
@@ -930,9 +1020,35 @@ impl<'a> Generator<'a> {
                 other => to_text(other),
             }
         };
+        // Each field is a key of the row, or an expression with `row` in scope.
+        let mut field_exprs: BTreeMap<String, expr::Expr> = BTreeMap::new();
+        for (name, src) in [
+            ("name", &f.name),
+            ("value", &f.value),
+            ("low", &f.low),
+            ("high", &f.high),
+            ("nominal", &f.nominal),
+            ("unit", &f.unit),
+            ("status", &f.status),
+        ] {
+            let src = src.trim();
+            if src.is_empty() || is_field_name(src) {
+                continue;
+            }
+            match expr::parse(src) {
+                Ok(e) => {
+                    field_exprs.insert(src.to_string(), e);
+                }
+                Err(e) => self.issue(Severity::Error, id, &format!("fields.{name}"), e.to_string()),
+            }
+        }
         let get = |row: &Value, key: &str| -> Value {
+            let key = key.trim();
             if key.is_empty() {
                 return Value::Null;
+            }
+            if let Some(e) = field_exprs.get(key) {
+                return scope.with("row", row.clone()).eval(e);
             }
             match row {
                 Value::Object(m) => m.get(key).cloned().unwrap_or(Value::Null),
@@ -979,7 +1095,11 @@ impl<'a> Generator<'a> {
                 cells.push(lit(&to_text(&get(row, &f.unit))));
             }
             if mt.show_status {
-                let label = if verdict.is_empty() { to_text(&get(row, &f.status)) } else { verdict.to_string() };
+                let label = if verdict.is_empty() {
+                    to_text(&get(row, &f.status))
+                } else {
+                    label(&verdict.to_ascii_lowercase())
+                };
                 cells.push(format!(
                     "text(weight: \"bold\", size: 0.9em, fill: {}, {})",
                     self.verdict_color(verdict),
@@ -990,7 +1110,7 @@ impl<'a> Generator<'a> {
             out.push((cells, fill));
         }
         let empty = if mt.failures_only && !rows.is_empty() {
-            "No failures".to_string()
+            label("noFailures")
         } else {
             self.text(scope, &mt.empty_text, id, "emptyText")
         };
@@ -1069,10 +1189,14 @@ impl<'a> Generator<'a> {
             _ => expr::rollup(verdicts.iter().copied()).to_string(),
         };
         let (shown, color) = if verdict.is_empty() {
-            ("NO RESULT".to_string(), self.verdict_color(""))
+            (self.doc.label("noResult"), self.verdict_color(""))
         } else {
             let c = self.verdict_color(&verdict);
-            (verdict.clone(), c)
+            let shown = match verdict.as_str() {
+                "PASS" | "FAIL" | "WARN" => self.doc.label(&verdict.to_ascii_lowercase()),
+                _ => verdict.clone(),
+            };
+            (shown, c)
         };
         let muted = self.color(&self.t.muted_color, "#6e6e73");
         let title = self.text(scope, &s.title, id, "title");
@@ -1089,13 +1213,13 @@ impl<'a> Generator<'a> {
             lit(&shown)
         )];
         if s.show_counts && total > 0 {
-            cells.push(stat("Total", total.to_string()));
-            cells.push(stat("Passed", passed.to_string()));
-            cells.push(stat("Failed", failed.to_string()));
+            cells.push(stat(&self.doc.label("total"), total.to_string()));
+            cells.push(stat(&self.doc.label("passed"), passed.to_string()));
+            cells.push(stat(&self.doc.label("failed"), failed.to_string()));
         }
         if s.show_rate && passed + failed > 0 {
             cells.push(stat(
-                "Pass rate",
+                &self.doc.label("passRate"),
                 format!("{} %", expr::fixed(passed as f64 / (passed + failed) as f64 * 100.0, 1)),
             ));
         }
@@ -1198,6 +1322,8 @@ impl<'a> Generator<'a> {
         for (i, l) in ch.limits.iter().enumerate() {
             if let Some(v) = self.num(scope, &l.value, id, &format!("limits[{i}].value")) {
                 let label = self.text(scope, &l.label, id, &format!("limits[{i}].label"));
+                // An empty label shows the limit value itself.
+                let label = if label.trim().is_empty() { expr::format_number(v) } else { label };
                 limits.push(LimitData { label, value: v, color: l.color.clone() });
             }
         }
@@ -1232,7 +1358,7 @@ impl<'a> Generator<'a> {
             let mut parts = String::new();
             if !sec.title.trim().is_empty() {
                 let title = g.rich(s, &sec.title, id, "title");
-                let _ = writeln!(parts, "heading(level: 2, outlined: false, {title})");
+                let _ = writeln!(parts, "heading(level: {}, outlined: false, {title})", sec.title_level.clamp(1, 4));
             }
             if container {
                 g.in_container += 1;
@@ -1456,6 +1582,56 @@ fn join_parts(parts: Vec<String>) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn gen(doc: serde_json::Value, data: serde_json::Value) -> Generated {
+        let doc = Document::from_json(&doc.to_string()).unwrap();
+        let opts = GenOptions { base_dir: None, preview: false, now: Some("2026-03-01T10:00:00Z".into()) };
+        let data = crate::validate::apply_data_map(&doc.data_map, &data);
+        Generator::new(&doc, &opts).generate(&data)
+    }
+
+    #[test]
+    fn authoring_shortcuts() {
+        let g = gen(
+            json!({
+                "meta": {"lang": "de"},
+                "labels": {"measured": "Messwert", "fail": "NIO"},
+                "vars": [{"name": "worst", "value": "max(results, 'v')"}],
+                "dataMap": {"results": "rows"},
+                "body": [
+                    {"type": "text", "text": "Worst {{ worst }}"},
+                    {"type": "table", "source": "results", "columns": [
+                        {"header": "V", "value": "row.v"},
+                        {"header": "Result", "value": "status(row.v, 0, 5)", "status": true}
+                    ]},
+                    {"type": "measurementTable", "source": "results", "fields": {"name": "row.id + '!'", "value": "v", "low": "", "high": "row.lim.hi"}},
+                    {"type": "section", "title": "Sub", "titleLevel": 3, "blocks": []}
+                ]
+            }),
+            json!({"rows": [{"id": "a", "v": 1, "lim": {"hi": 5}}, {"id": "b", "v": 9, "lim": {"hi": 5}}]}),
+        );
+        assert!(g.issues.is_empty(), "{:?}", g.issues);
+        let src = &g.source;
+        assert!(src.contains("lang: \"de\""));
+        assert!(src.contains("\"9\""), "worst value");
+        assert!(src.contains("\"Messwert\""));
+        assert!(src.contains("\"NIO\""));
+        assert!(src.contains("\"a!\""), "expression field");
+        assert!(src.contains("heading(level: 3"));
+        // The failing status column tints its row.
+        assert!(src.contains("lighten(88%)"));
+    }
+
+    #[test]
+    fn missing_fields_name_their_block() {
+        let g = gen(
+            json!({"body": [{"id": "k", "type": "text", "text": "{{ dut.serail }}"}]}),
+            json!({"dut": {"serial": "A"}}),
+        );
+        let i = &g.issues[0];
+        assert_eq!((i.block_id.as_str(), i.field.as_str()), ("k", "text"));
+        assert!(i.message.contains("did you mean 'dut.serial'"), "{}", i.message);
+    }
 
     #[test]
     fn literal_escaping() {

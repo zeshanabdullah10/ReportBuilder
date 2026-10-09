@@ -12,8 +12,8 @@ Templates from the retired Next.js + Supabase web builder can be imported with `
 
 | Path | What |
 |------|------|
-| `engine/reportcore` | Engine library: `model.rs` (document model), `expr.rs` (expression language), `validate.rs`, `typst_gen.rs` (doc+data → Typst source, string literals only), `charts.rs`/`codes.rs` (SVG), `render.rs` (Typst World, PDF/SVG, block regions), `api.rs` (JSON API shared by all front ends), `gallery.rs` + `templates/` (starters), `migrate.rs` (legacy Craft.js import) |
-| `engine/report-cli` | CLI (`render`, `batch`, `validate`, `schema`, `migrate`, `starters`, `serve`) + localhost HTTP API (`server.rs`) |
+| `engine/reportcore` | Engine library: `model.rs` (document model), `expr.rs` (expression language), `validate.rs` (checks, data contract, `dataMap`, unknown keys), `codegen.rs` (typed structures from the contract), `import.rs` (CSV and lenient data parsing), `typst_gen.rs` (doc+data → Typst source, string literals only), `charts.rs`/`codes.rs` (SVG), `render.rs` (Typst World, PDF/SVG, block regions), `api.rs` (JSON API shared by all front ends), `gallery.rs` + `templates/` (starters), `migrate.rs` (legacy Craft.js import) |
+| `engine/report-cli` | CLI (`render`, `batch`, `validate`, `schema`, `import`, `pack`, `migrate`, `starters`, `serve`) + localhost HTTP API (`server.rs`) |
 | `engine/reportcore-ffi` | C ABI (`rb_render`, `rb_render_file`, `rb_validate`, `rb_render_to_memory`, `rb_version`); header in `include/reportbuilder.h` |
 | `desktop` | Tauri 2 app. `src/` React+TS editor (Zustand store in `src/lib/store.ts`, pure tree ops in `src/lib/doc-ops.ts`, engine transport in `src/lib/engine.ts`); `src-tauri/` Rust commands |
 | `integrations` | LabVIEW guide, Python (`reportbuilder.py`) and C# bindings |

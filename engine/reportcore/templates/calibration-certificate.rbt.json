@@ -181,7 +181,6 @@
       "id": "res",
       "type": "table",
       "source": "points",
-      "rowTone": "status(row.asLeft, row.low, row.high)",
       "columns": [
         {
           "header": "Function",
@@ -190,7 +189,7 @@
         },
         {
           "header": "Nominal",
-          "value": "row.nominal + ' ' + row.unit",
+          "value": "with_unit(row.nominal, row.unit)",
           "align": "right"
         },
         {
@@ -226,7 +225,8 @@
         {
           "header": "Left",
           "value": "status(row.asLeft, row.low, row.high)",
-          "align": "center"
+          "align": "center",
+          "status": true
         }
       ]
     },

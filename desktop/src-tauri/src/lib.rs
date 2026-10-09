@@ -58,23 +58,34 @@ async fn validate(req: api::ValidateRequest) -> Result<reportcore::validate::Rep
 }
 
 #[tauri::command]
+async fn contract(req: api::ContractRequest) -> Result<api::ContractResponse, String> {
+    blocking(move || api::contract(&req).map_err(|e| e.to_string())).await
+}
+
+#[tauri::command]
 fn migrate(legacy: Value) -> Result<Value, String> {
     let m = reportcore::migrate::migrate_legacy(&legacy)?;
     Ok(serde_json::json!({ "document": m.document, "notes": m.notes }))
 }
 
+/// Convert CSV text into report data (`{..preamble, measurements|rows: [..]}`).
+#[tauri::command]
+fn import_csv(text: String, name: String) -> Result<Value, String> {
+    reportcore::import::csv_to_data(&text, &name).map_err(|e| format!("{e:#}"))
+}
+
 #[tauri::command]
 fn read_text_file(path: PathBuf) -> Result<String, String> {
-    if !ext_is(&path, &["json", "rbt"]) {
-        return Err("only .json templates and data files can be opened".into());
+    if !ext_is(&path, &["json", "rbt", "csv", "tsv"]) {
+        return Err("only .json templates and .json/.csv data files can be opened".into());
     }
     let meta = std::fs::metadata(&path).map_err(|e| format!("cannot open {}: {e}", path.display()))?;
     if meta.len() > MAX_READ {
         return Err(format!("{} is larger than 128 MB", path.display()));
     }
     let bytes = std::fs::read(&path).map_err(|e| format!("cannot read {}: {e}", path.display()))?;
-    let text = String::from_utf8_lossy(&bytes);
-    Ok(text.trim_start_matches('\u{feff}').to_string())
+    // UTF-8 (BOM removed) or Windows-1252, as Excel and LabVIEW write it.
+    Ok(reportcore::encoding::decode_text(&bytes))
 }
 
 #[tauri::command]
@@ -104,7 +115,9 @@ pub fn run() {
             starters,
             data_paths,
             validate,
+            contract,
             migrate,
+            import_csv,
             read_text_file,
             write_text_file,
             initial_file

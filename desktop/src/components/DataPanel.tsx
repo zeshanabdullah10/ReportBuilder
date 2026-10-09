@@ -56,7 +56,7 @@ export function DataPanel() {
       <div className="sidebar-head" style={{ paddingTop: 0 }}>
         <div className="row">
           <Select value={current.id} options={sets.map((s) => ({ value: s.id, label: s.name }))} onChange={setActive} ariaLabel="Active data set" />
-          <button className="btn icon bordered" title="Load a JSON file as a new data set" onClick={loadDataFile}>
+          <button className="btn icon bordered" title="Load a JSON or CSV file as a new data set" onClick={loadDataFile}>
             <Upload size={14} />
           </button>
           <button

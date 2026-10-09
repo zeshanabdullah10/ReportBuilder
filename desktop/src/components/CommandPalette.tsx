@@ -1,12 +1,30 @@
 import { Command, Search } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { exportPdf, importLegacy, loadDataFile, newDocument, openTemplate, saveTemplate } from '../lib/actions'
+import {
+  copySelected,
+  cutSelected,
+  exportPdf,
+  importLegacy,
+  loadDataFile,
+  newDocument,
+  openRecent,
+  openTemplate,
+  pasteFromClipboard,
+  saveAsMyTemplate,
+  saveBrandKitAsDefault,
+  saveSelectedBlock,
+  saveTemplate,
+} from '../lib/actions'
 import { CATALOG, blockInfo, blockSummary } from '../lib/blocks'
 import { dataSets } from '../lib/defaults'
 import { childLists } from '../lib/doc-ops'
+import { applyBrandKit } from '../lib/library'
+import { getPref } from '../lib/prefs'
 import { useStore } from '../lib/store'
 import type { Block } from '../lib/types'
+import { BlockMenu } from './BlockMenu'
 import { BlockIcon } from './Icon'
+import { PromptDialog } from './PromptDialog'
 
 interface Item {
   group: string
@@ -44,6 +62,20 @@ export function CommandPalette() {
       { group: 'File', label: 'Open template…', keys: '⌘O', run: () => openTemplate() },
       { group: 'File', label: 'New from gallery…', keys: '⌘N', run: () => newDocument() },
       { group: 'File', label: 'Import legacy web template…', run: () => importLegacy() },
+      { group: 'File', label: 'Save as my template…', sub: 'Reuse it from the gallery under My templates', run: () => void saveAsMyTemplate() },
+      ...getPref('recent').map((r) => ({ group: 'Recent', label: `Open recent: ${r.name}`, sub: r.path, run: () => void openRecent(r.path) })),
+      ...(s.selectedId
+        ? [
+            { group: 'Edit', label: 'Copy block', keys: '⌘C', run: () => void copySelected() },
+            { group: 'Edit', label: 'Cut block', keys: '⌘X', run: () => void cutSelected() },
+            { group: 'Edit', label: 'Save block to library…', sub: 'Offered under Saved blocks when adding', run: () => void saveSelectedBlock() },
+          ]
+        : []),
+      { group: 'Edit', label: 'Paste blocks', keys: '⌘V', run: () => void pasteFromClipboard() },
+      { group: 'Brand', label: 'Save brand kit as default for new reports', run: () => saveBrandKitAsDefault() },
+      ...(getPref('brandKit')
+        ? [{ group: 'Brand', label: 'Apply default brand kit', run: () => s.change((d) => applyBrandKit(d, getPref('brandKit'))) }]
+        : []),
       { group: 'Data', label: 'Load data file…', run: () => loadDataFile() },
       ...dataSets(doc).map((d) => ({ group: 'Data', label: `Use data set: ${d.name}`, run: () => s.setActiveDataSet(d.id) })),
       { group: 'View', label: 'Zoom to 100%', keys: '⌘0', run: () => s.setZoom(1) },
@@ -83,7 +115,13 @@ export function CommandPalette() {
     listRef.current?.querySelector('.palette-item.active')?.scrollIntoView({ block: 'nearest' })
   }, [active])
 
-  if (!open) return null
+  // Same shape open or closed, so the mounted dialogs keep their state.
+  if (!open)
+    return (
+      <>
+        <Mounted />
+      </>
+    )
 
   const run = (i: Item) => {
     setOpen(false)
@@ -92,52 +130,65 @@ export function CommandPalette() {
 
   let lastGroup = ''
   return (
-    <div className="scrim" onMouseDown={() => setOpen(false)}>
-      <div className="palette" role="dialog" aria-label="Command palette" onMouseDown={(e) => e.stopPropagation()}>
-        <div className="palette-input">
-          <Search size={17} color="var(--text-3)" />
-          <input
-            ref={inputRef}
-            value={q}
-            placeholder="Type a command, block type or search your blocks…"
-            onChange={(e) => setQ(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'ArrowDown') {
-                e.preventDefault()
-                setActive((a) => Math.min(filtered.length - 1, a + 1))
-              } else if (e.key === 'ArrowUp') {
-                e.preventDefault()
-                setActive((a) => Math.max(0, a - 1))
-              } else if (e.key === 'Enter') {
-                e.preventDefault()
-                if (filtered[active]) run(filtered[active])
-              } else if (e.key === 'Escape') {
-                setOpen(false)
-              }
-            }}
-          />
-          <kbd>esc</kbd>
-        </div>
-        <div className="palette-list" ref={listRef}>
-          {filtered.length === 0 && <div className="empty">Nothing matches “{q}”</div>}
-          {filtered.map((i, n) => {
-            const header = i.group !== lastGroup ? <div className="palette-group">{i.group}</div> : null
-            lastGroup = i.group
-            return (
-              <div key={`${i.group}-${i.label}-${n}`}>
-                {header}
-                <div className={`palette-item${n === active ? ' active' : ''}`} onMouseEnter={() => setActive(n)} onClick={() => run(i)}>
-                  {i.icon ?? <Command size={14} />}
-                  <span className="grow">
-                    {i.label} {i.sub && <span className="sub">— {i.sub}</span>}
-                  </span>
-                  {i.keys && <kbd>{i.keys}</kbd>}
+    <>
+      <Mounted />
+      <div className="scrim" onMouseDown={() => setOpen(false)}>
+        <div className="palette" role="dialog" aria-label="Command palette" onMouseDown={(e) => e.stopPropagation()}>
+          <div className="palette-input">
+            <Search size={17} color="var(--text-3)" />
+            <input
+              ref={inputRef}
+              value={q}
+              placeholder="Type a command, block type or search your blocks…"
+              onChange={(e) => setQ(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'ArrowDown') {
+                  e.preventDefault()
+                  setActive((a) => Math.min(filtered.length - 1, a + 1))
+                } else if (e.key === 'ArrowUp') {
+                  e.preventDefault()
+                  setActive((a) => Math.max(0, a - 1))
+                } else if (e.key === 'Enter') {
+                  e.preventDefault()
+                  if (filtered[active]) run(filtered[active])
+                } else if (e.key === 'Escape') {
+                  setOpen(false)
+                }
+              }}
+            />
+            <kbd>esc</kbd>
+          </div>
+          <div className="palette-list" ref={listRef}>
+            {filtered.length === 0 && <div className="empty">Nothing matches “{q}”</div>}
+            {filtered.map((i, n) => {
+              const header = i.group !== lastGroup ? <div className="palette-group">{i.group}</div> : null
+              lastGroup = i.group
+              return (
+                <div key={`${i.group}-${i.label}-${n}`}>
+                  {header}
+                  <div className={`palette-item${n === active ? ' active' : ''}`} onMouseEnter={() => setActive(n)} onClick={() => run(i)}>
+                    {i.icon ?? <Command size={14} />}
+                    <span className="grow">
+                      {i.label} {i.sub && <span className="sub">— {i.sub}</span>}
+                    </span>
+                    {i.keys && <kbd>{i.keys}</kbd>}
+                  </div>
                 </div>
-              </div>
-            )
-          })}
+              )
+            })}
+          </div>
         </div>
       </div>
-    </div>
+    </>
+  )
+}
+
+/** Dialogs and menus the palette's commands open; mounted with it so they are always available. */
+function Mounted() {
+  return (
+    <>
+      <PromptDialog />
+      <BlockMenu />
+    </>
   )
 }

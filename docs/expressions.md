@@ -22,7 +22,7 @@ and your section's alias. Press **Ctrl+Space** to open suggestions manually.
 | Legacy prefix | `data.dut.serial` (the `data.` prefix is optional) |
 | Literals | `42`, `1.5e-3`, `'text'`, `"text"`, `true`, `null`, `[1, 2]` |
 | Arithmetic | `+ - * / %` (`+` also joins text) |
-| Comparison | `== != < <= > >=` (`===`/`!==` accepted; `'5' == 5` is true) |
+| Comparison | `== != < <= > >=` (`===`/`!==` accepted; `'5' == 5` is true; numeric text compares as numbers, so `'10' > '9'`) |
 | Logic | `&& \|\| !` or `and or not` |
 | Conditional | `ok ? 'PASS' : 'FAIL'` |
 | Fallback | `operator ?? 'unknown'` |
@@ -38,6 +38,10 @@ and your section's alias. Press **Ctrl+Space** to open suggestions manually.
 | `row`, `index`, `number` | Inside table columns and row tints (`number` is 1-based) |
 | `item`, `index`, `number` | Inside chart series |
 | *alias*, `index`, `number` | Inside a repeated section (alias defaults to `item`) |
+| *computed fields* | Every name in the template's `vars`, e.g. `{{ failures }}` |
+
+Page numbers are only known after layout, so `page` and `pages` work on their own in text
+(`{{ page }}`), not inside larger expressions; validation warns about `{{ page + 1 }}`.
 
 ## Functions
 
@@ -48,7 +52,9 @@ and your section's alias. Press **Ctrl+Space** to open suggestions manually.
 **Lists**: `len`, `sum(list, 'field')`, `avg`, `min`, `max`, `stdev`, `cpk(values, low, high)`,
 `first`, `last`, `sort(list, 'field')`, `reverse`, `unique`, `slice(list, start, end)`,
 `pluck(list, 'field')`, `join(list, ', ')`, `where(list, 'field', value)`,
-`count_if(list, 'field', value)`, `range(n)`, `keys(obj)`, `entries(obj)`.
+`count_if(list, 'field', value)`, `range(n)`, `keys(obj)`, `entries(obj)`,
+`count_by(list, 'field')` (a Pareto: `[{key, count}]`, most frequent first),
+`group_by(list, 'field')` (`[{key, count, items}]`, in first-seen order).
 
 **Per-item expressions**: the second argument is an expression string evaluated with `it` as the
 current item:
@@ -58,15 +64,27 @@ current item:
 **Verdicts**: `verdict(x)` normalises PASS/FAIL/WARN/SKIP, accepting `true`, `OK`, `NG`, `Passed`
 and similar spellings. `verdict(list, 'status')` rolls a list up: any FAIL gives FAIL. When a row
 has no status field, it is judged from `value` against `low`/`high`. `status(value, low, high)`
-returns PASS/FAIL, and a NaN value is a FAIL. `in_range(v, lo, hi)`. `pass_rate(list, 'status')`
+returns PASS/FAIL, and a NaN value is a FAIL; `status(value, low, high, 0.05)` returns WARN for a
+pass within 5 % of the limit span from a limit. `in_range(v, lo, hi)`. `pass_rate(list, 'status')`
 returns 0–1.
 
-**Text**: `upper`, `lower`, `trim`, `replace(s, from, to)`, `contains(s, part)`, `concat(a, b, …)`,
-`string(x)`, `default(x, fallback)`, `if(cond, a, b)`.
+**Limits and units**: `limits(low, high, 'V', 2)` gives `4.75 … 5.25 V`, `≥ 4.75 V` or `≤ 5.25 V`
+depending on which limits exist (NaN/Inf count as none). `with_unit(value, 'V', 3)` gives
+`4.988 V`, and is empty when the value is missing.
 
-**Dates**: `now()`, `date(x, format)`, `duration(seconds)` (`3 min 05 s`).
-`x` may be an ISO 8601 string, a `YYYY-MM-DD[ HH:MM[:SS]]` string, or Unix seconds/milliseconds.
-The original UTC offset is kept.
+**Text**: `upper`, `lower`, `trim`, `replace(s, from, to)`, `contains(s, part)`, `concat(a, b, …)`,
+`split(s, ',')`, `string(x)`, `default(x, fallback)` (also treats empty text as missing, unlike
+`??`), `if(cond, a, b)`.
+
+**Dates**: `now()`, `date(x, format)`, `duration(seconds)` (`3 min 05 s`), `lvtime(seconds)`
+(a LabVIEW timestamp as an ISO date).
+`x` may be an ISO 8601 string, a `YYYY-MM-DD[ HH:MM[:SS]]` string, Unix seconds/milliseconds, or a
+LabVIEW timestamp (seconds since 1904: numbers from 2.9e9 to 1e11 are read that way).
+The original UTC offset is kept. `date()` is the render date; `date(x)` of a missing `x` is empty,
+not today.
+
+Calling a function that does not exist gives an empty value; validation reports it with the
+closest real name.
 
 | Token | Output | Token | Output |
 |---|---|---|---|

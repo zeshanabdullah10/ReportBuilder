@@ -6,11 +6,13 @@
 
 pub mod api;
 pub mod charts;
+pub mod codegen;
 pub mod codes;
 pub mod datetime;
 pub mod encoding;
 pub mod expr;
 pub mod gallery;
+pub mod import;
 pub mod migrate;
 pub mod model;
 pub mod render;

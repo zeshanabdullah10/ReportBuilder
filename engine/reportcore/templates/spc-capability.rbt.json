@@ -174,10 +174,10 @@
           "header": "",
           "value": "cpk(row.values, row.low, row.high) >= study.targetCpk ? 'PASS' : 'FAIL'",
           "width": "auto",
-          "align": "center"
+          "align": "center",
+          "status": true
         }
-      ],
-      "rowTone": "cpk(row.values, row.low, row.high) >= study.targetCpk ? 'PASS' : 'FAIL'"
+      ]
     },
     {
       "id": "sec",

@@ -9,6 +9,7 @@ license.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
+anyhow.workspace = true
 chrono = { version = "0.4", default-features = false, features = ["std", "clock"] }
 typst = "0.15"
 typst-pdf = "0.15"

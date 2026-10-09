@@ -5,7 +5,11 @@
 //!   1  usage or I/O error
 //!   2  template or data validation failed (errors, or warnings with --strict)
 //!   3  layout / PDF generation failed
+//!
+//! `batch` uses the same codes per file and exits with the most severe one.
 
+mod batch;
+mod pack;
 mod server;
 
 use anyhow::{bail, Context, Result};
@@ -32,8 +36,8 @@ struct Cli {
 enum Command {
     /// Render a template with JSON data to PDF (or SVG pages).
     Render(RenderArgs),
-    /// Render one PDF per JSON file in a folder.
-    Batch(BatchArgs),
+    /// Render one PDF per JSON/CSV file in a folder (optionally watching it).
+    Batch(batch::BatchArgs),
     /// Check a template (and optionally data) for problems.
     Validate(ValidateArgs),
     /// Print the data fields a template reads, or infer a JSON Schema from data.
@@ -42,6 +46,10 @@ enum Command {
     Migrate(MigrateArgs),
     /// List or create templates from the built-in gallery.
     Starters(StartersArgs),
+    /// Convert a CSV file into report data JSON.
+    Import(ImportArgs),
+    /// Inline the images a template references so it is self-contained.
+    Pack(PackArgs),
     /// Serve the JSON API (and optionally the editor UI) on localhost.
     Serve(ServeArgs),
 }
@@ -51,7 +59,7 @@ struct RenderArgs {
     /// Template file (.rbt.json)
     #[arg(short, long)]
     template: PathBuf,
-    /// JSON data file, or `-` for stdin. Defaults to the template's sample data.
+    /// Data file (.json, or .csv), or `-` for JSON on stdin. Defaults to the template's sample data.
     #[arg(short, long)]
     data: Option<PathBuf>,
     /// Output PDF path (or directory with --svg)
@@ -89,30 +97,6 @@ struct RenderArgs {
 }
 
 #[derive(Args)]
-struct BatchArgs {
-    #[arg(short, long)]
-    template: PathBuf,
-    /// Folder containing *.json data files
-    #[arg(long)]
-    data_dir: PathBuf,
-    /// Output folder
-    #[arg(long)]
-    out_dir: PathBuf,
-    /// File name template, e.g. "{{ dut.serial }}_{{ date(test.start, 'YYYYMMDD') }}". Defaults to the data file name.
-    #[arg(long)]
-    name: Option<String>,
-    #[arg(long)]
-    pdfa: bool,
-    #[arg(long)]
-    strict: bool,
-    /// Parallel workers (default: CPU count)
-    #[arg(short, long)]
-    jobs: Option<usize>,
-    #[arg(long)]
-    json: bool,
-}
-
-#[derive(Args)]
 struct ValidateArgs {
     #[arg(short, long)]
     template: PathBuf,
@@ -129,6 +113,15 @@ struct SchemaArgs {
     /// Print the data paths this template reads
     #[arg(short, long, conflicts_with = "infer")]
     template: Option<PathBuf>,
+    /// With --template: print the data contract as a JSON Schema
+    #[arg(long, requires = "template", conflicts_with = "types")]
+    json_schema: bool,
+    /// With --template: print typed data structures (csharp, python, typescript, labview)
+    #[arg(long, requires = "template", value_name = "LANG")]
+    types: Option<String>,
+    /// With --template: sample data for field types (default: the template's sampleData)
+    #[arg(short, long, requires = "template")]
+    data: Option<PathBuf>,
     /// Infer a JSON Schema from a data file
     #[arg(long)]
     infer: Option<PathBuf>,
@@ -150,6 +143,31 @@ struct StartersArgs {
     /// Output template path (sample data is written next to it)
     #[arg(short, long)]
     output: Option<PathBuf>,
+}
+
+#[derive(Args)]
+struct ImportArgs {
+    /// CSV file (`,` `;` or tab separated, optional key/value preamble)
+    input: PathBuf,
+    /// Output JSON file (default: stdout)
+    #[arg(short, long)]
+    output: Option<PathBuf>,
+}
+
+#[derive(Args)]
+struct PackArgs {
+    /// Template file (.rbt.json)
+    #[arg(short, long)]
+    template: PathBuf,
+    /// Packed template to write
+    #[arg(short, long)]
+    output: PathBuf,
+    /// Exit with code 2 when an image could not be inlined
+    #[arg(long)]
+    strict: bool,
+    /// Print a JSON report on stdout
+    #[arg(long)]
+    json: bool,
 }
 
 #[derive(Args)]
@@ -180,11 +198,13 @@ fn main() -> ExitCode {
 fn run(cli: Cli) -> Result<ExitCode> {
     match cli.command {
         Command::Render(a) => render(a),
-        Command::Batch(a) => batch(a),
+        Command::Batch(a) => batch::batch(a),
         Command::Validate(a) => validate_cmd(a),
         Command::Schema(a) => schema(a),
         Command::Migrate(a) => migrate_cmd(a),
         Command::Starters(a) => starters(a),
+        Command::Import(a) => import_cmd(a),
+        Command::Pack(a) => pack_cmd(a),
         Command::Serve(a) => {
             server::serve(a.port, a.static_dir)?;
             Ok(ExitCode::SUCCESS)
@@ -205,21 +225,26 @@ pub fn load_template(path: &Path) -> Result<Document> {
     Document::from_json(&text).with_context(|| format!("{} is not a valid template", path.display()))
 }
 
+/// Load data: JSON (bare NaN/Infinity tolerated) or, for `.csv`/`.tsv` files, CSV.
 fn load_data(path: Option<&Path>, doc: &Document) -> Result<Value> {
     match path {
         None => Ok(doc.sample_data.clone().unwrap_or_else(|| json!({}))),
         Some(p) if p.as_os_str() == "-" => {
             let mut bytes = Vec::new();
-            std::io::stdin().read_to_end(&mut bytes)?;
-            serde_json::from_str(&reportcore::encoding::decode_text(&bytes)).context("stdin is not valid JSON")
+            std::io::stdin().read_to_end(&mut bytes).context("cannot read stdin")?;
+            reportcore::import::parse_data_bytes(&bytes, "").context("stdin")
         }
         Some(p) => {
             let bytes = std::fs::read(p).with_context(|| format!("cannot read data {}", p.display()))?;
             // UTF-8 (with or without BOM) or Windows-1252, as LabVIEW writes it.
-            serde_json::from_str(&reportcore::encoding::decode_text(&bytes))
-                .with_context(|| format!("{} is not valid JSON", p.display()))
+            reportcore::import::parse_data_bytes(&bytes, &p.to_string_lossy())
         }
     }
+}
+
+/// Non-info issues as `{severity, blockId, field, message}` objects (same shape as the C API's `issuesDetail`).
+fn issues_detail(issues: &[reportcore::Issue]) -> Vec<&reportcore::Issue> {
+    issues.iter().filter(|i| i.severity != Severity::Info).collect()
 }
 
 fn print_issues(issues: &[reportcore::Issue]) {
@@ -231,15 +256,33 @@ fn print_issues(issues: &[reportcore::Issue]) {
 }
 
 fn render(a: RenderArgs) -> Result<ExitCode> {
+    let json = a.json;
+    // I/O problems still produce one JSON line with --json.
+    let fail = |stage: &str, e: anyhow::Error| -> Result<ExitCode> {
+        eprintln!("error: {e:#}");
+        if json {
+            println!("{}", json!({"ok": false, "stage": stage, "error": format!("{e:#}")}));
+        }
+        Ok(ExitCode::from(1))
+    };
     let started = Instant::now();
     let _ = (&a.wait, &a.format, &a.margin, a.no_header_footer, a.verbose);
-    let doc = load_template(&a.template)?;
-    let data = load_data(a.data.as_deref(), &doc)?;
+    let doc = match load_template(&a.template) {
+        Ok(d) => d,
+        Err(e) => return fail("template", e),
+    };
+    let data = match load_data(a.data.as_deref(), &doc) {
+        Ok(d) => d,
+        Err(e) => return fail("data", e),
+    };
     let report = validate::validate(&doc, Some(&data));
     if report.has_errors() {
         print_issues(&report.issues);
-        if a.json {
-            println!("{}", json!({"ok": false, "stage": "validate", "issues": report.issues}));
+        if json {
+            println!(
+                "{}",
+                json!({"ok": false, "stage": "validate", "error": "template or data has errors", "issues": report.issues, "issuesDetail": issues_detail(&report.issues)})
+            );
         }
         return Ok(ExitCode::from(2));
     }
@@ -254,7 +297,7 @@ fn render(a: RenderArgs) -> Result<ExitCode> {
         Ok(c) => c,
         Err(e) => {
             eprintln!("error: {e}");
-            if a.json {
+            if json {
                 println!("{}", json!({"ok": false, "stage": "layout", "error": e.to_string()}));
             }
             return Ok(ExitCode::from(3));
@@ -264,37 +307,52 @@ fn render(a: RenderArgs) -> Result<ExitCode> {
     let warnings = issues.iter().filter(|i| i.severity == Severity::Warning).count();
     print_issues(&issues);
     if a.strict && warnings > 0 {
-        if a.json {
-            println!("{}", json!({"ok": false, "stage": "strict", "issues": issues}));
+        if json {
+            println!(
+                "{}",
+                json!({"ok": false, "stage": "strict", "error": format!("{warnings} warning(s)"), "issues": issues, "issuesDetail": issues_detail(&issues)})
+            );
         }
         return Ok(ExitCode::from(2));
     }
+    let mut bytes = 0usize;
     if a.svg {
-        std::fs::create_dir_all(&a.output)?;
-        for (i, svg) in compiled.to_svg_pages().iter().enumerate() {
-            std::fs::write(a.output.join(format!("page-{:03}.svg", i + 1)), svg)?;
+        let written = std::fs::create_dir_all(&a.output).and_then(|_| {
+            for (i, svg) in compiled.to_svg_pages().iter().enumerate() {
+                std::fs::write(a.output.join(format!("page-{:03}.svg", i + 1)), svg)?;
+                bytes += svg.len();
+            }
+            Ok(())
+        });
+        if let Err(e) = written {
+            return fail("io", anyhow::anyhow!("cannot write {}: {e}", a.output.display()));
         }
     } else {
         let pdf = match compiled.to_pdf(opts.pdf_standard) {
             Ok(p) => p,
             Err(e) => {
                 eprintln!("error: {e}");
-                if a.json {
+                if json {
                     println!("{}", json!({"ok": false, "stage": "pdf", "error": e.to_string()}));
                 }
                 return Ok(ExitCode::from(3));
             }
         };
         if let Some(parent) = a.output.parent().filter(|p| !p.as_os_str().is_empty()) {
-            std::fs::create_dir_all(parent)?;
+            if let Err(e) = std::fs::create_dir_all(parent) {
+                return fail("io", anyhow::anyhow!("cannot create {}: {e}", parent.display()));
+            }
         }
-        write_atomic(&a.output, &pdf)?;
+        if let Err(e) = write_atomic(&a.output, &pdf) {
+            return fail("io", e);
+        }
+        bytes = pdf.len();
     }
     let ms = started.elapsed().as_millis();
-    if a.json {
+    if json {
         println!(
             "{}",
-            json!({"ok": true, "output": a.output, "pages": compiled.page_count(), "warnings": warnings, "elapsedMs": ms, "issues": issues})
+            json!({"ok": true, "output": a.output, "pages": compiled.page_count(), "bytes": bytes, "warnings": warnings, "elapsedMs": ms, "issues": issues, "issuesDetail": issues_detail(&issues)})
         );
     } else {
         eprintln!(
@@ -329,94 +387,20 @@ fn sanitize_file_name(s: &str) -> String {
     }
 }
 
-fn batch(a: BatchArgs) -> Result<ExitCode> {
-    let started = Instant::now();
-    let doc = load_template(&a.template)?;
-    let static_report = validate::validate(&doc, None);
-    if static_report.has_errors() {
-        print_issues(&static_report.issues);
-        return Ok(ExitCode::from(2));
-    }
-    let mut files: Vec<PathBuf> = std::fs::read_dir(&a.data_dir)
-        .with_context(|| format!("cannot read {}", a.data_dir.display()))?
-        .filter_map(|e| e.ok().map(|e| e.path()))
-        .filter(|p| p.extension().and_then(|e| e.to_str()).is_some_and(|e| e.eq_ignore_ascii_case("json")))
-        .collect();
-    files.sort();
-    std::fs::create_dir_all(&a.out_dir)?;
-    let jobs = a.jobs.unwrap_or_else(|| std::thread::available_parallelism().map(|n| n.get()).unwrap_or(2)).max(1);
-    let base_dir = a.template.parent().map(Path::to_path_buf);
-    let std_ = if a.pdfa { PdfStandard::A2b } else { PdfStandard::None };
-
-    let results = std::sync::Mutex::new(Vec::new());
-    let next = std::sync::atomic::AtomicUsize::new(0);
-    std::thread::scope(|scope| {
-        for _ in 0..jobs.min(files.len().max(1)) {
-            scope.spawn(|| loop {
-                let i = next.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
-                let Some(file) = files.get(i) else { break };
-                let outcome = (|| -> Result<(PathBuf, usize, usize)> {
-                    let data = load_data(Some(file), &doc)?;
-                    let stem = match &a.name {
-                        Some(tpl) => {
-                            let missing = std::cell::RefCell::new(Default::default());
-                            let scope = reportcore::expr::Scope::new(&data, &missing, "");
-                            scope.render_template(tpl).map_err(|e| anyhow::anyhow!("--name: {e}"))?
-                        }
-                        None => file.file_stem().and_then(|s| s.to_str()).unwrap_or("report").to_string(),
-                    };
-                    let out = a.out_dir.join(format!("{}.pdf", sanitize_file_name(&stem)));
-                    let opts = RenderOptions { base_dir: base_dir.clone(), pdf_standard: std_, ..Default::default() };
-                    let c = reportcore::compile(&doc, &data, &opts)?;
-                    let warnings = c.issues.iter().filter(|i| i.severity == Severity::Warning).count();
-                    if a.strict && warnings > 0 {
-                        bail!(
-                            "{} warning(s): {}",
-                            warnings,
-                            c.issues.iter().map(|i| i.to_string()).collect::<Vec<_>>().join("; ")
-                        );
-                    }
-                    write_atomic(&out, &c.to_pdf(std_)?)?;
-                    Ok((out, c.page_count(), warnings))
-                })();
-                results.lock().unwrap().push((file.clone(), outcome));
-            });
-        }
-    });
-    let mut results = results.into_inner().unwrap();
-    results.sort_by(|a, b| a.0.cmp(&b.0));
-    let failed = results.iter().filter(|r| r.1.is_err()).count();
-    if a.json {
-        let items: Vec<Value> = results
-            .iter()
-            .map(|(f, r)| match r {
-                Ok((out, pages, w)) => json!({"data": f, "ok": true, "output": out, "pages": pages, "warnings": w}),
-                Err(e) => json!({"data": f, "ok": false, "error": format!("{e:#}")}),
-            })
-            .collect();
-        println!(
-            "{}",
-            json!({"ok": failed == 0, "count": results.len(), "failed": failed, "elapsedMs": started.elapsed().as_millis(), "results": items})
-        );
-    } else {
-        for (f, r) in &results {
-            match r {
-                Ok((out, pages, _)) => eprintln!("✓ {} → {} ({pages} p)", f.display(), out.display()),
-                Err(e) => eprintln!("✗ {}: {e:#}", f.display()),
-            }
-        }
-        eprintln!("{} rendered, {} failed in {} ms", results.len() - failed, failed, started.elapsed().as_millis());
-    }
-    Ok(if failed > 0 { ExitCode::from(3) } else { ExitCode::SUCCESS })
-}
-
 fn validate_cmd(a: ValidateArgs) -> Result<ExitCode> {
     let doc = load_template(&a.template)?;
     let data = match &a.data {
         Some(p) => Some(load_data(Some(p), &doc)?),
         None => None,
     };
-    let report = validate::validate(&doc, data.as_ref());
+    let mut report = validate::validate(&doc, data.as_ref());
+    // Settings the engine doesn't know (typos) are only visible in the raw JSON.
+    if let Ok(raw) = std::fs::read_to_string(&a.template)
+        .map_err(anyhow::Error::from)
+        .and_then(|t| Ok(serde_json::from_str::<Value>(t.trim_start_matches('\u{feff}'))?))
+    {
+        report.issues.extend(validate::unknown_keys(&raw));
+    }
     let warnings = report.issues.iter().filter(|i| i.severity == Severity::Warning).count();
     let failed = report.has_errors() || (a.strict && warnings > 0);
     if a.json {
@@ -445,8 +429,25 @@ fn validate_cmd(a: ValidateArgs) -> Result<ExitCode> {
 fn schema(a: SchemaArgs) -> Result<ExitCode> {
     if let Some(t) = a.template {
         let doc = load_template(&t)?;
-        for p in validate::validate(&doc, None).referenced_paths {
-            println!("{p}");
+        let data = match &a.data {
+            Some(p) => Some(load_data(Some(p), &doc)?),
+            None => doc.sample_data.clone(),
+        };
+        let report = validate::validate(&doc, data.as_ref());
+        if a.json_schema || a.types.is_some() {
+            let schema = validate::contract_schema(&report, &doc.meta.name);
+            match &a.types {
+                Some(lang) => print!(
+                    "{}",
+                    reportcore::codegen::typedefs(&schema, lang, &doc.meta.name).map_err(anyhow::Error::msg)?
+                ),
+                None => println!("{}", serde_json::to_string_pretty(&schema)?),
+            }
+            return Ok(ExitCode::SUCCESS);
+        }
+        // One field per line, in the data's names (types and optional fields: --json-schema).
+        for c in report.contract {
+            println!("{}", c.path);
         }
     } else if let Some(d) = a.infer {
         let text = std::fs::read_to_string(&d)?;
@@ -491,4 +492,47 @@ fn starters(a: StartersArgs) -> Result<ExitCode> {
         }
     }
     Ok(ExitCode::SUCCESS)
+}
+
+fn import_cmd(a: ImportArgs) -> Result<ExitCode> {
+    let bytes = std::fs::read(&a.input).with_context(|| format!("cannot read {}", a.input.display()))?;
+    let name = a.input.to_string_lossy();
+    let data = reportcore::import::csv_to_data(&reportcore::encoding::decode_text(&bytes), &name)?;
+    let text = serde_json::to_string_pretty(&data)? + "\n";
+    match &a.output {
+        Some(out) => {
+            std::fs::write(out, text).with_context(|| format!("cannot write {}", out.display()))?;
+            let list = if data.get("measurements").is_some() { "measurements" } else { "rows" };
+            let n = data.get(list).and_then(Value::as_array).map_or(0, Vec::len);
+            eprintln!("✓ wrote {} ({n} {list})", out.display());
+        }
+        None => print!("{text}"),
+    }
+    Ok(ExitCode::SUCCESS)
+}
+
+fn pack_cmd(a: PackArgs) -> Result<ExitCode> {
+    let report = pack::pack_file(&a.template, &a.output)?;
+    let failed = a.strict && !report.skipped.is_empty();
+    if a.json {
+        let mut v = report.to_json();
+        v["ok"] = json!(!failed);
+        v["output"] = json!(a.output);
+        println!("{v}");
+    } else {
+        for (at, src, n) in &report.inlined {
+            eprintln!("inlined {at}: {src} ({} KB)", n.div_ceil(1024));
+        }
+        for (at, src, reason) in &report.skipped {
+            eprintln!("warning: not inlined {at}: {src}: {reason}");
+        }
+        eprintln!(
+            "✓ wrote {} ({} image{} inlined, {} not inlined)",
+            a.output.display(),
+            report.inlined.len(),
+            if report.inlined.len() == 1 { "" } else { "s" },
+            report.skipped.len()
+        );
+    }
+    Ok(if failed { ExitCode::from(2) } else { ExitCode::SUCCESS })
 }
