@@ -48,6 +48,25 @@ export function pasteBlocks(doc: ReportDocument, blocks: Block[], at: Location):
 // --- the clipboard itself ----------------------------------------------------------------------
 
 let memory: { text: string; blocks: Block[] } | null = null
+/** A clipboard permission prompt that nobody answers must not hang copy/paste. */
+const CLIPBOARD_TIMEOUT_MS = 1500
+
+function withTimeout<T>(p: Promise<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error('clipboard timed out')), CLIPBOARD_TIMEOUT_MS)
+    p.then(
+      (v) => {
+        clearTimeout(t)
+        resolve(v)
+      },
+      (e) => {
+        clearTimeout(t)
+        reject(e)
+      },
+    )
+  })
+}
+
 /** True when the last copy could not reach the system clipboard. */
 let systemFailed = false
 
@@ -56,7 +75,7 @@ export async function writeBlocks(blocks: Block[]): Promise<void> {
   memory = { text, blocks: structuredClone(blocks) }
   try {
     if (!navigator.clipboard?.writeText) throw new Error('no clipboard')
-    await navigator.clipboard.writeText(text)
+    await withTimeout(navigator.clipboard.writeText(text))
     systemFailed = false
   } catch {
     systemFailed = true
@@ -67,7 +86,7 @@ export async function writeBlocks(blocks: Block[]): Promise<void> {
 export async function readBlocks(): Promise<Block[] | null> {
   try {
     if (!navigator.clipboard?.readText) throw new Error('no clipboard')
-    const text = await navigator.clipboard.readText()
+    const text = await withTimeout(navigator.clipboard.readText())
     const blocks = decodeBlocks(text)
     if (blocks) return blocks
     // Something else was copied since: only fall back when our copy never got there.

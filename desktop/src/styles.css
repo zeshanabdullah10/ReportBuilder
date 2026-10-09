@@ -612,6 +612,7 @@ body.dragging, body.dragging * { cursor: grabbing !important; user-select: none 
 .add-item .add-item-delete { opacity: 0; flex: none; }
 .add-item:hover .add-item-delete, .add-item.active .add-item-delete { opacity: 1; color: inherit; }
 .add-item.saved { cursor: pointer; }
+.add-item.saved .grow { flex: 1; }
 
 /* Welcome: recent files and my templates */
 .recent { margin: -8px 0 30px; }

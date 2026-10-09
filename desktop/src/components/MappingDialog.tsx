@@ -112,7 +112,7 @@ export function MappingDialog({
                     <select
                       className="select"
                       value={picked}
-                      aria-label={`Item field for ${c.label}`}
+                      aria-label={`${g.list} item ${c.need} (${c.label})`}
                       onChange={(e) => setItemChoice({ ...itemChoice, [c.key]: e.target.value })}
                     >
                       <option value="">— leave empty —</option>
