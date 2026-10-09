@@ -192,7 +192,7 @@
         },
         {
           "header": "Value",
-          "value": "row.value != null ? fixed(row.value, 4) : ''",
+          "value": "fixed(row.value, 4)",
           "width": "auto",
           "align": "right"
         },
@@ -203,13 +203,13 @@
         },
         {
           "header": "Low",
-          "value": "row.low != null ? fixed(row.low, 3) : ''",
+          "value": "fixed(row.low, 3)",
           "width": "auto",
           "align": "right"
         },
         {
           "header": "High",
-          "value": "row.high != null ? fixed(row.high, 3) : ''",
+          "value": "fixed(row.high, 3)",
           "width": "auto",
           "align": "right"
         },
@@ -217,10 +217,10 @@
           "header": "Status",
           "value": "row.status",
           "width": "auto",
-          "align": "center"
+          "align": "center",
+          "status": true
         }
       ],
-      "rowTone": "row.status == 'FAIL' ? 'FAIL' : ''",
       "fontSize": 8,
       "zebra": true,
       "repeatHeader": true

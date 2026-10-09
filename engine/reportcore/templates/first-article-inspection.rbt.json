@@ -141,7 +141,6 @@
       "id": "tbl",
       "type": "table",
       "source": "characteristics",
-      "rowTone": "row.status ?? status(row.value, row.low, row.high)",
       "columns": [
         {
           "header": "#",
@@ -173,7 +172,8 @@
         {
           "header": "Result",
           "value": "row.status ?? status(row.value, row.low, row.high)",
-          "align": "center"
+          "align": "center",
+          "status": true
         }
       ]
     },

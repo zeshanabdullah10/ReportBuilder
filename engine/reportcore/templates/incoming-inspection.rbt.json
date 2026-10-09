@@ -238,10 +238,10 @@
           "header": "",
           "value": "in_range(min(row.samples), row.low, row.high) && in_range(max(row.samples), row.low, row.high) ? 'PASS' : 'FAIL'",
           "width": "auto",
-          "align": "center"
+          "align": "center",
+          "status": true
         }
-      ],
-      "rowTone": "in_range(min(row.samples), row.low, row.high) && in_range(max(row.samples), row.low, row.high) ? 'PASS' : 'FAIL'"
+      ]
     },
     {
       "id": "vis-h",
@@ -263,7 +263,8 @@
           "header": "Result",
           "value": "row.result",
           "width": "auto",
-          "align": "center"
+          "align": "center",
+          "status": true
         },
         {
           "header": "Note",
@@ -271,7 +272,6 @@
           "width": "1fr"
         }
       ],
-      "rowTone": "row.result",
       "zebra": true
     },
     {

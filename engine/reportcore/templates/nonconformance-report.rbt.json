@@ -277,10 +277,10 @@
           "header": "Done",
           "value": "row.done ? 'PASS' : 'WARN'",
           "width": "auto",
-          "align": "center"
+          "align": "center",
+          "status": true
         }
-      ],
-      "rowTone": "row.done ? 'PASS' : 'WARN'"
+      ]
     },
     {
       "id": "rc-h",

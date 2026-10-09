@@ -223,10 +223,10 @@
           "header": "",
           "value": "row.result",
           "width": "auto",
-          "align": "center"
+          "align": "center",
+          "status": true
         }
-      ],
-      "rowTone": "row.result"
+      ]
     },
     {
       "id": "ph-h",
