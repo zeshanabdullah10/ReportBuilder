@@ -61,6 +61,15 @@ export function migrate(legacy: unknown): Promise<{ document: ReportDocument; no
   return isTauri ? invoke('migrate', { legacy }) : http('migrate', legacy)
 }
 
+/**
+ * Convert CSV text into report data: key/value preamble rows become top-level
+ * fields, the table goes under `measurements` (when it has value + limit
+ * columns) or `rows`. `name` is the file name (a `.tsv` name prefers tabs).
+ */
+export function importCsv(text: string, name: string): Promise<Record<string, unknown>> {
+  return isTauri ? invoke('import_csv', { text, name }) : http('import-csv', { text, name })
+}
+
 /** Render a PDF. Desktop: writes to `path`. Browser: returns the bytes for download. */
 export async function exportPdf(req: RenderRequest, path?: string): Promise<{ pages?: number; blob?: Blob }> {
   if (isTauri) {

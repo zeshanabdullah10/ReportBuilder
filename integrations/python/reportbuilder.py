@@ -12,7 +12,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Any, Optional
+from typing import Any, Iterable, Optional
 
 __all__ = ["ReportBuilder", "ReportError"]
 
@@ -80,12 +80,35 @@ class ReportBuilder:
         self._lib.rb_version(buf, 64)
         return buf.value.decode()
 
+    @staticmethod
+    def _opts(pdfa: bool, strict: bool, now: Optional[str], font_dirs: Optional[Iterable[str | os.PathLike]],
+              base_dir: Optional[str | os.PathLike] = None) -> dict:
+        opts: dict = {"pdfa": pdfa, "strict": strict}
+        if now:
+            opts["now"] = now
+        if font_dirs:
+            opts["fontDirs"] = [os.fspath(d) for d in font_dirs]
+        if base_dir:
+            opts["baseDir"] = os.fspath(base_dir)
+        return opts
+
     def render(self, template: str | os.PathLike, data: Any, output: str | os.PathLike, *,
-               pdfa: bool = False, strict: bool = False, now: Optional[str] = None) -> dict:
-        """Render `template` with `data` (dict/list/JSON string/None) to the PDF file `output`."""
-        opts = {"pdfa": pdfa, "strict": strict, **({"now": now} if now else {})}
+               pdfa: bool = False, strict: bool = False, now: Optional[str] = None,
+               font_dirs: Optional[Iterable[str | os.PathLike]] = None) -> dict:
+        """Render `template` with `data` (dict/list/JSON string/None) to the PDF file `output`.
+
+        `font_dirs` adds folders with .ttf/.otf fonts. Float NaN/inf values in `data` are fine.
+        """
         return self._call(self._lib.rb_render, self._enc(os.fspath(template)), self._enc(data),
-                          self._enc(os.fspath(output)), self._enc(opts))
+                          self._enc(os.fspath(output)), self._enc(self._opts(pdfa, strict, now, font_dirs)))
+
+    def render_file(self, template: str | os.PathLike, data_path: str | os.PathLike | None,
+                    output: str | os.PathLike, *, pdfa: bool = False, strict: bool = False,
+                    now: Optional[str] = None, font_dirs: Optional[Iterable[str | os.PathLike]] = None) -> dict:
+        """Render with data read from a file: JSON, or CSV when the path ends in .csv."""
+        return self._call(self._lib.rb_render_file, self._enc(os.fspath(template)),
+                          self._enc(os.fspath(data_path) if data_path else ""), self._enc(os.fspath(output)),
+                          self._enc(self._opts(pdfa, strict, now, font_dirs)))
 
     def validate(self, template: str | os.PathLike, data: Any = None) -> dict:
         buf = ctypes.create_string_buffer(self._size)
@@ -95,16 +118,24 @@ class ReportBuilder:
             raise ReportError(code, result)
         return result
 
-    def render_bytes(self, template: Any, data: Any = None, *, pdfa: bool = False) -> bytes:
-        """Render a template (dict or JSON string) to PDF bytes in memory."""
+    def render_bytes(self, template: Any, data: Any = None, *, pdfa: bool = False, strict: bool = False,
+                     now: Optional[str] = None, font_dirs: Optional[Iterable[str | os.PathLike]] = None,
+                     base_dir: Optional[str | os.PathLike] = None) -> bytes:
+        """Render a template (dict or JSON string) to PDF bytes in memory.
+
+        Validates and honours `strict` like `render`. `base_dir` is where relative image paths resolve.
+        """
         ptr = ctypes.POINTER(ctypes.c_uint8)()
         size = ctypes.c_size_t(0)
         buf = ctypes.create_string_buffer(self._size)
-        code = self._lib.rb_render_to_memory(self._enc(template), self._enc(data), self._enc({"pdfa": pdfa}),
+        opts = self._opts(pdfa, strict, now, font_dirs, base_dir)
+        code = self._lib.rb_render_to_memory(self._enc(template), self._enc(data), self._enc(opts),
                                              ctypes.byref(ptr), ctypes.byref(size), buf, self._size)
-        if code != RB_OK:
-            raise ReportError(code, json.loads(buf.value.decode("utf-8") or "{}"))
         try:
+            # RB_ERR_BUFFER only means the result JSON was truncated; the PDF is complete.
+            if code not in (RB_OK, RB_ERR_BUFFER) or not ptr:
+                raise ReportError(code, json.loads(buf.value.decode("utf-8") or "{}"))
             return ctypes.string_at(ptr, size.value)
         finally:
-            self._lib.rb_free(ptr, size)
+            if ptr:
+                self._lib.rb_free(ptr, size)

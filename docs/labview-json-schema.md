@@ -24,6 +24,10 @@ them. This page lists the conventions the built-in blocks understand. For the in
   "no limit". `status` is optional; when absent, PASS/FAIL is computed from the limits. A NaN
   value is always a FAIL. Status spellings such as `PASS`, `Passed`, `OK`, `true`, `FAIL`, `NG`
   and `false` are all understood.
+- **NaN and Infinity.** Strict JSON has no non-finite numbers. Send them either as the strings
+  `"NaN"`, `"Infinity"`, `"-Infinity"`, or as the bare tokens `NaN`, `Infinity`, `-Infinity` (also
+  `nan`, `inf`, `-inf`) that LabVIEW and Python's `json` module emit: both forms are accepted
+  everywhere data is read (DLL, `report-cli`, local API) and behave as numbers in expressions.
 - **Timestamps.** ISO 8601 strings keep the station's UTC offset. Format them in the template with
   `date(test.start, 'D MMM YYYY HH:mm')`.
 - **Repeated sections.** Any list works, e.g. one entry per channel:
@@ -34,6 +38,13 @@ them. This page lists the conventions the built-in blocks understand. For the in
 Use **Flatten To JSON**. Cluster element labels become keys, and arrays of clusters become lists of
 objects. Keep *Enable LabVIEW extensions* off. The engine accepts both UTF-8 and Windows-1252
 strings.
+
+## From a CSV file
+
+A `.csv` file can be used instead of JSON (`rb_render_file`, `report-cli render -d run.csv`).
+Key/value rows before the header (`Serial,SN123`) become top-level fields, and a table with value
+and limit columns becomes `measurements` with the keys shown above. `report-cli import run.csv`
+prints the resulting JSON; see [docs/cli.md](cli.md#import).
 
 ## Checking data against a template
 
