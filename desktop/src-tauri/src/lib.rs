@@ -58,6 +58,11 @@ async fn validate(req: api::ValidateRequest) -> Result<reportcore::validate::Rep
 }
 
 #[tauri::command]
+async fn contract(req: api::ContractRequest) -> Result<api::ContractResponse, String> {
+    blocking(move || api::contract(&req).map_err(|e| e.to_string())).await
+}
+
+#[tauri::command]
 fn migrate(legacy: Value) -> Result<Value, String> {
     let m = reportcore::migrate::migrate_legacy(&legacy)?;
     Ok(serde_json::json!({ "document": m.document, "notes": m.notes }))
@@ -110,6 +115,7 @@ pub fn run() {
             starters,
             data_paths,
             validate,
+            contract,
             migrate,
             import_csv,
             read_text_file,

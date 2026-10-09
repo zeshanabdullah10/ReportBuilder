@@ -334,3 +334,24 @@ fn import_and_pack() {
     let o = cli().arg("render").arg("-t").arg(&packed).arg("-o").arg(&pdf).output().unwrap();
     assert!(o.status.success(), "{}", String::from_utf8_lossy(&o.stderr));
 }
+
+#[test]
+fn schema_types_and_unknown_settings() {
+    let dir = tempfile::tempdir().unwrap();
+    let t = dir.path().join("t.rbt.json");
+    std::fs::write(
+        &t,
+        r#"{"sampleData":{"dut":{"serial":"A"},"m":[{"value":1.5}]},"body":[
+            {"id":"h","type":"heading","text":"SN {{ dut.serial }}"},
+            {"id":"m","type":"measurementTable","source":"m","sorce":"x"}]}"#,
+    )
+    .unwrap();
+    let o = cli().arg("schema").arg("-t").arg(&t).arg("--json-schema").output().unwrap();
+    let s: serde_json::Value = serde_json::from_slice(&o.stdout).unwrap();
+    assert_eq!(s["properties"]["m"]["items"]["properties"]["value"]["type"], "number");
+    let o = cli().arg("schema").arg("-t").arg(&t).args(["--types", "csharp"]).output().unwrap();
+    assert!(String::from_utf8_lossy(&o.stdout).contains("public class"));
+    let o = cli().arg("validate").arg("-t").arg(&t).output().unwrap();
+    let all = format!("{}{}", String::from_utf8_lossy(&o.stdout), String::from_utf8_lossy(&o.stderr));
+    assert!(all.contains("unknown setting 'sorce'"), "{all}");
+}

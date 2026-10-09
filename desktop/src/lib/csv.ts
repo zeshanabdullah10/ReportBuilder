@@ -2,8 +2,6 @@
 
 import * as engine from './engine'
 
-type ImportCsv = (text: string, name: string) => Promise<unknown>
-
 export function isCsvName(name: string): boolean {
   return /\.csv$/i.test(name)
 }
@@ -15,10 +13,7 @@ export function dataSetName(name: string): string {
 
 /** Turn CSV text into the JSON data object the engine builds from it. */
 export async function importCsvText(text: string, name: string): Promise<unknown> {
-  // Looked up at call time: the engine transport gains `importCsv` separately.
-  const fn = (engine as unknown as { importCsv?: ImportCsv }).importCsv
-  if (typeof fn !== 'function') throw new Error('CSV import is not available in this version of the engine')
-  return fn(text.replace(/^﻿/, ''), name)
+  return engine.importCsv(text.replace(/^﻿/, ''), name)
 }
 
 /** Parse a data file by its name: CSV via the engine, anything else as JSON (BOM tolerated). */

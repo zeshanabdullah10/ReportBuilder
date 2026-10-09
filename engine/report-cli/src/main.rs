@@ -113,6 +113,15 @@ struct SchemaArgs {
     /// Print the data paths this template reads
     #[arg(short, long, conflicts_with = "infer")]
     template: Option<PathBuf>,
+    /// With --template: print the data contract as a JSON Schema
+    #[arg(long, requires = "template", conflicts_with = "types")]
+    json_schema: bool,
+    /// With --template: print typed data structures (csharp, python, typescript, labview)
+    #[arg(long, requires = "template", value_name = "LANG")]
+    types: Option<String>,
+    /// With --template: sample data for field types (default: the template's sampleData)
+    #[arg(short, long, requires = "template")]
+    data: Option<PathBuf>,
     /// Infer a JSON Schema from a data file
     #[arg(long)]
     infer: Option<PathBuf>,
@@ -384,7 +393,14 @@ fn validate_cmd(a: ValidateArgs) -> Result<ExitCode> {
         Some(p) => Some(load_data(Some(p), &doc)?),
         None => None,
     };
-    let report = validate::validate(&doc, data.as_ref());
+    let mut report = validate::validate(&doc, data.as_ref());
+    // Settings the engine doesn't know (typos) are only visible in the raw JSON.
+    if let Ok(raw) = std::fs::read_to_string(&a.template)
+        .map_err(anyhow::Error::from)
+        .and_then(|t| Ok(serde_json::from_str::<Value>(t.trim_start_matches('\u{feff}'))?))
+    {
+        report.issues.extend(validate::unknown_keys(&raw));
+    }
     let warnings = report.issues.iter().filter(|i| i.severity == Severity::Warning).count();
     let failed = report.has_errors() || (a.strict && warnings > 0);
     if a.json {
@@ -413,8 +429,25 @@ fn validate_cmd(a: ValidateArgs) -> Result<ExitCode> {
 fn schema(a: SchemaArgs) -> Result<ExitCode> {
     if let Some(t) = a.template {
         let doc = load_template(&t)?;
-        for p in validate::validate(&doc, None).referenced_paths {
-            println!("{p}");
+        let data = match &a.data {
+            Some(p) => Some(load_data(Some(p), &doc)?),
+            None => doc.sample_data.clone(),
+        };
+        let report = validate::validate(&doc, data.as_ref());
+        if a.json_schema || a.types.is_some() {
+            let schema = validate::contract_schema(&report, &doc.meta.name);
+            match &a.types {
+                Some(lang) => print!(
+                    "{}",
+                    reportcore::codegen::typedefs(&schema, lang, &doc.meta.name).map_err(anyhow::Error::msg)?
+                ),
+                None => println!("{}", serde_json::to_string_pretty(&schema)?),
+            }
+            return Ok(ExitCode::SUCCESS);
+        }
+        // One field per line, in the data's names (types and optional fields: --json-schema).
+        for c in report.contract {
+            println!("{}", c.path);
         }
     } else if let Some(d) = a.infer {
         let text = std::fs::read_to_string(&d)?;

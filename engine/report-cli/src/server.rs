@@ -163,6 +163,13 @@ fn route(req: Request, method: &Method, url: &str, input: Value, cors: Option<St
             },
             Err(e) => bad(req, e.to_string(), cors),
         },
+        (Method::Post, "/api/contract") => match serde_json::from_value::<api::ContractRequest>(input) {
+            Ok(r) => match api::contract(&r) {
+                Ok(c) => json_resp(req, 200, &serde_json::to_value(c).unwrap(), cors),
+                Err(e) => json_resp(req, 422, &json!({"error": e.to_string()}), cors),
+            },
+            Err(e) => bad(req, e.to_string(), cors),
+        },
         (Method::Post, "/api/data-paths") => {
             json_resp(req, 200, &serde_json::to_value(api::data_paths(&input)).unwrap(), cors)
         }
